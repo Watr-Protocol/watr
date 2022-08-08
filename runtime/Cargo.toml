@@ -1,5 +1,5 @@
 [package]
-name = "parachain-template-runtime"
+name = "watr-runtime"
 version = "0.1.0"
 authors = ["Anonymous"]
 description = "A new Cumulus FRAME-based Substrate Runtime, ready for hacking together a parachain."
@@ -21,9 +21,6 @@ log = { version = "0.4.17", default-features = false }
 scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
 serde = { version = "1.0.140", optional = true, features = ["derive"] }
 smallvec = "1.9.0"
-
-# Local
-pallet-template = { path = "../pallets/template", default-features = false }
 
 # Substrate
 frame-benchmarking = { git = "https://github.com/paritytech/substrate", default-features = false, optional = true, branch = "polkadot-v0.9.27" }
@@ -75,9 +72,22 @@ cumulus-primitives-utility = { git = "https://github.com/paritytech/cumulus", br
 pallet-collator-selection = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.27", default-features = false }
 parachain-info = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.27", default-features = false }
 
+# Contracts specific packages
+pallet-contracts = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27", package = "pallet-contracts", default-features = false }
+pallet-contracts-primitives = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27", package = "pallet-contracts-primitives", default-features = false }
+pallet-contracts-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27", package = "pallet-contracts-rpc-runtime-api", default-features = false }
+
+pallet-randomness-collective-flip = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27", package = "pallet-randomness-collective-flip", default-features = false }
+
+pallet-multisig = {git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27", package = "pallet-multisig", default-features = false}
+pallet-identity = {git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27", package = "pallet-identity", default-features = false}
+
+
 [features]
 default = [
 	"std",
+	# temporarily enable unstable contracts features by default, remove this before using on a production chain.
+	"contracts-unstable-interface",
 ]
 std = [
 	"codec/std",
@@ -102,7 +112,6 @@ std = [
 	"pallet-collator-selection/std",
 	"pallet-session/std",
 	"pallet-sudo/std",
-	"pallet-template/std",
 	"pallet-timestamp/std",
 	"pallet-transaction-payment-rpc-runtime-api/std",
 	"pallet-transaction-payment/std",
@@ -125,6 +134,12 @@ std = [
 	"xcm-builder/std",
 	"xcm-executor/std",
 	"xcm/std",
+	"pallet-contracts/std",
+	"pallet-contracts-primitives/std",
+	"pallet-contracts-rpc-runtime-api/std",
+	"pallet-multisig/std",
+	"pallet-identity/std",
+	"pallet-randomness-collective-flip/std",
 ]
 
 runtime-benchmarks = [
@@ -135,7 +150,6 @@ runtime-benchmarks = [
 	"frame-system/runtime-benchmarks",
 	"pallet-balances/runtime-benchmarks",
 	"pallet-collator-selection/runtime-benchmarks",
-	"pallet-template/runtime-benchmarks",
 	"pallet-timestamp/runtime-benchmarks",
 	"pallet-xcm/runtime-benchmarks",
 	"sp-runtime/runtime-benchmarks",
@@ -147,4 +161,12 @@ runtime-benchmarks = [
 try-runtime = [
 	"frame-executive/try-runtime",
 	"frame-try-runtime",
+	"pallet-randomness-collective-flip/try-runtime",
+]
+
+
+# Make contract callable functions marked as __unstable__ available. Do not enable
+# on live chains as those are subject to change.
+contracts-unstable-interface = [
+	"pallet-contracts/unstable-interface"
 ]
