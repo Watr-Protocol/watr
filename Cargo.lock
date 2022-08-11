@@ -6509,6 +6509,7 @@ dependencies = [
  "fp-storage",
  "frame-benchmarking",
  "frame-benchmarking-cli",
+ "futures",
  "hex-literal",
  "jsonrpsee",
  "log",

@@ -37,6 +37,13 @@ pub enum Subcommand {
 
 	/// Try some testing command against a specified runtime state.
 	TryRuntime(try_runtime_cli::TryRuntimeCmd),
+
+	/// Db meta columns information.
+	FrontierDb(fc_cli::FrontierDbCmd),
+
+	/// Key management cli utilities
+	#[clap(subcommand)]
+	Key(sc_cli::KeySubcommand),
 }
 
 #[derive(Debug, clap::Parser)]
