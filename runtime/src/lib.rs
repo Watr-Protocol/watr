@@ -597,7 +597,6 @@ impl pallet_identity::Config for Runtime {
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
 
-// Start Frontier
 pub struct FindAuthorTruncated<F>(PhantomData<F>);
 impl<F: FindAuthor<u32>> FindAuthor<H160> for FindAuthorTruncated<F> {
 	fn find_author<'a, I>(digests: I) -> Option<H160>
@@ -623,7 +622,7 @@ impl GasWeightMapping for FixedGasWeightMapping {
 }
 
 parameter_types! {
-	pub const ChainId: u64 = 42;
+	pub const ChainId: u64 = 688;
 	pub BlockGasLimit: U256 = U256::from(NORMAL_DISPATCH_RATIO * MAXIMUM_BLOCK_WEIGHT / WEIGHT_PER_GAS);
 	pub PrecompilesValue: FrontierPrecompiles<Runtime> = FrontierPrecompiles::<_>::new();
 }
@@ -639,7 +638,7 @@ impl pallet_evm::Config for Runtime {
 	type Event = Event;
 	type PrecompilesType = FrontierPrecompiles<Self>;
 	type PrecompilesValue = PrecompilesValue;
-	type ChainId = ChainId; //TODO with v0.9.27 EVMChainId;
+	type ChainId = ChainId; //TODO with latest frontier EVMChainId;
 	type BlockGasLimit = BlockGasLimit;
 	type Runner = pallet_evm::runner::stack::Runner<Self>;
 	type OnChargeTransaction = ();
@@ -688,8 +687,6 @@ impl pallet_hotfix_sufficients::Config for Runtime {
 	type AddressMapping = HashedAddressMapping<BlakeTwo256>;
 	type WeightInfo = pallet_hotfix_sufficients::weights::SubstrateWeight<Runtime>;
 }
-
-// End Frontier
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
@@ -740,7 +737,6 @@ construct_runtime!(
 	}
 );
 
-// Start Frontier
 pub struct TransactionConverter;
 
 impl fp_rpc::ConvertTransaction<UncheckedExtrinsic> for TransactionConverter {
@@ -818,9 +814,6 @@ impl fp_self_contained::SelfContainedCall for Call {
 		}
 	}
 }
-
-
-// End Frontier
 
 #[cfg(feature = "runtime-benchmarks")]
 #[macro_use]

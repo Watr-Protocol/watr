@@ -16,3 +16,8 @@
 .DS_Store
 .idea
 .vscode
+
+# polkadot-launch logs
+9988.log
+alice.log
+bob.log

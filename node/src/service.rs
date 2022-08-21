@@ -70,14 +70,6 @@ impl sc_executor::NativeExecutionDispatch for TemplateRuntimeExecutor {
 	}
 }
 
-//TODO: is this necessary?
-pub type FullClient =
-	sc_service::TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<TemplateRuntimeExecutor>>;
-type FullBackend = sc_service::TFullBackend<Block>;
-type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
-
-
-
 /// Starts a `ServiceBuilder` for a full service.
 ///
 /// Use this macro if you don't actually need the full service, but just the builder in order to
@@ -176,11 +168,7 @@ where
 		client.clone(),
 	);
 
-	// Start Frontier 
 	let frontier_backend = crate::rpc::open_frontier_backend(config)?;
-	let filter_pool: Option<FilterPool> = Some(Arc::new(Mutex::new(BTreeMap::new())));
-	// End Frontier 
-
 
 	let import_queue = build_import_queue(
 		client.clone(),
@@ -362,7 +350,6 @@ where
 
     // Frontier `EthFilterApi` maintenance. Manages the pool of user-created Filters.
     // Each filter is allowed to stay in the pool for 100 blocks.
-    const FILTER_RETAIN_THRESHOLD: u64 = 100;
 	if let Some(ref filter_pool) = filter_pool {
 		// Each filter is allowed to stay in the pool for 100 blocks.
 		const FILTER_RETAIN_THRESHOLD: u64 = 100;
@@ -624,53 +611,3 @@ pub async fn start_parachain_node(
 	)
 	.await
 }
-
-// fn spawn_frontier_tasks(
-// 	task_manager: &TaskManager,
-// 	client: Arc<FullClient>,
-// 	backend: Arc<FullBackend>,
-// 	frontier_backend: Arc<FrontierBackend<Block>>,
-// 	filter_pool: Option<FilterPool>,
-// 	overrides: Arc<OverrideHandle<Block>>,
-// 	fee_history_cache: FeeHistoryCache,
-// 	fee_history_cache_limit: FeeHistoryCacheLimit,
-// ) {
-// 	task_manager.spawn_essential_handle().spawn(
-// 		"frontier-mapping-sync-worker",
-// 		None,
-// 		MappingSyncWorker::new(
-// 			client.import_notification_stream(),
-// 			Duration::new(6, 0),
-// 			client.clone(),
-// 			backend,
-// 			frontier_backend,
-// 			3,
-// 			0,
-// 			SyncStrategy::Normal,
-// 		)
-// 		.for_each(|()| future::ready(())),
-// 	);
-
-// 	// Spawn Frontier EthFilterApi maintenance task.
-// 	if let Some(filter_pool) = filter_pool {
-// 		// Each filter is allowed to stay in the pool for 100 blocks.
-// 		const FILTER_RETAIN_THRESHOLD: u64 = 100;
-// 		task_manager.spawn_essential_handle().spawn(
-// 			"frontier-filter-pool",
-// 			None,
-// 			EthTask::filter_pool_task(client.clone(), filter_pool, FILTER_RETAIN_THRESHOLD),
-// 		);
-// 	}
-
-// 	// Spawn Frontier FeeHistory cache maintenance task.
-// 	task_manager.spawn_essential_handle().spawn(
-// 		"frontier-fee-history",
-// 		None,
-// 		EthTask::fee_history_task(
-// 			client,
-// 			overrides,
-// 			fee_history_cache,
-// 			fee_history_cache_limit,
-// 		),
-// 	);
-// }

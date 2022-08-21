@@ -1,0 +1,24 @@
+[settings]
+timeout = 0
+
+[relaychain]
+chain = "rococo-local"
+default_command = "../../../repos/polkadot-v0.9.25/target/release/polkadot"
+
+  [[relaychain.nodes]]
+  name = "alice"
+  validator = true
+
+  [[relaychain.nodes]]
+  name = "bob"
+  validator = true
+
+[[parachains]]
+id = 2000
+addToGenesis = true
+cumulus_based = true
+
+  [parachains.collator]
+  name = "watr-collator01"
+  command = "./target/release/watr-node"
+  args = ["--log=xcm=trace,pallet-assets=trace"]
