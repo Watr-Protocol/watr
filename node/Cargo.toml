@@ -1,5 +1,5 @@
 [package]
-name = "parachain-template-node"
+name = "watr-node"
 version = "0.1.0"
 authors = ["Anonymous"]
 description = "A new Cumulus FRAME-based Substrate Node, ready for hacking together a parachain."
@@ -27,15 +27,15 @@ frame-benchmarking-cli = { git = "https://github.com/paritytech/substrate", bran
 pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27" }
 sc-basic-authorship = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27" }
 sc-chain-spec = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27" }
-sc-cli = { git = "https://github.com/paritytech/substrate", features = ["wasmtime"] , branch = "polkadot-v0.9.27" }
+sc-cli = { git = "https://github.com/paritytech/substrate", features = ["wasmtime"], branch = "polkadot-v0.9.27" }
 sc-client-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27" }
 sc-consensus = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27" }
-sc-executor = { git = "https://github.com/paritytech/substrate", features = ["wasmtime"] , branch = "polkadot-v0.9.27" }
+sc-executor = { git = "https://github.com/paritytech/substrate", features = ["wasmtime"], branch = "polkadot-v0.9.27" }
 sc-keystore = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27" }
 sc-network = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27" }
 sc-rpc = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27" }
 sc-rpc-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27" }
-sc-service = { git = "https://github.com/paritytech/substrate", features = ["wasmtime"] , branch = "polkadot-v0.9.27" }
+sc-service = { git = "https://github.com/paritytech/substrate", features = ["wasmtime"], branch = "polkadot-v0.9.27" }
 sc-sysinfo = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27" }
 sc-telemetry = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27" }
 sc-tracing = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27" }
