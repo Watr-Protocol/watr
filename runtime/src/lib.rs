@@ -20,7 +20,7 @@ use sp_runtime::{
 	ApplyExtrinsicResult, MultiSignature,
 };
 
-use pallet_contracts::{migration, DefaultContractAccessWeight};
+use pallet_contracts::{DefaultContractAccessWeight};
 
 use sp_std::prelude::*;
 #[cfg(feature = "std")]
@@ -195,6 +195,10 @@ pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
 pub const MINUTES: BlockNumber = 60_000 / (MILLISECS_PER_BLOCK as BlockNumber);
 pub const HOURS: BlockNumber = MINUTES * 60;
 pub const DAYS: BlockNumber = HOURS * 24;
+
+// Prints debug output of the `contracts` pallet to stdout if the node is
+// started with `-lruntime::contracts=debug`.
+pub const CONTRACTS_DEBUG_OUTPUT: bool = true;
 
 pub const MICRO_WATR: Balance = 1_000_000;
 pub const MILLI_WATR: Balance = 1_000 * MICRO_WATR;
@@ -459,36 +463,14 @@ impl pallet_collator_selection::Config for Runtime {
 parameter_types! {
 	pub const DepositPerItem: Balance = deposit(1, 0);
 	pub const DepositPerByte: Balance = deposit(0, 1);
+	pub const DeletionQueueDepth: u32 = 128;
 	// The lazy deletion runs inside on_initialize.
-	// pub DeletionWeightLimit: Weight = AVERAGE_ON_INITIALIZE_RATIO *
-	// 	RuntimeBlockWeights::get().max_block;
 	pub DeletionWeightLimit: Weight = RuntimeBlockWeights::get()
 		.per_class
 		.get(DispatchClass::Normal)
 		.max_total
 		.unwrap_or(RuntimeBlockWeights::get().max_block);
-
-	pub const DeletionQueueDepth: u32 = 128;
-	// The weight needed for decoding the queue should be less or equal than a fifth
-	// of the overall weight dedicated to the lazy deletion.
-	// pub DeletionQueueDepth: u32 = ((DeletionWeightLimit::get() / (
-	// 		<Runtime as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(1) -
-	// 		<Runtime as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(0)
-	// 	)) / 5) as u32;
-	
 	pub Schedule: pallet_contracts::Schedule<Runtime> = Default::default();
-	// pub Schedule: pallet_contracts::Schedule<Runtime> = {
-	// 	let mut schedule = pallet_contracts::Schedule::<Runtime>::default();
-	// 	// We decided to **temporarily* increase the default allowed contract size here
-	// 	// (the default is `128 * 1024`).
-	// 	//
-	// 	// Our reasoning is that a number of people ran into `CodeTooLarge` when trying
-	// 	// to deploy their contracts. We are currently introducing a number of optimizations
-	// 	// into ink! which should bring the contract sizes lower. In the meantime we don't
-	// 	// want to pose additional friction on developers.
-	// 	schedule.limits.code_len = 256 * 1024;
-	// 	schedule
-	// };
 }
 
 impl pallet_contracts::Config for Runtime {
@@ -514,7 +496,6 @@ impl pallet_contracts::Config for Runtime {
 	type DeletionWeightLimit = DeletionWeightLimit;
 	type Schedule = Schedule;
 	type AddressGenerator = pallet_contracts::DefaultAddressGenerator;
-
 	type ContractAccessWeight = DefaultContractAccessWeight<RuntimeBlockWeights>;
 	// This node is geared towards development and testing of contracts.
 	// We decided to increase the default allowed contract size for this
@@ -606,7 +587,7 @@ construct_runtime!(
 		CumulusXcm: cumulus_pallet_xcm::{Pallet, Event<T>, Origin} = 32,
 		DmpQueue: cumulus_pallet_dmp_queue::{Pallet, Call, Storage, Event<T>} = 33,
 
-		Contracts: pallet_contracts = 40,
+		Contracts: pallet_contracts::{Pallet, Call, Storage, Event<T>} = 40,
 		Multisig: pallet_multisig = 41,
 		Identity: pallet_identity = 42,
 	}
@@ -735,6 +716,65 @@ impl_runtime_apis! {
 		}
 	}
 
+	impl pallet_contracts_rpc_runtime_api::ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>
+		for Runtime
+	{
+		fn call(
+			origin: AccountId,
+			dest: AccountId,
+			value: Balance,
+			gas_limit: u64,
+			storage_deposit_limit: Option<Balance>,
+			input_data: Vec<u8>,
+		) -> pallet_contracts_primitives::ContractExecResult<Balance> {
+			Contracts::bare_call(
+				origin,
+				dest,
+				value,
+				gas_limit,
+				storage_deposit_limit,
+				input_data,
+				CONTRACTS_DEBUG_OUTPUT,
+			)
+		}
+
+		fn instantiate(
+			origin: AccountId,
+			value: Balance,
+			gas_limit: u64,
+			storage_deposit_limit: Option<Balance>,
+			code: pallet_contracts_primitives::Code<Hash>,
+			data: Vec<u8>,
+			salt: Vec<u8>,
+		) -> pallet_contracts_primitives::ContractInstantiateResult<AccountId, Balance> {
+			Contracts::bare_instantiate(
+				origin,
+				value,
+				gas_limit,
+				storage_deposit_limit,
+				code,
+				data,
+				salt,
+				CONTRACTS_DEBUG_OUTPUT,
+			)
+		}
+
+		fn upload_code(
+			origin: AccountId,
+			code: Vec<u8>,
+			storage_deposit_limit: Option<Balance>,
+		) -> pallet_contracts_primitives::CodeUploadResult<Hash, Balance> {
+			Contracts::bare_upload_code(origin, code, storage_deposit_limit)
+		}
+
+		fn get_storage(
+			address: AccountId,
+			key: Vec<u8>,
+		) -> pallet_contracts_primitives::GetStorageResult {
+			Contracts::get_storage(address, key)
+		}
+	}
+
 	#[cfg(feature = "try-runtime")]
 	impl frame_try_runtime::TryRuntime<Block> for Runtime {
 		fn on_runtime_upgrade() -> (Weight, Weight) {
@@ -828,3 +868,5 @@ cumulus_pallet_parachain_system::register_validate_block! {
 	BlockExecutor = cumulus_pallet_aura_ext::BlockExecutor::<Runtime, Executive>,
 	CheckInherents = CheckInherents,
 }
+
+
