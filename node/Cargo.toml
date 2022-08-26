@@ -43,6 +43,7 @@ sc-tracing = { git = "https://github.com/paritytech/substrate", branch = "polkad
 sc-transaction-pool = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.25" }
 sc-transaction-pool-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.25" }
 sp-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.25" }
+sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.25" }
 sp-block-builder = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.25" }
 sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.25" }
 sp-consensus = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.25" }
@@ -91,6 +92,9 @@ fp-dynamic-fee = { git = 'https://github.com/paritytech/frontier.git', branch = 
 fp-evm = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.25" }
 fp-rpc = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.25" }
 fp-storage = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.25" }
+
+# Contracts
+pallet-contracts-rpc = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.25", package = "pallet-contracts-rpc" }
 
 [build-dependencies]
 substrate-build-script-utils = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.25" }

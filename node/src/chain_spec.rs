@@ -1,7 +1,7 @@
 use std::{collections::BTreeMap, str::FromStr};
 use cumulus_primitives_core::ParaId;
 use hex_literal::hex;
-use watr_runtime::{AccountId, AuraId, Signature, EXISTENTIAL_DEPOSIT};
+use watr_runtime::{AccountId, AuraId, Signature, BalancesConfig, EXISTENTIAL_DEPOSIT, WATR};
 use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
@@ -107,9 +107,8 @@ pub fn development_config() -> ChainSpec {
 					hex!["e1ad20aae239ccbb609aa537d515dc9d53c5936ea67d8acc9fe0618925279f7d"].into(),
 				],
 				PARA_ID.into(),
-				//TODO: original node has a total_issuance
 				// Total supply
-				//Some(12000000 * WATR),
+				Some(12000000 * WATR),
 			)
 		},
 		Vec::new(),
@@ -119,7 +118,7 @@ pub fn development_config() -> ChainSpec {
 		None,
 		Extensions {
 			relay_chain: "rococo-local".into(), // You MUST set this to the correct network!
-			para_id: PARA_ID,
+			para_id: PARA_ID.into(),
 		},
 	)
 }
@@ -166,9 +165,8 @@ pub fn local_testnet_config() -> ChainSpec {
 					hex!["e1ad20aae239ccbb609aa537d515dc9d53c5936ea67d8acc9fe0618925279f7d"].into(),
 				],
 				PARA_ID.into(),
-				//TODO original has total_issuance
 				// Total supply
-				//Some(12000000 * WATR),
+				Some(12000000 * WATR),
 			)
 		},
 		// Bootnodes
@@ -184,7 +182,7 @@ pub fn local_testnet_config() -> ChainSpec {
 		// Extensions
 		Extensions {
 			relay_chain: "rococo-local".into(), // You MUST set this to the correct network!
-			para_id: PARA_ID,
+			para_id: PARA_ID.into(),
 		},
 	)
 }
@@ -193,10 +191,23 @@ fn testnet_genesis(
 	invulnerables: Vec<(AccountId, AuraId)>,
 	endowed_accounts: Vec<AccountId>,
 	id: ParaId,
+	total_issuance: Option<watr_runtime::Balance>,
 ) -> watr_runtime::GenesisConfig {
 	use watr_runtime::{
 		BalancesConfig, EVMConfig,
 		SystemConfig,
+	};
+
+	let num_endowed_accounts = endowed_accounts.len();
+	let balances = match total_issuance {
+		Some(total_issuance) => {
+			let balance_per_endowed = total_issuance
+				.checked_div(num_endowed_accounts as watr_runtime::Balance)
+				.unwrap_or(0 as watr_runtime::Balance);
+
+			endowed_accounts.iter().cloned().map(|k| (k, balance_per_endowed)).collect()
+		},
+		None => vec![],
 	};
 
 	watr_runtime::GenesisConfig {
@@ -205,9 +216,9 @@ fn testnet_genesis(
 				.expect("WASM binary was not build, please build it!")
 				.to_vec(),
 		},
-		balances: watr_runtime::BalancesConfig {
-			balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect(),
-		},
+
+		balances: BalancesConfig { balances },
+
 		parachain_info: watr_runtime::ParachainInfoConfig { parachain_id: id },
 		collator_selection: watr_runtime::CollatorSelectionConfig {
 			invulnerables: invulnerables.iter().cloned().map(|(acc, _)| acc).collect(),

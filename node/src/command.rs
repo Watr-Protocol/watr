@@ -22,7 +22,7 @@ use sp_runtime::traits::{AccountIdConversion, Block as BlockT};
 use crate::{
 	chain_spec,
 	cli::{Cli, RelayChainCli, Subcommand},
-	service::{self, new_partial, TemplateRuntimeExecutor},
+	service::{self, new_partial, WatrRuntimeExecutor},
 };
 
 fn load_spec(id: &str) -> std::result::Result<Box<dyn ChainSpec>, String> {
@@ -120,7 +120,7 @@ macro_rules! construct_async_run {
 		runner.async_run(|$config| {
 			let $components = new_partial::<
 				RuntimeApi,
-				TemplateRuntimeExecutor,
+				WatrRuntimeExecutor,
 				_
 			>(
 				&$config,
@@ -206,21 +206,21 @@ pub fn run() -> Result<()> {
 			match cmd {
 				BenchmarkCmd::Pallet(cmd) =>
 					if cfg!(feature = "runtime-benchmarks") {
-						runner.sync_run(|config| cmd.run::<Block, TemplateRuntimeExecutor>(config))
+						runner.sync_run(|config| cmd.run::<Block, WatrRuntimeExecutor>(config))
 					} else {
 						Err("Benchmarking wasn't enabled when building the node. \
 					You can enable it with `--features runtime-benchmarks`."
 							.into())
 					},
 				BenchmarkCmd::Block(cmd) => runner.sync_run(|config| {
-					let partials = new_partial::<RuntimeApi, TemplateRuntimeExecutor, _>(
+					let partials = new_partial::<RuntimeApi, WatrRuntimeExecutor, _>(
 						&config,
 						crate::service::parachain_build_import_queue,
 					)?;
 					cmd.run(partials.client)
 				}),
 				BenchmarkCmd::Storage(cmd) => runner.sync_run(|config| {
-					let partials = new_partial::<RuntimeApi, TemplateRuntimeExecutor, _>(
+					let partials = new_partial::<RuntimeApi, WatrRuntimeExecutor, _>(
 						&config,
 						crate::service::parachain_build_import_queue,
 					)?;
@@ -248,7 +248,7 @@ pub fn run() -> Result<()> {
 						.map_err(|e| format!("Error: {:?}", e))?;
 
 				runner.async_run(|config| {
-					Ok((cmd.run::<Block, TemplateRuntimeExecutor>(config), task_manager))
+					Ok((cmd.run::<Block, WatrRuntimeExecutor>(config), task_manager))
 				})
 			} else {
 				Err("Try-runtime must be enabled by `--features try-runtime`.".into())

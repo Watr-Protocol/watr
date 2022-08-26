@@ -6,10 +6,9 @@
 #![warn(missing_docs)]
 
 use std::{collections::BTreeMap, sync::Arc};
-
 use jsonrpsee::RpcModule;
 
-use watr_runtime::{opaque::Block, AccountId, Balance, Index as Nonce, Hash, Index};
+use watr_runtime::{opaque::Block, AccountId, Balance, Index as Nonce, Hash, BlockNumber, Index};
 
 use sc_client_api::{
 	backend::{AuxStore, Backend, StateBackend, StorageProvider},
@@ -147,12 +146,14 @@ where
         + fp_rpc::ConvertTransactionRuntimeApi<Block>
         + fp_rpc::EthereumRuntimeRPCApi<Block>
         + BlockBuilder<Block>,
+	C::Api: pallet_contracts_rpc::ContractsRuntimeApi<Block, AccountId, Balance, BlockNumber, Hash>,
     P: TransactionPool<Block = Block> + Sync + Send + 'static,
     BE: Backend<Block> + 'static,
     BE::State: StateBackend<BlakeTwo256>,
     BE::Blockchain: BlockchainBackend<Block>,
     A: ChainApi<Block = Block> + 'static,
 {
+	use pallet_contracts_rpc::{Contracts, ContractsApiServer};
 	use fc_rpc::{
 		Eth, EthApiServer, EthDevSigner, EthFilter, EthFilterApiServer, EthPubSub,
 		EthPubSubApiServer, EthSigner, Net, NetApiServer, Web3, Web3ApiServer,
@@ -177,6 +178,9 @@ where
 		overrides,
 		block_data_cache,
 	} = deps;
+
+	// Contracts RPC API extension
+	io.merge(Contracts::new(client.clone()).into_rpc())?;
 
 	io.merge(System::new(client.clone(), pool.clone(), deny_unsafe).into_rpc())?;
 	io.merge(TransactionPayment::new(client.clone()).into_rpc())?;

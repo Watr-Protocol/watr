@@ -18,6 +18,7 @@
 .vscode
 
 # polkadot-launch logs
-9988.log
-alice.log
-bob.log
+*.log
+
+# node binaries
+bin/*
