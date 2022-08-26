@@ -193,10 +193,7 @@ fn testnet_genesis(
 	id: ParaId,
 	total_issuance: Option<watr_runtime::Balance>,
 ) -> watr_runtime::GenesisConfig {
-	use watr_runtime::{
-		BalancesConfig, EVMConfig,
-		SystemConfig,
-	};
+	use watr_runtime::EVMConfig;
 
 	let num_endowed_accounts = endowed_accounts.len();
 	let balances = match total_issuance {

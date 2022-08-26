@@ -22,7 +22,7 @@ use sp_core::{
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, Verify,
-		DispatchInfoOf, Dispatchable, Get, NumberFor, PostDispatchInfoOf, UniqueSaturatedInto},
+		DispatchInfoOf, Dispatchable, PostDispatchInfoOf, UniqueSaturatedInto},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
 	ApplyExtrinsicResult, MultiSignature,
 };
@@ -1132,7 +1132,7 @@ impl_runtime_apis! {
 
 		fn get_storage(
 			address: AccountId,
-			key: Vec<u8>,
+			key: [u8; 32], //TODO v0.9.27 uses Vec<u8>,
 		) -> pallet_contracts_primitives::GetStorageResult {
 			Contracts::get_storage(address, key)
 		}

@@ -8,7 +8,7 @@
 use std::{collections::BTreeMap, sync::Arc};
 use jsonrpsee::RpcModule;
 
-use watr_runtime::{opaque::Block, AccountId, Balance, Index as Nonce, Hash, BlockNumber, Index};
+use watr_runtime::{opaque::Block, AccountId, Balance, Index as Nonce, Hash, BlockNumber};
 
 use sc_client_api::{
 	backend::{AuxStore, Backend, StateBackend, StorageProvider},
@@ -31,11 +31,8 @@ use fc_rpc::{
 	EthBlockDataCacheTask, OverrideHandle, RuntimeApiStorageOverride, SchemaV1Override,
 	SchemaV2Override, SchemaV3Override, StorageOverride,
 };
-use fc_rpc_core::types::{FeeHistoryCache, FeeHistoryCacheLimit, FilterPool};
+use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
 use fp_storage::EthereumStorageSchema;
-
-/// A type representing all RPC extensions.
-pub type RpcExtension = jsonrpsee::RpcModule<()>;
 
 /// Full client dependencies.
 pub struct FullDeps<C, P, A: ChainApi> {
@@ -155,8 +152,8 @@ where
 {
 	use pallet_contracts_rpc::{Contracts, ContractsApiServer};
 	use fc_rpc::{
-		Eth, EthApiServer, EthDevSigner, EthFilter, EthFilterApiServer, EthPubSub,
-		EthPubSubApiServer, EthSigner, Net, NetApiServer, Web3, Web3ApiServer,
+		Eth, EthApiServer, EthFilter, EthFilterApiServer, EthPubSub,
+		EthPubSubApiServer, Net, NetApiServer, Web3, Web3ApiServer,
 	};
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
 	use substrate_frame_rpc_system::{System, SystemApiServer};
@@ -185,7 +182,7 @@ where
 	io.merge(System::new(client.clone(), pool.clone(), deny_unsafe).into_rpc())?;
 	io.merge(TransactionPayment::new(client.clone()).into_rpc())?;
 
-	let mut signers = Vec::new();
+	let signers = Vec::new();
 
 	io.merge(
 		Eth::new(

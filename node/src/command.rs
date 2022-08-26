@@ -13,7 +13,6 @@ use sc_cli::{
 use sc_service::{
 	config::{BasePath, PrometheusConfig},
 	TaskManager,
-	DatabaseSource, 
 	PartialComponents
 };
 use sp_core::hexdisplay::HexDisplay;

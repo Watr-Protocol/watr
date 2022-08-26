@@ -3,8 +3,7 @@
 // std
 use std::{
 	collections::BTreeMap,
-	path::PathBuf,
-	sync::{Arc, Mutex},
+	sync::{Arc},
 	time::Duration,
 };
 
@@ -13,7 +12,6 @@ use futures::{future, StreamExt};
 // rpc
 use jsonrpsee::RpcModule;
 
-use crate::cli::Cli;
 use sc_client_api::BlockchainEvents;
 
 use cumulus_client_cli::CollatorOptions;
@@ -38,20 +36,17 @@ use cumulus_relay_chain_rpc_interface::RelayChainRPCInterface;
 use sc_client_api::ExecutorProvider;
 use sc_executor::NativeElseWasmExecutor;
 use sc_network::NetworkService;
-use sc_service::{Configuration, PartialComponents, TFullBackend, TFullClient, TaskManager, BasePath};
+use sc_service::{Configuration, PartialComponents, TFullBackend, TFullClient, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryHandle, TelemetryWorker, TelemetryWorkerHandle};
 use sp_api::ConstructRuntimeApi;
 use sp_keystore::SyncCryptoStorePtr;
 use sp_runtime::traits::BlakeTwo256;
 use substrate_prometheus_endpoint::Registry;
-use sp_core::U256;
 
 // Frontier
-use fc_consensus::FrontierBlockImport;
-use fc_db::Backend as FrontierBackend;
 use fc_mapping_sync::{MappingSyncWorker, SyncStrategy};
-use fc_rpc::{EthTask, OverrideHandle};
-use fc_rpc_core::types::{FeeHistoryCache, FeeHistoryCacheLimit, FilterPool};
+use fc_rpc::{EthTask};
+use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
 
 use polkadot_service::CollatorPair;
 
