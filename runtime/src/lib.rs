@@ -383,8 +383,7 @@ parameter_types! {
 }
 
 impl pallet_transaction_payment::Config for Runtime {
-	//TODO: when upgrading to v.0.9.27
-	//type Event = Event;
+	type Event = Event;
 	type OnChargeTransaction = pallet_transaction_payment::CurrencyAdapter<Balances, ()>;
 	type WeightToFee = WeightToFee;
 	type LengthToFee = ConstantMultiplier<Balance, TransactionByteFee>;
@@ -531,8 +530,7 @@ impl pallet_contracts::Config for Runtime {
 	// just more lax.
 	type MaxCodeLen = ConstU32<{ 256 * 1024 }>;
 	type RelaxedMaxCodeLen = ConstU32<{ 512 * 1024 }>;
-	//when upgrading to v0.9.27 
-	//type MaxStorageKeyLen = ConstU32<128>;
+	type MaxStorageKeyLen = ConstU32<128>;
 }
 
 pub struct Migrations;
@@ -627,7 +625,7 @@ impl pallet_evm::Config for Runtime {
 	type Event = Event;
 	type PrecompilesType = FrontierPrecompiles<Self>;
 	type PrecompilesValue = PrecompilesValue;
-	type ChainId = ChainId; //TODO with latest frontier EVMChainId;
+	type ChainId = ChainId;
 	type BlockGasLimit = BlockGasLimit;
 	type Runner = pallet_evm::runner::stack::Runner<Self>;
 	type OnChargeTransaction = ();
@@ -648,8 +646,8 @@ impl pallet_dynamic_fee::Config for Runtime {
 }
 
 parameter_types! {
-	pub IsActive: bool = true;
 	pub DefaultBaseFeePerGas: U256 = U256::from(1_000_000_000);
+	pub DefaultElasticity: Permill = Permill::from_parts(125_000);
 }
 
 pub struct BaseFeeThreshold;
@@ -668,8 +666,8 @@ impl pallet_base_fee::BaseFeeThreshold for BaseFeeThreshold {
 impl pallet_base_fee::Config for Runtime {
 	type Event = Event;
 	type Threshold = BaseFeeThreshold;
-	type IsActive = IsActive;
 	type DefaultBaseFeePerGas = DefaultBaseFeePerGas;
+	type DefaultElasticity = DefaultElasticity;
 }
 
 impl pallet_hotfix_sufficients::Config for Runtime {
@@ -695,8 +693,7 @@ construct_runtime!(
 
 		// Monetary stuff.
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>} = 10,
-		//TODO: when upgrading to v.0.9.27 add Event<T>
-		TransactionPayment: pallet_transaction_payment::{Pallet, Storage} = 11,
+		TransactionPayment: pallet_transaction_payment::{Pallet, Storage, Event<T>} = 11,
 
 		// Collator support. The order of these 4 are important and shall not change.
 		Authorship: pallet_authorship::{Pallet, Call, Storage} = 20,
@@ -721,8 +718,6 @@ construct_runtime!(
 		DynamicFee: pallet_dynamic_fee  = 52,
 		BaseFee: pallet_base_fee = 53,
 		HotfixSufficients: pallet_hotfix_sufficients = 54,
-		//TODO: a newer version of Frontier uses this 
-		//EVMChainId: pallet_evm_chain_id,
 	}
 );
 
@@ -1132,7 +1127,7 @@ impl_runtime_apis! {
 
 		fn get_storage(
 			address: AccountId,
-			key: [u8; 32], //TODO v0.9.27 uses Vec<u8>,
+			key: Vec<u8>,
 		) -> pallet_contracts_primitives::GetStorageResult {
 			Contracts::get_storage(address, key)
 		}
