@@ -81,7 +81,6 @@ fp-self-contained = { git = 'https://github.com/paritytech/frontier.git', branch
 
 # Frontier FRAME
 pallet-base-fee = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27", default-features = false }
-pallet-dynamic-fee = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27", default-features = false }
 pallet-ethereum = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27", default-features = false }
 pallet-evm = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27", default-features = false }
 pallet-evm-precompile-modexp = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27", default-features = false }
@@ -164,7 +163,6 @@ std = [
 	"fp-self-contained/std",
 	# Frontier FRAME
 	"pallet-base-fee/std",
-	"pallet-dynamic-fee/std",
 	"pallet-ethereum/std",
 	"pallet-evm/std",
 	"pallet-evm-precompile-modexp/std",
