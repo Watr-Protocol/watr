@@ -80,6 +80,7 @@ pub fn development_config() -> ChainSpec {
 		ChainType::Development,
 		move || {
 			testnet_genesis(
+				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				// initial collators.
 				vec![
 					(
@@ -138,6 +139,7 @@ pub fn local_testnet_config() -> ChainSpec {
 		ChainType::Local,
 		move || {
 			testnet_genesis(
+				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				// initial collators.
 				vec![
 					(
@@ -188,6 +190,7 @@ pub fn local_testnet_config() -> ChainSpec {
 }
 
 fn testnet_genesis(
+	root_key: AccountId,
 	invulnerables: Vec<(AccountId, AuraId)>,
 	endowed_accounts: Vec<AccountId>,
 	id: ParaId,
@@ -234,6 +237,7 @@ fn testnet_genesis(
 				})
 				.collect(),
 		},
+		sudo: watr_runtime::SudoConfig { key: Some(root_key) },
 		// no need to pass anything to aura, in fact it will panic if we do. Session will take care
 		// of this.
 		aura: Default::default(),
