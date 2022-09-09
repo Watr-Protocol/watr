@@ -26,7 +26,14 @@
           "rpcPort": 8833,
           "port": 31200,
           "name": "alice",
-          "flags": ["--rpc-cors=all", "--", "--execution=wasm"]
+          "flags": [
+            "--unsafe-rpc-external",
+            "--rpc-methods=unsafe",
+            "--unsafe-ws-external",
+            "--rpc-cors=all",
+            "--",
+            "--execution=wasm"
+          ]
         }
       ]
     }

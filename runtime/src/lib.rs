@@ -533,17 +533,6 @@ parameter_types! {
 
 impl pallet_multisig::Config for Runtime {
 	type Event = Event;
-	type Currency = Balances;
-	type BasicDeposit = BasicDeposit;
-	type FieldDeposit = FieldDeposit;
-	type SubAccountDeposit = SubAccountDeposit;
-	type MaxSubAccounts = MaxSubAccounts;
-	type MaxAdditionalFields = MaxAdditionalFields;
-	type MaxRegistrars = MaxRegistrars;
-	type Slashed = ();
-	type ForceOrigin = frame_system::EnsureRoot<AccountId>;
-	type RegistrarOrigin = frame_system::EnsureRoot<AccountId>;
-	type WeightInfo = pallet_identity::weights::SubstrateWeight<Runtime>;
 	type Call = Call;
 	type Currency = Balances;
 	type DepositBase = DepositBase;
@@ -551,8 +540,6 @@ impl pallet_multisig::Config for Runtime {
 	type MaxSignatories = MaxSignatories;
 	type WeightInfo = pallet_multisig::weights::SubstrateWeight<Runtime>;
 }
-
-impl pallet_randomness_collective_flip::Config for Runtime {}
 
 parameter_types! {
 	pub const BasicDeposit: Balance = deposit(1, 258);

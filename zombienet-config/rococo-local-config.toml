@@ -1,6 +1,3 @@
-[settings]
-timeout = 0
-
 [relaychain]
 chain = "rococo-local"
 default_command = "./bin/polkadot"
@@ -21,4 +18,3 @@ cumulus_based = true
   [parachains.collator]
   name = "watr-collator01"
   command = "./target/release/watr-node"
-  args = ["--log=xcm=trace,pallet-assets=trace"]
