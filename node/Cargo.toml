@@ -19,7 +19,8 @@ hex-literal = "0.3.4"
 jsonrpsee = { version = "0.14.0", features = ["server"] }
 
 # Local
-watr-runtime = { path = "../runtime" }
+watr-runtime = { path = "../runtime/watr" }
+watr-devnet-runtime = { path = "../runtime/devnet" }
 
 # Substrate
 frame-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27" }
