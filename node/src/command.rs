@@ -25,11 +25,10 @@ use crate::{
 
 fn load_spec(id: &str) -> std::result::Result<Box<dyn ChainSpec>, String> {
 	Ok(match id {
-		"dev" => Box::new(chain_spec::watr::development_config()),
-		"devnet-rococo" => Box::new(chain_spec::watr_devnet::rococo_devnet_config()),
-		"devnet-local" => Box::new(chain_spec::watr_devnet::local_testnet_config()),
-		"" | "local" => Box::new(chain_spec::watr::local_testnet_config()),
-		path => Box::new(chain_spec::watr::ChainSpec::from_json_file(std::path::PathBuf::from(path))?),
+		"dev" => Box::new(chain_spec::development_config()),
+		"template-rococo" => Box::new(chain_spec::local_testnet_config()),
+		"" | "local" => Box::new(chain_spec::local_testnet_config()),
+		path => Box::new(chain_spec::ChainSpec::from_json_file(std::path::PathBuf::from(path))?),
 	})
 }
 
@@ -138,7 +137,12 @@ pub fn run() -> Result<()> {
 	match &cli.subcommand {
 		Some(Subcommand::BuildSpec(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
-			runner.sync_run(|config| cmd.run(config.chain_spec, config.network))
+			runner.sync_run(|config| {
+				sp_core::crypto::set_default_ss58_version(
+					watr_runtime::SS58Prefix::get().into(),
+				);
+				cmd.run(config.chain_spec, config.network)
+			})
 		},
 		Some(Subcommand::CheckBlock(cmd)) => {
 			construct_async_run!(|components, cli, cmd, config| {
@@ -295,6 +299,10 @@ pub fn run() -> Result<()> {
 				info!("Parachain Account: {}", parachain_account);
 				info!("Parachain genesis state: {}", genesis_state);
 				info!("Is collating: {}", if config.role.is_authority() { "yes" } else { "no" });
+
+				sp_core::crypto::set_default_ss58_version(
+					watr_runtime::SS58Prefix::get().into(),
+				);
 
 				crate::service::start_parachain_node(
 					config,
