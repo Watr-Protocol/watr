@@ -5,7 +5,6 @@ use cumulus_client_cli::generate_genesis_block;
 use cumulus_primitives_core::ParaId;
 use frame_benchmarking_cli::{BenchmarkCmd, SUBSTRATE_REFERENCE_HARDWARE};
 use log::info;
-use watr_runtime::{Block, RuntimeApi};
 use sc_cli::{
 	ChainSpec, CliConfiguration, DefaultConfigurationValues, ImportParams, KeystoreParams,
 	NetworkParams, Result, RuntimeVersion, SharedParams, SubstrateCli,
@@ -16,6 +15,7 @@ use sc_service::{
 };
 use sp_core::hexdisplay::HexDisplay;
 use sp_runtime::traits::{AccountIdConversion, Block as BlockT};
+use watr_runtime::{Block, RuntimeApi};
 
 use crate::{
 	chain_spec,
@@ -138,9 +138,7 @@ pub fn run() -> Result<()> {
 		Some(Subcommand::BuildSpec(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
 			runner.sync_run(|config| {
-				sp_core::crypto::set_default_ss58_version(
-					watr_runtime::SS58Prefix::get().into(),
-				);
+				sp_core::crypto::set_default_ss58_version(watr_runtime::SS58Prefix::get().into());
 				cmd.run(config.chain_spec, config.network)
 			})
 		},
@@ -300,9 +298,7 @@ pub fn run() -> Result<()> {
 				info!("Parachain genesis state: {}", genesis_state);
 				info!("Is collating: {}", if config.role.is_authority() { "yes" } else { "no" });
 
-				sp_core::crypto::set_default_ss58_version(
-					watr_runtime::SS58Prefix::get().into(),
-				);
+				sp_core::crypto::set_default_ss58_version(watr_runtime::SS58Prefix::get().into());
 
 				crate::service::start_parachain_node(
 					config,

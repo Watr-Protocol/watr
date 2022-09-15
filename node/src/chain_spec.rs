@@ -1,14 +1,13 @@
 use cumulus_primitives_core::ParaId;
-use watr_runtime::{AccountId, AuraId, Signature, BalancesConfig, EXISTENTIAL_DEPOSIT, WATR};
 use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
+use watr_runtime::{AccountId, AuraId, BalancesConfig, Signature, EXISTENTIAL_DEPOSIT, WATR};
 
 /// Specialized `ChainSpec` for the normal parachain runtime.
-pub type ChainSpec =
-	sc_service::GenericChainSpec<watr_runtime::GenesisConfig, Extensions>;
+pub type ChainSpec = sc_service::GenericChainSpec<watr_runtime::GenesisConfig, Extensions>;
 
 /// The default XCM version to set in genesis config.
 const SAFE_XCM_VERSION: u32 = xcm::prelude::XCM_VERSION;
@@ -116,7 +115,7 @@ pub fn development_config() -> ChainSpec {
 		None,
 		Extensions {
 			relay_chain: "rococo-local".into(), // You MUST set this to the correct network!
-			para_id: PARA_ID.into(),
+			para_id: PARA_ID,
 		},
 	)
 }
@@ -180,7 +179,7 @@ pub fn local_testnet_config() -> ChainSpec {
 		// Extensions
 		Extensions {
 			relay_chain: "rococo-local".into(), // You MUST set this to the correct network!
-			para_id: PARA_ID.into(),
+			para_id: PARA_ID,
 		},
 	)
 }
@@ -237,8 +236,6 @@ fn testnet_genesis(
 		aura: Default::default(),
 		aura_ext: Default::default(),
 		parachain_system: Default::default(),
-		polkadot_xcm: watr_runtime::PolkadotXcmConfig {
-			safe_xcm_version: Some(SAFE_XCM_VERSION),
-		},
+		polkadot_xcm: watr_runtime::PolkadotXcmConfig { safe_xcm_version: Some(SAFE_XCM_VERSION) },
 	}
 }

@@ -7,7 +7,7 @@
 
 use std::sync::Arc;
 
-use watr_runtime::{opaque::Block, AccountId, Balance, Index as Nonce, BlockNumber, Hash};
+use watr_runtime::{opaque::Block, AccountId, Balance, BlockNumber, Hash, Index as Nonce};
 
 use sc_client_api::AuxStore;
 pub use sc_rpc::{DenyUnsafe, SubscriptionTaskExecutor};
