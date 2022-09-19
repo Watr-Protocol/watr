@@ -1,11 +1,33 @@
-# Substrate Cumulus Parachain Template
+<p align="center">
+  <a href="https://www.watr.org/">
+		<img src="https://user-images.githubusercontent.com/23270067/191095552-260f6a1b-0f32-4f89-b818-7bfc7280b0db.svg" width="460">
+	</a>
+</p>
 
-A new [Cumulus](https://github.com/paritytech/cumulus/)-based Substrate node, ready for hacking ☁️..
+<div align="center">
+	
+[![Twitter URL](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Ftwitter.com%WatrProtocol)](https://twitter.com/WatrProtocol)
+[![Medium](https://img.shields.io/badge/Medium-gray?logo=medium)](https://medium.com/watr-protocol)
 
-This project is originally a fork of the
-[Substrate Node Template](https://github.com/substrate-developer-hub/substrate-node-template)
-modified to include dependencies required for registering this node as a **parathread** or
-**parachain** to a **relay chain**.
+</div>
+
+# Watr
+Watr is the blockchain protocol and decentralized app ecosystem for a new class of ethical commodities, their financing and trade.
+
+## Node Overview
+This node currently contains the following pallets:
+- Balances
+- Multisig
+- Contracts
+
+Future releases will include EVM smart contracts.
+
+## Devnet
+A current devnet is running on the Rococo relay chain with ink! smart contracts enabled.  
+Endpoint: [https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.dev.watr.org%3A443#/explorer](https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.dev.watr.org%3A443#/explorer)
+
+## Cumulus
+This project was originally forked from the Substrate Parachain Template.
 
 The stand-alone version of this template is hosted on the
 [Substrate Devhub Parachain Template](https://github.com/substrate-developer-hub/substrate-parachain-template/)
