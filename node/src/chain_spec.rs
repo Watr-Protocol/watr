@@ -1,17 +1,18 @@
 use cumulus_primitives_core::ParaId;
-use watr_runtime::{AccountId, AuraId, Signature, EXISTENTIAL_DEPOSIT};
 use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
+use watr_runtime::{AccountId, AuraId, BalancesConfig, Signature, EXISTENTIAL_DEPOSIT, WATR};
 
 /// Specialized `ChainSpec` for the normal parachain runtime.
-pub type ChainSpec =
-	sc_service::GenericChainSpec<watr_runtime::GenesisConfig, Extensions>;
+pub type ChainSpec = sc_service::GenericChainSpec<watr_runtime::GenesisConfig, Extensions>;
 
 /// The default XCM version to set in genesis config.
 const SAFE_XCM_VERSION: u32 = xcm::prelude::XCM_VERSION;
+
+pub const PARA_ID: u32 = 2000;
 
 /// Helper function to generate a crypto pair from seed
 pub fn get_public_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
@@ -65,8 +66,8 @@ pub fn development_config() -> ChainSpec {
 	// Give your base currency a unit name and decimal places
 	let mut properties = sc_chain_spec::Properties::new();
 	properties.insert("tokenSymbol".into(), "WATRD".into());
-	properties.insert("tokenDecimals".into(), 12.into());
-	properties.insert("ss58Format".into(), 42.into());
+	properties.insert("tokenDecimals".into(), 18.into());
+	properties.insert("ss58Format".into(), 19.into());
 
 	ChainSpec::from_genesis(
 		// Name
@@ -76,6 +77,7 @@ pub fn development_config() -> ChainSpec {
 		ChainType::Development,
 		move || {
 			testnet_genesis(
+				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				// initial collators.
 				vec![
 					(
@@ -101,10 +103,9 @@ pub fn development_config() -> ChainSpec {
 					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
 				],
-				1000.into(),
-				//TODO: original node has a total_issuance
+				PARA_ID.into(),
 				// Total supply
-				//Some(12000000 * WATR),
+				Some(12000000 * WATR),
 			)
 		},
 		Vec::new(),
@@ -114,7 +115,7 @@ pub fn development_config() -> ChainSpec {
 		None,
 		Extensions {
 			relay_chain: "rococo-local".into(), // You MUST set this to the correct network!
-			para_id: 1000,
+			para_id: PARA_ID,
 		},
 	)
 }
@@ -123,8 +124,8 @@ pub fn local_testnet_config() -> ChainSpec {
 	// Give your base currency a unit name and decimal places
 	let mut properties = sc_chain_spec::Properties::new();
 	properties.insert("tokenSymbol".into(), "WATRD".into());
-	properties.insert("tokenDecimals".into(), 12.into());
-	properties.insert("ss58Format".into(), 42.into());
+	properties.insert("tokenDecimals".into(), 18.into());
+	properties.insert("ss58Format".into(), 19.into());
 
 	ChainSpec::from_genesis(
 		// Name
@@ -134,6 +135,7 @@ pub fn local_testnet_config() -> ChainSpec {
 		ChainType::Local,
 		move || {
 			testnet_genesis(
+				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				// initial collators.
 				vec![
 					(
@@ -159,10 +161,9 @@ pub fn local_testnet_config() -> ChainSpec {
 					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
 				],
-				1000.into(),
-				//TODO original has total_issuance
+				PARA_ID.into(),
 				// Total supply
-				//Some(12000000 * WATR),
+				Some(12000000 * WATR),
 			)
 		},
 		// Bootnodes
@@ -178,25 +179,39 @@ pub fn local_testnet_config() -> ChainSpec {
 		// Extensions
 		Extensions {
 			relay_chain: "rococo-local".into(), // You MUST set this to the correct network!
-			para_id: 1000,
+			para_id: PARA_ID,
 		},
 	)
 }
 
 fn testnet_genesis(
+	root_key: AccountId,
 	invulnerables: Vec<(AccountId, AuraId)>,
 	endowed_accounts: Vec<AccountId>,
 	id: ParaId,
+	total_issuance: Option<watr_runtime::Balance>,
 ) -> watr_runtime::GenesisConfig {
+	let num_endowed_accounts = endowed_accounts.len();
+	let balances = match total_issuance {
+		Some(total_issuance) => {
+			let balance_per_endowed = total_issuance
+				.checked_div(num_endowed_accounts as watr_runtime::Balance)
+				.unwrap_or(0 as watr_runtime::Balance);
+
+			endowed_accounts.iter().cloned().map(|k| (k, balance_per_endowed)).collect()
+		},
+		None => vec![],
+	};
+
 	watr_runtime::GenesisConfig {
 		system: watr_runtime::SystemConfig {
 			code: watr_runtime::WASM_BINARY
 				.expect("WASM binary was not build, please build it!")
 				.to_vec(),
 		},
-		balances: watr_runtime::BalancesConfig {
-			balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect(),
-		},
+
+		balances: BalancesConfig { balances },
+
 		parachain_info: watr_runtime::ParachainInfoConfig { parachain_id: id },
 		collator_selection: watr_runtime::CollatorSelectionConfig {
 			invulnerables: invulnerables.iter().cloned().map(|(acc, _)| acc).collect(),
@@ -215,13 +230,12 @@ fn testnet_genesis(
 				})
 				.collect(),
 		},
+		sudo: watr_runtime::SudoConfig { key: Some(root_key) },
 		// no need to pass anything to aura, in fact it will panic if we do. Session will take care
 		// of this.
 		aura: Default::default(),
 		aura_ext: Default::default(),
 		parachain_system: Default::default(),
-		polkadot_xcm: watr_runtime::PolkadotXcmConfig {
-			safe_xcm_version: Some(SAFE_XCM_VERSION),
-		},
+		polkadot_xcm: watr_runtime::PolkadotXcmConfig { safe_xcm_version: Some(SAFE_XCM_VERSION) },
 	}
 }

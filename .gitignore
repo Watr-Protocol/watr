@@ -16,3 +16,9 @@
 .DS_Store
 .idea
 .vscode
+
+# polkadot-launch logs
+*.log
+
+# node binaries
+bin/*
