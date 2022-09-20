@@ -3,7 +3,6 @@ name: Testing and Linter
 on:
   push:
     branches:
-      - main
       - release-**
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
