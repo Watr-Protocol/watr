@@ -12,6 +12,7 @@ use sc_cli::{
 use sc_service::{
 	config::{BasePath, PrometheusConfig},
 	TaskManager,
+	PartialComponents
 };
 use sp_core::hexdisplay::HexDisplay;
 use sp_runtime::traits::{AccountIdConversion, Block as BlockT};
@@ -20,7 +21,7 @@ use watr_runtime::{Block, RuntimeApi};
 use crate::{
 	chain_spec,
 	cli::{Cli, RelayChainCli, Subcommand},
-	service::{new_partial, WatrRuntimeExecutor},
+	service::{self, new_partial, WatrRuntimeExecutor},
 };
 
 fn load_spec(id: &str) -> std::result::Result<Box<dyn ChainSpec>, String> {
@@ -254,6 +255,15 @@ pub fn run() -> Result<()> {
 			} else {
 				Err("Try-runtime must be enabled by `--features try-runtime`.".into())
 			}
+		},
+		Some(Subcommand::Key(cmd)) => cmd.run(&cli),
+		Some(Subcommand::FrontierDb(cmd)) => {
+			let runner = cli.create_runner(cmd)?;
+			runner.sync_run(|config| {
+				let PartialComponents { client, other, .. } = service::new_partial(&config, crate::service::parachain_build_import_queue)?;
+				let frontier_backend = other.2;
+				cmd.run::<_, watr_runtime::opaque::Block>(client, frontier_backend)
+			})
 		},
 		None => {
 			let runner = cli.create_runner(&cli.run.normalize())?;
