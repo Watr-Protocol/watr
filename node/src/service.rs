@@ -1,11 +1,7 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
 // std
-use std::{
-	collections::BTreeMap,
-	sync::{Arc},
-	time::Duration,
-};
+use std::{collections::BTreeMap, sync::Arc, time::Duration};
 
 use futures::{future, StreamExt};
 
@@ -45,7 +41,7 @@ use substrate_prometheus_endpoint::Registry;
 
 // Frontier
 use fc_mapping_sync::{MappingSyncWorker, SyncStrategy};
-use fc_rpc::{EthTask};
+use fc_rpc::EthTask;
 use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
 
 use polkadot_service::CollatorPair;
@@ -74,23 +70,19 @@ pub fn new_partial<RuntimeApi, Executor, BIQ>(
 	build_import_queue: BIQ,
 ) -> Result<
 	PartialComponents<
-        TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>,
-        TFullBackend<Block>,
-        (),
-        sc_consensus::DefaultImportQueue<
-            Block,
-            TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>,
-        >,
-        sc_transaction_pool::FullPool<
-            Block,
-            TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>,
-        >,
-        (
-            Option<Telemetry>,
-            Option<TelemetryWorkerHandle>,
-            Arc<fc_db::Backend<Block>>,
-        ),
-    >,
+		TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>,
+		TFullBackend<Block>,
+		(),
+		sc_consensus::DefaultImportQueue<
+			Block,
+			TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>,
+		>,
+		sc_transaction_pool::FullPool<
+			Block,
+			TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>,
+		>,
+		(Option<Telemetry>, Option<TelemetryWorkerHandle>, Arc<fc_db::Backend<Block>>),
+	>,
 	sc_service::Error,
 >
 where
@@ -171,18 +163,18 @@ where
 		&task_manager,
 	)?;
 
-    let params = PartialComponents {
-        backend,
-        client,
-        import_queue,
-        keystore_container,
-        task_manager,
-        transaction_pool,
-        select_chain: (),
-        other: (telemetry, telemetry_worker_handle, frontier_backend),
-    };
+	let params = PartialComponents {
+		backend,
+		client,
+		import_queue,
+		keystore_container,
+		task_manager,
+		transaction_pool,
+		select_chain: (),
+		other: (telemetry, telemetry_worker_handle, frontier_backend),
+	};
 
-    Ok(params)
+	Ok(params)
 }
 
 async fn build_relay_chain_interface(
@@ -240,7 +232,7 @@ where
 		+ cumulus_primitives_core::CollectCollationInfo<Block>
 		+ pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>
 		+ fp_rpc::EthereumRuntimeRPCApi<Block>
-        + fp_rpc::ConvertTransactionRuntimeApi<Block>
+		+ fp_rpc::ConvertTransactionRuntimeApi<Block>
 		+ substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>
 		+ pallet_contracts_rpc::ContractsRuntimeApi<Block, AccountId, Balance, BlockNumber, Hash>,
 	sc_client_api::StateBackendFor<TFullBackend<Block>, Block>: sp_api::StateBackend<BlakeTwo256>,
@@ -281,13 +273,13 @@ where
 {
 	let parachain_config = prepare_node_config(parachain_config);
 
-    let params = new_partial::<RuntimeApi, Executor, BIQ>(&parachain_config, build_import_queue)?;
-    let (mut telemetry, telemetry_worker_handle, frontier_backend) = params.other;
+	let params = new_partial::<RuntimeApi, Executor, BIQ>(&parachain_config, build_import_queue)?;
+	let (mut telemetry, telemetry_worker_handle, frontier_backend) = params.other;
 
-    let client = params.client.clone();
-    let backend = params.backend.clone();
+	let client = params.client.clone();
+	let backend = params.backend.clone();
 
-    let mut task_manager = params.task_manager;
+	let mut task_manager = params.task_manager;
 	let (relay_chain_interface, collator_key) = build_relay_chain_interface(
 		polkadot_config,
 		&parachain_config,
@@ -302,32 +294,32 @@ where
 		s => s.to_string().into(),
 	})?;
 
-    let block_announce_validator = BlockAnnounceValidator::new(relay_chain_interface.clone(), id);
+	let block_announce_validator = BlockAnnounceValidator::new(relay_chain_interface.clone(), id);
 
-    let force_authoring = parachain_config.force_authoring;
-    let is_authority = parachain_config.role.is_authority();
-    let prometheus_registry = parachain_config.prometheus_registry().cloned();
-    let transaction_pool = params.transaction_pool.clone();
-    let import_queue = cumulus_client_service::SharedImportQueue::new(params.import_queue);
-    let (network, system_rpc_tx, start_network) =
-        sc_service::build_network(sc_service::BuildNetworkParams {
-            config: &parachain_config,
-            client: client.clone(),
-            transaction_pool: transaction_pool.clone(),
-            spawn_handle: task_manager.spawn_handle(),
-            import_queue: import_queue.clone(),
-            block_announce_validator_builder: Some(Box::new(|_| {
-                Box::new(block_announce_validator)
-            })),
-            warp_sync: None,
-        })?;
+	let force_authoring = parachain_config.force_authoring;
+	let is_authority = parachain_config.role.is_authority();
+	let prometheus_registry = parachain_config.prometheus_registry().cloned();
+	let transaction_pool = params.transaction_pool.clone();
+	let import_queue = cumulus_client_service::SharedImportQueue::new(params.import_queue);
+	let (network, system_rpc_tx, start_network) =
+		sc_service::build_network(sc_service::BuildNetworkParams {
+			config: &parachain_config,
+			client: client.clone(),
+			transaction_pool: transaction_pool.clone(),
+			spawn_handle: task_manager.spawn_handle(),
+			import_queue: import_queue.clone(),
+			block_announce_validator_builder: Some(Box::new(|_| {
+				Box::new(block_announce_validator)
+			})),
+			warp_sync: None,
+		})?;
 
-    let filter_pool: Option<FilterPool> = Some(Arc::new(std::sync::Mutex::new(BTreeMap::new())));
-    let fee_history_cache: FeeHistoryCache = Arc::new(std::sync::Mutex::new(BTreeMap::new()));
-    let overrides = crate::rpc::overrides_handle(client.clone());
+	let filter_pool: Option<FilterPool> = Some(Arc::new(std::sync::Mutex::new(BTreeMap::new())));
+	let fee_history_cache: FeeHistoryCache = Arc::new(std::sync::Mutex::new(BTreeMap::new()));
+	let overrides = crate::rpc::overrides_handle(client.clone());
 
-    // Frontier offchain DB task. Essential.
-    // Maps emulated ethereum data to substrate native data.
+	// Frontier offchain DB task. Essential.
+	// Maps emulated ethereum data to substrate native data.
 	task_manager.spawn_essential_handle().spawn(
 		"frontier-mapping-sync-worker",
 		None,
@@ -344,8 +336,8 @@ where
 		.for_each(|()| future::ready(())),
 	);
 
-    // Frontier `EthFilterApi` maintenance. Manages the pool of user-created Filters.
-    // Each filter is allowed to stay in the pool for 100 blocks.
+	// Frontier `EthFilterApi` maintenance. Manages the pool of user-created Filters.
+	// Each filter is allowed to stay in the pool for 100 blocks.
 	if let Some(ref filter_pool) = filter_pool {
 		// Each filter is allowed to stay in the pool for 100 blocks.
 		const FILTER_RETAIN_THRESHOLD: u64 = 100;
@@ -356,25 +348,25 @@ where
 		);
 	}
 
-    const FEE_HISTORY_LIMIT: u64 = 2048;
-    task_manager.spawn_essential_handle().spawn(
-        "frontier-fee-history",
-        Some("frontier"),
-        fc_rpc::EthTask::fee_history_task(
-            client.clone(),
-            overrides.clone(),
-            fee_history_cache.clone(),
-            FEE_HISTORY_LIMIT,
-        ),
-    );
+	const FEE_HISTORY_LIMIT: u64 = 2048;
+	task_manager.spawn_essential_handle().spawn(
+		"frontier-fee-history",
+		Some("frontier"),
+		fc_rpc::EthTask::fee_history_task(
+			client.clone(),
+			overrides.clone(),
+			fee_history_cache.clone(),
+			FEE_HISTORY_LIMIT,
+		),
+	);
 
-    let block_data_cache = Arc::new(fc_rpc::EthBlockDataCacheTask::new(
-        task_manager.spawn_handle(),
-        overrides.clone(),
-        50,
-        50,
-        prometheus_registry.clone(),
-    ));
+	let block_data_cache = Arc::new(fc_rpc::EthBlockDataCacheTask::new(
+		task_manager.spawn_handle(),
+		overrides.clone(),
+		50,
+		50,
+		prometheus_registry.clone(),
+	));
 
 	let rpc_extensions_builder = {
 		let client = client.clone();
@@ -405,75 +397,75 @@ where
 		})
 	};
 
-    // Spawn basic services.
-    sc_service::spawn_tasks(sc_service::SpawnTasksParams {
-        rpc_builder: rpc_extensions_builder,
-        client: client.clone(),
-        transaction_pool: transaction_pool.clone(),
-        task_manager: &mut task_manager,
-        config: parachain_config,
-        keystore: params.keystore_container.sync_keystore(),
-        backend: backend.clone(),
-        network: network.clone(),
-        system_rpc_tx,
-        telemetry: telemetry.as_mut(),
-    })?;
+	// Spawn basic services.
+	sc_service::spawn_tasks(sc_service::SpawnTasksParams {
+		rpc_builder: rpc_extensions_builder,
+		client: client.clone(),
+		transaction_pool: transaction_pool.clone(),
+		task_manager: &mut task_manager,
+		config: parachain_config,
+		keystore: params.keystore_container.sync_keystore(),
+		backend: backend.clone(),
+		network: network.clone(),
+		system_rpc_tx,
+		telemetry: telemetry.as_mut(),
+	})?;
 
-    let announce_block = {
-        let network = network.clone();
-        Arc::new(move |hash, data| network.announce_block(hash, data))
-    };
+	let announce_block = {
+		let network = network.clone();
+		Arc::new(move |hash, data| network.announce_block(hash, data))
+	};
 
-    let relay_chain_slot_duration = Duration::from_secs(6);
+	let relay_chain_slot_duration = Duration::from_secs(6);
 
-    if is_authority {
-        let parachain_consensus = build_consensus(
-            client.clone(),
-            prometheus_registry.as_ref(),
-            telemetry.as_ref().map(|t| t.handle()),
-            &task_manager,
-            relay_chain_interface.clone(),
-            transaction_pool,
-            network,
-            params.keystore_container.sync_keystore(),
-            force_authoring,
-        )?;
+	if is_authority {
+		let parachain_consensus = build_consensus(
+			client.clone(),
+			prometheus_registry.as_ref(),
+			telemetry.as_ref().map(|t| t.handle()),
+			&task_manager,
+			relay_chain_interface.clone(),
+			transaction_pool,
+			network,
+			params.keystore_container.sync_keystore(),
+			force_authoring,
+		)?;
 
-        let spawner = task_manager.spawn_handle();
+		let spawner = task_manager.spawn_handle();
 
-        let params = StartCollatorParams {
-            para_id: id,
-            block_status: client.clone(),
-            announce_block,
-            client: client.clone(),
-            task_manager: &mut task_manager,
-            relay_chain_interface: relay_chain_interface.clone(),
-            spawner,
-            parachain_consensus,
-            import_queue,
-            collator_key: collator_key.expect("Command line arguments do not allow this. qed"),
-            relay_chain_slot_duration,
-        };
+		let params = StartCollatorParams {
+			para_id: id,
+			block_status: client.clone(),
+			announce_block,
+			client: client.clone(),
+			task_manager: &mut task_manager,
+			relay_chain_interface: relay_chain_interface.clone(),
+			spawner,
+			parachain_consensus,
+			import_queue,
+			collator_key: collator_key.expect("Command line arguments do not allow this. qed"),
+			relay_chain_slot_duration,
+		};
 
-        start_collator(params).await?;
-    } else {
-        let params = StartFullNodeParams {
-            client: client.clone(),
-            announce_block,
-            task_manager: &mut task_manager,
-            para_id: id,
-            relay_chain_interface,
-            relay_chain_slot_duration,
-            import_queue,
-            collator_options,
-        };
+		start_collator(params).await?;
+	} else {
+		let params = StartFullNodeParams {
+			client: client.clone(),
+			announce_block,
+			task_manager: &mut task_manager,
+			para_id: id,
+			relay_chain_interface,
+			relay_chain_slot_duration,
+			import_queue,
+			collator_options,
+		};
 
-        start_full_node(params)?;
-    }
+		start_full_node(params)?;
+	}
 
-    start_network.start_network();
+	start_network.start_network();
 
-    Ok((task_manager, client))
+	Ok((task_manager, client))
 }
 
 /// Build the import queue for the parachain runtime.

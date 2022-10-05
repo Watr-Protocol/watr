@@ -5,8 +5,8 @@
 
 #![warn(missing_docs)]
 
-use std::{collections::BTreeMap, sync::Arc};
 use jsonrpsee::RpcModule;
+use std::{collections::BTreeMap, sync::Arc};
 
 use watr_runtime::{opaque::Block, AccountId, Balance, BlockNumber, Hash, Index as Nonce};
 
@@ -101,60 +101,55 @@ where
 // TODO This is copied from frontier. It should be imported instead after
 // https://github.com/paritytech/frontier/issues/333 is solved
 pub fn open_frontier_backend(
-    config: &sc_service::Configuration,
+	config: &sc_service::Configuration,
 ) -> Result<Arc<fc_db::Backend<Block>>, String> {
-    let config_dir = config
-        .base_path
-        .as_ref()
-        .map(|base_path| base_path.config_dir(config.chain_spec.id()))
-        .unwrap_or_else(|| {
-            sc_service::BasePath::from_project("", "", "watr").config_dir(config.chain_spec.id())
-        });
-    let path = config_dir.join("frontier").join("db");
+	let config_dir = config
+		.base_path
+		.as_ref()
+		.map(|base_path| base_path.config_dir(config.chain_spec.id()))
+		.unwrap_or_else(|| {
+			sc_service::BasePath::from_project("", "", "watr").config_dir(config.chain_spec.id())
+		});
+	let path = config_dir.join("frontier").join("db");
 
-    Ok(Arc::new(fc_db::Backend::<Block>::new(
-        &fc_db::DatabaseSettings {
-            source: fc_db::DatabaseSource::RocksDb {
-                path,
-                cache_size: 0,
-            },
-        },
-    )?))
+	Ok(Arc::new(fc_db::Backend::<Block>::new(&fc_db::DatabaseSettings {
+		source: fc_db::DatabaseSource::RocksDb { path, cache_size: 0 },
+	})?))
 }
 
 /// Instantiate all RPC extensions.
 pub fn create_full<C, P, BE, A>(
-    deps: FullDeps<C, P, A>,
-    subscription_task_executor: SubscriptionTaskExecutor,
+	deps: FullDeps<C, P, A>,
+	subscription_task_executor: SubscriptionTaskExecutor,
 ) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
-    C: ProvideRuntimeApi<Block>
-        + HeaderBackend<Block>
-        + AuxStore
-        + StorageProvider<Block, BE>
-        + HeaderMetadata<Block, Error = BlockChainError>
-        + BlockchainEvents<Block>
-        + Send
-        + Sync
-        + 'static,
-    C: sc_client_api::BlockBackend<Block>,
-    C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>
-        + pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>
-        + fp_rpc::ConvertTransactionRuntimeApi<Block>
-        + fp_rpc::EthereumRuntimeRPCApi<Block>
-        + BlockBuilder<Block>,
+	C: ProvideRuntimeApi<Block>
+		+ HeaderBackend<Block>
+		+ AuxStore
+		+ StorageProvider<Block, BE>
+		+ HeaderMetadata<Block, Error = BlockChainError>
+		+ BlockchainEvents<Block>
+		+ Send
+		+ Sync
+		+ 'static,
+	C: sc_client_api::BlockBackend<Block>,
+	C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>
+		+ pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>
+		+ fp_rpc::ConvertTransactionRuntimeApi<Block>
+		+ fp_rpc::EthereumRuntimeRPCApi<Block>
+		+ BlockBuilder<Block>,
 	C::Api: pallet_contracts_rpc::ContractsRuntimeApi<Block, AccountId, Balance, BlockNumber, Hash>,
-    P: TransactionPool<Block = Block> + Sync + Send + 'static,
-    BE: Backend<Block> + 'static,
-    BE::State: StateBackend<BlakeTwo256>,
-    BE::Blockchain: BlockchainBackend<Block>,
-    A: ChainApi<Block = Block> + 'static,
+	P: TransactionPool<Block = Block> + Sync + Send + 'static,
+	BE: Backend<Block> + 'static,
+	BE::State: StateBackend<BlakeTwo256>,
+	BE::Blockchain: BlockchainBackend<Block>,
+	A: ChainApi<Block = Block> + 'static,
 {
-	use pallet_contracts_rpc::{Contracts, ContractsApiServer};
 	use fc_rpc::{
-		Eth, EthApiServer, EthFilter, EthFilterApiServer, EthPubSub,
-		EthPubSubApiServer, Net, NetApiServer, Web3, Web3ApiServer,
+		Eth, EthApiServer, EthFilter, EthFilterApiServer, EthPubSub, EthPubSubApiServer, Net,
+		NetApiServer, Web3, Web3ApiServer,
 	};
+	use pallet_contracts_rpc::{Contracts, ContractsApiServer};
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
 	use substrate_frame_rpc_system::{System, SystemApiServer};
 
@@ -199,13 +194,13 @@ where
 			block_data_cache.clone(),
 			fee_history_cache,
 			fee_history_cache_limit,
-			10
+			10,
 		)
 		.into_rpc(),
 	)?;
 
 	let max_past_logs: u32 = 10_000;
-    let max_stored_filters: usize = 500;
+	let max_stored_filters: usize = 500;
 	if let Some(filter_pool) = filter_pool {
 		io.merge(
 			EthFilter::new(

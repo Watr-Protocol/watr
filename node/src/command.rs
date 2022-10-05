@@ -11,8 +11,7 @@ use sc_cli::{
 };
 use sc_service::{
 	config::{BasePath, PrometheusConfig},
-	TaskManager,
-	PartialComponents
+	PartialComponents, TaskManager,
 };
 use sp_core::hexdisplay::HexDisplay;
 use sp_runtime::traits::{AccountIdConversion, Block as BlockT};
@@ -260,7 +259,8 @@ pub fn run() -> Result<()> {
 		Some(Subcommand::FrontierDb(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
 			runner.sync_run(|config| {
-				let PartialComponents { client, other, .. } = service::new_partial(&config, crate::service::parachain_build_import_queue)?;
+				let PartialComponents { client, other, .. } =
+					service::new_partial(&config, crate::service::parachain_build_import_queue)?;
 				let frontier_backend = other.2;
 				cmd.run::<_, watr_runtime::opaque::Block>(client, frontier_backend)
 			})

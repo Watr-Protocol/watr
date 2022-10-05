@@ -1,12 +1,12 @@
-use std::{collections::BTreeMap, str::FromStr};
 use cumulus_primitives_core::ParaId;
 use hex_literal::hex;
-use watr_runtime::{AccountId, AuraId, Signature, BalancesConfig, EXISTENTIAL_DEPOSIT, WATR};
 use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
 use sp_core::{sr25519, Pair, Public, H160, U256};
 use sp_runtime::traits::{IdentifyAccount, Verify};
+use std::{collections::BTreeMap, str::FromStr};
+use watr_runtime::{AccountId, AuraId, BalancesConfig, Signature, EXISTENTIAL_DEPOSIT, WATR};
 
 /// Specialized `ChainSpec` for the normal parachain runtime.
 pub type ChainSpec = sc_service::GenericChainSpec<watr_runtime::GenesisConfig, Extensions>;
@@ -242,9 +242,7 @@ fn testnet_genesis(
 		aura: Default::default(),
 		aura_ext: Default::default(),
 		parachain_system: Default::default(),
-		polkadot_xcm: watr_runtime::PolkadotXcmConfig {
-			safe_xcm_version: Some(SAFE_XCM_VERSION),
-		},
+		polkadot_xcm: watr_runtime::PolkadotXcmConfig { safe_xcm_version: Some(SAFE_XCM_VERSION) },
 
 		// EVM compatibility
 		// evm_chain_id: EVMChainIdConfig { chain_id },
