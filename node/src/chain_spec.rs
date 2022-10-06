@@ -1,9 +1,11 @@
 use cumulus_primitives_core::ParaId;
+use hex_literal::hex;
 use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
-use sp_core::{sr25519, Pair, Public};
+use sp_core::{sr25519, Pair, Public, H160, U256};
 use sp_runtime::traits::{IdentifyAccount, Verify};
+use std::{collections::BTreeMap, str::FromStr};
 use watr_runtime::{AccountId, AuraId, BalancesConfig, Signature, EXISTENTIAL_DEPOSIT, WATR};
 
 /// Specialized `ChainSpec` for the normal parachain runtime.
@@ -102,6 +104,7 @@ pub fn development_config() -> ChainSpec {
 					get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
+					hex!["e1ad20aae239ccbb609aa537d515dc9d53c5936ea67d8acc9fe0618925279f7d"].into(),
 				],
 				PARA_ID.into(),
 				// Total supply
@@ -160,6 +163,7 @@ pub fn local_testnet_config() -> ChainSpec {
 					get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
+					hex!["e1ad20aae239ccbb609aa537d515dc9d53c5936ea67d8acc9fe0618925279f7d"].into(),
 				],
 				PARA_ID.into(),
 				// Total supply
@@ -191,6 +195,8 @@ fn testnet_genesis(
 	id: ParaId,
 	total_issuance: Option<watr_runtime::Balance>,
 ) -> watr_runtime::GenesisConfig {
+	use watr_runtime::EVMConfig;
+
 	let num_endowed_accounts = endowed_accounts.len();
 	let balances = match total_issuance {
 		Some(total_issuance) => {
@@ -237,5 +243,71 @@ fn testnet_genesis(
 		aura_ext: Default::default(),
 		parachain_system: Default::default(),
 		polkadot_xcm: watr_runtime::PolkadotXcmConfig { safe_xcm_version: Some(SAFE_XCM_VERSION) },
+
+		// EVM compatibility
+		// evm_chain_id: EVMChainIdConfig { chain_id },
+		evm: EVMConfig {
+			accounts: {
+				let mut map = BTreeMap::new();
+				map.insert(
+					// H160 address of Alice dev account
+					// Derived from SS58 (42 prefix) address
+					// SS58: 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+					// hex: 0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d
+					// Using the full hex key, truncating to the first 20 bytes (the first 40 hex chars)
+					H160::from_str("d43593c715fdd31c61141abd04a99fd6822c8558")
+						.expect("internal H160 is valid; qed"),
+					fp_evm::GenesisAccount {
+						balance: U256::from_str("0xffffffffffffffffffffffffffffffff")
+							.expect("internal U256 is valid; qed"),
+						code: Default::default(),
+						nonce: Default::default(),
+						storage: Default::default(),
+					},
+				);
+				map.insert(
+					// H160 address of Metamask dev account
+					// Derived from SS58 (42 prefix) address
+					// SS58: 5HAc4UzLYQuyjHbpEPicC7bAjnofHqRWYStRKqA5WfreMKWk
+					// hex: 0xe1ad20aae239ccbb609aa537d515dc9d53c5936ea67d8acc9fe0618925279f7d
+					// Using the full hex key, truncating to the first 20 bytes (the first 40 hex chars)
+					H160::from_str("0xe31B11A052aFC923259949352B2f573a21301Ba4")
+						.expect("internal H160 is valid; qed"),
+					fp_evm::GenesisAccount {
+						balance: U256::from_str("0xffffffffffffffffffffffffffffffff")
+							.expect("internal U256 is valid; qed"),
+						code: Default::default(),
+						nonce: Default::default(),
+						storage: Default::default(),
+					},
+				);
+				map.insert(
+					// H160 address of CI test runner account
+					H160::from_str("6be02d1d3665660d22ff9624b7be0551ee1ac91b")
+						.expect("internal H160 is valid; qed"),
+					fp_evm::GenesisAccount {
+						balance: U256::from_str("0xffffffffffffffffffffffffffffffff")
+							.expect("internal U256 is valid; qed"),
+						code: Default::default(),
+						nonce: Default::default(),
+						storage: Default::default(),
+					},
+				);
+				map.insert(
+					// H160 address for benchmark usage
+					H160::from_str("1000000000000000000000000000000000000001")
+						.expect("internal H160 is valid; qed"),
+					fp_evm::GenesisAccount {
+						nonce: U256::from(1),
+						balance: U256::from(1_000_000_000_000_000_000_000_000u128),
+						storage: Default::default(),
+						code: vec![0x00],
+					},
+				);
+				map
+			},
+		},
+		ethereum: Default::default(),
+		base_fee: Default::default(),
 	}
 }
