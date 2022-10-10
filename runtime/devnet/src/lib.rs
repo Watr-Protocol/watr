@@ -194,8 +194,8 @@ pub const CONTRACTS_DEBUG_OUTPUT: bool = true;
 
 pub const MICRO_WATRD: Balance = 1_000_000;
 pub const MILLI_WATRD: Balance = 1_000 * MICRO_WATRD;
-pub const CENTI_WATR: Balance = 10 * MILLI_WATRD;
-pub const WATRD: Balance = 100 * CENTI_WATR;
+pub const CENTI_WATRD: Balance = 10 * MILLI_WATRD;
+pub const WATRD: Balance = 100 * CENTI_WATRD;
 
 pub const EXISTENTIAL_DEPOSIT: Balance = MILLI_WATRD;
 
