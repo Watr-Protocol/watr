@@ -1,6 +1,6 @@
 [package]
 name = "watr-node"
-version = "1.0.0"
+version = "0.9.270"
 authors = ["Anonymous"]
 description = "A new Cumulus FRAME-based Substrate Node, ready for hacking together a parachain."
 license = "Unlicense"
