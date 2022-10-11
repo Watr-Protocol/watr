@@ -95,6 +95,8 @@ pallet-randomness-collective-flip = { git = "https://github.com/paritytech/subst
 pallet-multisig = {git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27", package = "pallet-multisig", default-features = false}
 pallet-identity = {git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27", package = "pallet-identity", default-features = false}
 
+# Local
+watr-common = {path = "../common", default-features = false }
 
 [features]
 default = [

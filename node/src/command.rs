@@ -25,10 +25,14 @@ use crate::{
 
 fn load_spec(id: &str) -> std::result::Result<Box<dyn ChainSpec>, String> {
 	Ok(match id {
-		"dev" => Box::new(chain_spec::development_config()),
-		"template-rococo" => Box::new(chain_spec::local_testnet_config()),
-		"" | "local" => Box::new(chain_spec::local_testnet_config()),
-		path => Box::new(chain_spec::ChainSpec::from_json_file(std::path::PathBuf::from(path))?),
+		"mainnet-dev" => Box::new(chain_spec::mainnet_development_config()),
+		"mainnet-local" => Box::new(chain_spec::mainnet_local_testnet_config()),
+		"devnet-dev" => Box::new(chain_spec::devnet_development_config()),
+		"devnet-local" => Box::new(chain_spec::devnet_local_testnet_config()),
+		"dev" => Box::new(chain_spec::devnet_local_testnet_config()),
+		"" | "local" => Box::new(chain_spec::devnet_local_testnet_config()),
+		path =>
+			Box::new(chain_spec::DevnetChainSpec::from_json_file(std::path::PathBuf::from(path))?),
 	})
 }
 
