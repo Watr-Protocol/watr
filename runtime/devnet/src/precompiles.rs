@@ -2,6 +2,7 @@ use pallet_evm::{Precompile, PrecompileHandle, PrecompileResult, PrecompileSet};
 use sp_core::H160;
 use sp_std::marker::PhantomData;
 
+use pallet_evm_precompile_bn128::{Bn128Add, Bn128Mul, Bn128Pairing};
 use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripemd160, Sha256};
@@ -32,6 +33,9 @@ where
 			a if a == hash(3) => Some(Ripemd160::execute(handle)),
 			a if a == hash(4) => Some(Identity::execute(handle)),
 			a if a == hash(5) => Some(Modexp::execute(handle)),
+			a if a == hash(6) => Some(Bn128Add::execute(handle)),
+			a if a == hash(7) => Some(Bn128Mul::execute(handle)),
+			a if a == hash(8) => Some(Bn128Pairing::execute(handle)),
 			// Non-Frontier specific nor Ethereum precompiles :
 			a if a == hash(1024) => Some(Sha3FIPS256::execute(handle)),
 			a if a == hash(1025) => Some(ECRecoverPublicKey::execute(handle)),
