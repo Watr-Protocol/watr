@@ -5674,6 +5674,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-evm-precompile-blake2"
+version = "2.0.0-dev"
+source = "git+https://github.com/paritytech/frontier.git?branch=polkadot-v0.9.30#1bd889c001b2a4735777160354cb57b8c17cf756"
+dependencies = [
+ "fp-evm",
+]
+
+[[package]]
 name = "pallet-evm-precompile-bn128"
 version = "2.0.0-dev"
 source = "git+https://github.com/paritytech/frontier.git?branch=polkadot-v0.9.30#1bd889c001b2a4735777160354cb57b8c17cf756"
@@ -12011,6 +12019,7 @@ dependencies = [
  "pallet-contracts-rpc-runtime-api",
  "pallet-ethereum",
  "pallet-evm",
+ "pallet-evm-precompile-blake2",
  "pallet-evm-precompile-bn128",
  "pallet-evm-precompile-modexp",
  "pallet-evm-precompile-sha3fips",
