@@ -5206,37 +5206,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-asset-tx-payment"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.27#8eff668a42325aeb4433eace1604f4d286a6ec05"
-dependencies = [
- "frame-support",
- "frame-system",
- "pallet-transaction-payment",
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-assets"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.27#8eff668a42325aeb4433eace1604f4d286a6ec05"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "scale-info",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "pallet-aura"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.27#8eff668a42325aeb4433eace1604f4d286a6ec05"
@@ -5676,7 +5645,7 @@ dependencies = [
 [[package]]
 name = "pallet-evm-precompile-blake2"
 version = "2.0.0-dev"
-source = "git+https://github.com/paritytech/frontier.git?branch=polkadot-v0.9.30#1bd889c001b2a4735777160354cb57b8c17cf756"
+source = "git+https://github.com/paritytech/frontier.git?branch=polkadot-v0.9.27#32f9c7eaf5aa550191c90e14476b145e5d7833d7"
 dependencies = [
  "fp-evm",
 ]
@@ -5684,7 +5653,7 @@ dependencies = [
 [[package]]
 name = "pallet-evm-precompile-bn128"
 version = "2.0.0-dev"
-source = "git+https://github.com/paritytech/frontier.git?branch=polkadot-v0.9.30#1bd889c001b2a4735777160354cb57b8c17cf756"
+source = "git+https://github.com/paritytech/frontier.git?branch=polkadot-v0.9.27#32f9c7eaf5aa550191c90e14476b145e5d7833d7"
 dependencies = [
  "fp-evm",
  "sp-core",
@@ -11989,8 +11958,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "watr-common"
+version = "1.1.0"
+dependencies = [
+ "frame-support",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-consensus-aura",
+ "sp-core",
+ "sp-runtime",
+ "substrate-wasm-builder",
+]
+
+[[package]]
 name = "watr-devnet-runtime"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",
@@ -12001,6 +11983,8 @@ dependencies = [
  "cumulus-primitives-core",
  "cumulus-primitives-timestamp",
  "cumulus-primitives-utility",
+ "fp-rpc",
+ "fp-self-contained",
  "frame-benchmarking",
  "frame-executive",
  "frame-support",
@@ -12013,6 +11997,7 @@ dependencies = [
  "pallet-aura",
  "pallet-authorship",
  "pallet-balances",
+ "pallet-base-fee",
  "pallet-collator-selection",
  "pallet-contracts",
  "pallet-contracts-primitives",
@@ -12054,6 +12039,7 @@ dependencies = [
  "sp-transaction-pool",
  "sp-version",
  "substrate-wasm-builder",
+ "watr-common",
  "xcm",
  "xcm-builder",
  "xcm-executor",
@@ -12061,7 +12047,7 @@ dependencies = [
 
 [[package]]
 name = "watr-node"
-version = "1.0.0"
+version = "0.9.270"
 dependencies = [
  "clap",
  "cumulus-client-cli",
@@ -12134,6 +12120,7 @@ dependencies = [
  "substrate-frame-rpc-system",
  "substrate-prometheus-endpoint",
  "try-runtime-cli",
+ "watr-common",
  "watr-devnet-runtime",
  "watr-runtime",
  "xcm",
@@ -12141,7 +12128,7 @@ dependencies = [
 
 [[package]]
 name = "watr-runtime"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",
@@ -12163,8 +12150,6 @@ dependencies = [
  "frame-try-runtime",
  "hex-literal",
  "log",
- "pallet-asset-tx-payment",
- "pallet-assets",
  "pallet-aura",
  "pallet-authorship",
  "pallet-balances",
@@ -12191,7 +12176,6 @@ dependencies = [
  "parachain-info",
  "parity-scale-codec",
  "polkadot-parachain",
- "polkadot-primitives",
  "polkadot-runtime-common",
  "scale-info",
  "serde",
@@ -12209,6 +12193,7 @@ dependencies = [
  "sp-transaction-pool",
  "sp-version",
  "substrate-wasm-builder",
+ "watr-common",
  "xcm",
  "xcm-builder",
  "xcm-executor",
