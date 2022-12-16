@@ -26,6 +26,9 @@ pub type Hash = sp_core::H256;
 /// Digest item type.
 pub type DigestItem = sp_runtime::generic::DigestItem;
 
+// Id used for identifying assets.
+pub type AssetId = u32;
+
 pub type AuraId = sp_consensus_aura::sr25519::AuthorityId;
 
 /// An index to a block.
