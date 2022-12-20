@@ -6,4 +6,5 @@ members = [
 	"node",
 	"runtime/mainnet",
 	"runtime/devnet",
+	"pallets/motion"
 ]
