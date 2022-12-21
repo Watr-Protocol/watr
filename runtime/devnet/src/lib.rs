@@ -685,9 +685,6 @@ parameter_types! {
 	pub const CouncilMaxMembers: u32 = 100;
 }
 
-//TODO: do we want both the regular council and TechnicalCollective?
-// There is no election mechanism added, so to me it makes sense to only use
-// TechnicalCollective
 pub type CouncilCollective = pallet_collective::Instance1;
 impl pallet_collective::Config<CouncilCollective> for Runtime {
 	type RuntimeOrigin = RuntimeOrigin;
@@ -700,24 +697,6 @@ impl pallet_collective::Config<CouncilCollective> for Runtime {
 	type WeightInfo = pallet_collective::weights::SubstrateWeight<Runtime>;
 }
 
-parameter_types! {
-	pub const TechnicalMotionDuration: BlockNumber = 7 * DAYS;
-	pub const TechnicalMaxProposals: u32 = 100;
-	pub const TechnicalMaxMembers: u32 = 100;
-}
-
-pub type TechnicalCollective = pallet_collective::Instance2;
-impl pallet_collective::Config<TechnicalCollective> for Runtime {
-	type RuntimeOrigin = RuntimeOrigin;
-	type Proposal = RuntimeCall;
-	type RuntimeEvent = RuntimeEvent;
-	type MotionDuration = TechnicalMotionDuration;
-	type MaxProposals = TechnicalMaxProposals;
-	type MaxMembers = TechnicalMaxMembers;
-	type DefaultVote = pallet_collective::PrimeDefaultVote;
-	type WeightInfo = pallet_collective::weights::SubstrateWeight<Runtime>;
-}
-
 impl pallet_membership::Config<pallet_membership::Instance1> for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type AddOrigin = MoreThanHalfCouncil;
@@ -725,10 +704,21 @@ impl pallet_membership::Config<pallet_membership::Instance1> for Runtime {
 	type SwapOrigin = MoreThanHalfCouncil;
 	type ResetOrigin = MoreThanHalfCouncil;
 	type PrimeOrigin = MoreThanHalfCouncil;
-	type MembershipInitialized = TechnicalCommittee;
-	type MembershipChanged = TechnicalCommittee;
-	type MaxMembers = TechnicalMaxMembers;
+	type MembershipInitialized = Council;
+	type MembershipChanged = Council;
+	type MaxMembers = CouncilMaxMembers;
 	type WeightInfo = pallet_membership::weights::SubstrateWeight<Runtime>;
+}
+
+impl pallet_motion::Config for Runtime {
+	type RuntimeCall = RuntimeCall;
+	type RuntimeEvent = RuntimeEvent;
+	type SimpleMajorityOrigin =
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 1, 2>;
+	type SuperMajorityOrigin =
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 2, 3>;
+	type UnanimousOrigin =
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 1, 1>;
 }
 
 parameter_types! {
@@ -886,8 +876,7 @@ construct_runtime!(
 
 		//Governance
 		Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>} = 44,
-		TechnicalCommittee: pallet_collective::<Instance2>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>} = 45,
-		TechnicalMembership: pallet_membership::<Instance1>::{Pallet, Call, Storage, Event<T>, Config<T>} = 46,
+		CouncilMembership: pallet_membership::<Instance1>::{Pallet, Call, Storage, Event<T>, Config<T>} = 46,
 		Treasury: pallet_treasury::{Pallet, Call, Storage, Config, Event<T>} = 47,
 
 		//Assets
@@ -900,6 +889,8 @@ construct_runtime!(
 		Ethereum: pallet_ethereum::{Pallet, Call, Storage, Event, Origin, Config} = 50,
 		EVM: pallet_evm::{Pallet, Config, Call, Storage, Event<T>} = 51,
 		BaseFee: pallet_base_fee::{Pallet, Call, Storage, Config<T>, Event} = 52,
+
+		Motion: pallet_motion::{Pallet, Call, Storage,  Event<T>} = 60,
 	}
 );
 

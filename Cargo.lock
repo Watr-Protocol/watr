@@ -5998,6 +5998,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-motion"
+version = "4.0.0-dev"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-multisig"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.30#a3ed0119c45cdd0d571ad34e5b3ee7518c8cef8d"
@@ -12318,6 +12333,7 @@ dependencies = [
  "pallet-evm-precompile-simple",
  "pallet-identity",
  "pallet-membership",
+ "pallet-motion",
  "pallet-multisig",
  "pallet-preimage",
  "pallet-randomness-collective-flip",

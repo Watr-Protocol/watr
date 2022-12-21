@@ -385,11 +385,7 @@ fn devnet_testnet_genesis(
 		polkadot_xcm: devnet::PolkadotXcmConfig { safe_xcm_version: Some(SAFE_XCM_VERSION) },
 
 		council: devnet::CouncilConfig { members: vec![], phantom: Default::default() },
-		technical_committee: devnet::TechnicalCommitteeConfig {
-			members: vec![],
-			phantom: Default::default(),
-		},
-		technical_membership: Default::default(),
+		council_membership: Default::default(),
 		treasury: Default::default(),
 
 		// EVM compatibility
