@@ -119,6 +119,13 @@ pub fn devnet_development_config() -> DevnetChainSpec {
 					//prefunded EVM account
 					hex!["e1ad20aae239ccbb609aa537d515dc9d53c5936ea67d8acc9fe0618925279f7d"].into(),
 				],
+				// initial councillors
+				sp_runtime::bounded_vec![
+					get_account_id_from_seed::<sr25519::Public>("Alice"),
+					get_account_id_from_seed::<sr25519::Public>("Bob"),
+					get_account_id_from_seed::<sr25519::Public>("Charlie"),
+					get_account_id_from_seed::<sr25519::Public>("Dave"),
+				],
 				PARA_ID.into(),
 				// Total supply
 				Some(12000000 * WATRD),
@@ -239,6 +246,13 @@ pub fn devnet_local_testnet_config() -> DevnetChainSpec {
 					//prefunded EVM account
 					hex!["e1ad20aae239ccbb609aa537d515dc9d53c5936ea67d8acc9fe0618925279f7d"].into(),
 				],
+				// initial councillors
+				sp_runtime::bounded_vec![
+					get_account_id_from_seed::<sr25519::Public>("Alice"),
+					get_account_id_from_seed::<sr25519::Public>("Bob"),
+					get_account_id_from_seed::<sr25519::Public>("Charlie"),
+					get_account_id_from_seed::<sr25519::Public>("Dave"),
+				],
 				PARA_ID.into(),
 				// Total supply
 				Some(12000000 * WATRD),
@@ -332,6 +346,7 @@ fn devnet_testnet_genesis(
 	root_key: AccountId,
 	invulnerables: Vec<(AccountId, AuraId)>,
 	endowed_accounts: Vec<AccountId>,
+	councillors: sp_runtime::BoundedVec<AccountId, devnet::CouncilMaxMembers>,
 	id: ParaId,
 	total_issuance: Option<devnet::Balance>,
 ) -> devnet::GenesisConfig {
@@ -384,8 +399,7 @@ fn devnet_testnet_genesis(
 		parachain_system: Default::default(),
 		polkadot_xcm: devnet::PolkadotXcmConfig { safe_xcm_version: Some(SAFE_XCM_VERSION) },
 
-		council: devnet::CouncilConfig { members: vec![], phantom: Default::default() },
-		council_membership: Default::default(),
+		council_membership: devnet::CouncilMembershipConfig{members: councillors, phantom: Default::default()},
 		treasury: Default::default(),
 
 		// EVM compatibility
