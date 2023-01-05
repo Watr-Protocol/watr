@@ -9,9 +9,13 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 mod weights;
 pub mod xcm_config;
 
+pub use parachains_common::{
+	impls::{DealWithFees, ToStakingPot},
+	AccountId, AssetId, AuraId, Balance, BlockNumber, Hash, Index, Signature,
+};
 pub use watr_common::{
-	AccountId, AuraId, Balance, BlockNumber, Hash, Index, Signature, AVERAGE_ON_INITIALIZE_RATIO,
-	HOURS, MAXIMUM_BLOCK_WEIGHT, NORMAL_DISPATCH_RATIO, SLOT_DURATION, WEIGHT_PER_GAS,
+	AVERAGE_ON_INITIALIZE_RATIO, DAYS, HOURS, MAXIMUM_BLOCK_WEIGHT, MINUTES, NORMAL_DISPATCH_RATIO,
+	SLOT_DURATION, WEIGHT_PER_GAS,
 };
 
 use codec::{Decode, Encode};
