@@ -5758,88 +5758,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-contracts"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.30#a3ed0119c45cdd0d571ad34e5b3ee7518c8cef8d"
-dependencies = [
- "bitflags",
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "impl-trait-for-tuples",
- "log",
- "pallet-contracts-primitives",
- "pallet-contracts-proc-macro",
- "parity-scale-codec",
- "rand 0.8.5",
- "scale-info",
- "serde",
- "smallvec",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-sandbox",
- "sp-std",
- "wasm-instrument",
- "wasmi-validation",
-]
-
-[[package]]
-name = "pallet-contracts-primitives"
-version = "6.0.0"
-source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.30#a3ed0119c45cdd0d571ad34e5b3ee7518c8cef8d"
-dependencies = [
- "bitflags",
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-core",
- "sp-rpc",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-contracts-proc-macro"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.30#a3ed0119c45cdd0d571ad34e5b3ee7518c8cef8d"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "pallet-contracts-rpc"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.30#a3ed0119c45cdd0d571ad34e5b3ee7518c8cef8d"
-dependencies = [
- "jsonrpsee",
- "pallet-contracts-primitives",
- "pallet-contracts-rpc-runtime-api",
- "parity-scale-codec",
- "serde",
- "sp-api",
- "sp-blockchain",
- "sp-core",
- "sp-rpc",
- "sp-runtime",
-]
-
-[[package]]
-name = "pallet-contracts-rpc-runtime-api"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.30#a3ed0119c45cdd0d571ad34e5b3ee7518c8cef8d"
-dependencies = [
- "pallet-contracts-primitives",
- "parity-scale-codec",
- "scale-info",
- "sp-api",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "pallet-democracy"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.30#a3ed0119c45cdd0d571ad34e5b3ee7518c8cef8d"
@@ -12690,9 +12608,6 @@ dependencies = [
  "pallet-base-fee 1.0.0 (git+https://github.com/AstarNetwork/frontier?branch=polkadot-v0.9.30)",
  "pallet-collator-selection",
  "pallet-collective",
- "pallet-contracts",
- "pallet-contracts-primitives",
- "pallet-contracts-rpc-runtime-api",
  "pallet-ethereum 4.0.0-dev (git+https://github.com/AstarNetwork/frontier?branch=polkadot-v0.9.30)",
  "pallet-evm 6.0.0-dev (git+https://github.com/AstarNetwork/frontier?branch=polkadot-v0.9.30)",
  "pallet-evm-precompile-assets-erc20",
@@ -12776,7 +12691,6 @@ dependencies = [
  "hex-literal",
  "jsonrpsee",
  "log",
- "pallet-contracts-rpc",
  "pallet-transaction-payment-rpc",
  "parachains-common",
  "parity-scale-codec",
@@ -12854,9 +12768,6 @@ dependencies = [
  "pallet-balances",
  "pallet-base-fee 1.0.0 (git+https://github.com/paritytech/frontier.git?branch=polkadot-v0.9.30)",
  "pallet-collator-selection",
- "pallet-contracts",
- "pallet-contracts-primitives",
- "pallet-contracts-rpc-runtime-api",
  "pallet-ethereum 4.0.0-dev (git+https://github.com/paritytech/frontier.git?branch=polkadot-v0.9.30)",
  "pallet-evm 6.0.0-dev (git+https://github.com/paritytech/frontier.git?branch=polkadot-v0.9.30)",
  "pallet-evm-precompile-modexp 2.0.0-dev (git+https://github.com/paritytech/frontier.git?branch=polkadot-v0.9.30)",

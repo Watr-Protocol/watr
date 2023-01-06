@@ -98,9 +98,6 @@ fp-evm = { git = 'https://github.com/paritytech/frontier.git', branch = "polkado
 fp-rpc = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30" }
 fp-storage = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30" }
 
-# Contracts
-pallet-contracts-rpc = { git = "https://github.com/paritytech/substrate", package = "pallet-contracts-rpc", branch = "polkadot-v0.9.30" }
-
 [build-dependencies]
 substrate-build-script-utils = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
 

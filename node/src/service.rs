@@ -234,8 +234,7 @@ where
 		+ pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>
 		+ fp_rpc::EthereumRuntimeRPCApi<Block>
 		+ fp_rpc::ConvertTransactionRuntimeApi<Block>
-		+ substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>
-		+ pallet_contracts_rpc::ContractsRuntimeApi<Block, AccountId, Balance, BlockNumber, Hash>,
+		+ substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>,
 	sc_client_api::StateBackendFor<TFullBackend<Block>, Block>: sp_api::StateBackend<BlakeTwo256>,
 	Executor: sc_executor::NativeExecutionDispatch + 'static,
 	RB: Fn(
