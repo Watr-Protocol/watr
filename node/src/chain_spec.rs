@@ -404,7 +404,10 @@ fn devnet_testnet_genesis(
 		parachain_system: Default::default(),
 		polkadot_xcm: devnet::PolkadotXcmConfig { safe_xcm_version: Some(SAFE_XCM_VERSION) },
 
-		council_membership: devnet::CouncilMembershipConfig{members: councillors, phantom: Default::default()},
+		council_membership: devnet::CouncilMembershipConfig {
+			members: councillors,
+			phantom: Default::default(),
+		},
 		treasury: Default::default(),
 
 		// EVM compatibility
