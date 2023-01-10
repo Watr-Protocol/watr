@@ -1,0 +1,245 @@
+---
+settings:
+  chains:
+    relay_chain: &relay_chain
+      wsPort: 9800
+    statemint_parachain: &stmt_parachain
+      wsPort: 9810
+      paraId: &stmt_id 1000
+    watr_parachain: &watr_parachain
+      wsPort: 9820
+      paraId: &watr_id 2000
+  variables:
+    common:
+      require_weight_at_most: &weight_at_most 1000000000
+    chains:
+      relay_chain:
+        sudo:
+          signer: &rc_sudo_signer //Alice
+        destinations:
+          statemint: &rc->stmt_dest { v1: { 0, interior: { x1: { parachain: *stmt_id }}}}
+      statemint_parachain:
+        asset_ower:
+          signer: &stmt_asset_owner_signer //Alice
+          # wallet: &stmt_asset_owner_wallet 15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5 # Alice Statmint
+          wallet: &stmt_asset_owner_wallet HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F # Alice Statmine
+        asset_sender:
+          signer: &stmt_asset_sender_signer //Bob
+          # wallet: &stmt_asset_sender_wallet 14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3 # Bob Statmint
+          wallet: &stmt_asset_sender_wallet FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP # Bob Statmine
+        asset:
+          id: &stmt_asset_id 1984 # Tether USD
+          name: &stmt_asset_name Tether USD
+          symbol: &stmt_asset_symbol USDT
+          isSufficient: &stmt_asset_is_sufficient true
+          decimals: &stmt_asset_decimals 12
+          min_balance: &stmt_asset_ed 1000
+          pallet_id: &stmt_assets_pallet_id 50
+          total_issuance: &stmt_asset_total_issuance 1000000000000000
+          amount_to_send: &stmt_asset_amount_to_send 500000000000000 # half of total issuance
+          local_locations: &stmt_local_asset_location {
+            parents: 0,
+            interior: {
+              X2: [
+                {  PalletInstance: *stmt_assets_pallet_id },
+                { GeneralIndex: *stmt_asset_id }
+              ]
+            }
+          }
+        destinations:
+          watr: &stmt->watr_dest { v1: { parents: 1, interior: { x1: { parachain: *watr_id } }}}
+      watr_parachain:
+        # sovereign_account: &watr_sovereign_sibl 13cKp89Msu7M2PiaCuuGr1BzAsD5V3vaVbDMs3YtjMZHdGwR # Statemint
+        sovereign_account: &watr_sovereign_sibl FBeL7EAeUroLWXW1yfKboiqTqVfbRBcsUKd6QqVf4kGBySS # Statemine
+        asset_ower:
+          signer: &watr_asset_owner_signer //Alice
+          wallet: &watr_asset_owner_wallet 2ykmykmyFJQsRjxKKcNs8VPfCwv7yCor31xW3fpT9cb7SYuS # Alice
+        asset_receiver:
+          account: &watr_asset_receiver_acc '0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48' # Bob
+          wallet: &watr_asset_receiver_wallet 2xBchgbq7aQyGjTotgQvP9Uh76uEWfQWYBpAzJgn5dfsfhsW # Bob
+        asset:
+          id: &watr_asset_id 1984 # Wrapped Tether USD
+          name: &watr_asset_name Wrapped Tether USD
+          symbol: &watr_asset_symbol wxUSDT
+          isSufficient: &watr_asset_is_sufficient true
+          decimals: &watr_asset_decimals 12
+          min_balance: &watr_asset_ed 1000
+        fees: &watr_expected_fees 1000..1000000000
+  decodedCalls:
+    force_create_asset:
+      chain: *stmt_parachain
+      pallet: assets
+      call: forceCreate
+      args: [
+        *stmt_asset_id,
+        { Id: *stmt_asset_owner_wallet }, # owner
+        *stmt_asset_is_sufficient, # isSufficient
+        *stmt_asset_ed # minBalance
+      ]
+
+tests:
+  - name: RESERVE TRANSFER
+    describes:
+      - name: polkadotXcm.limitedReserveTransferAssets (Asset) | Statemint Parachain -> Watr Parachain
+        before:
+          - name: DEPENDANCY | An Asset should exist in the Statemint Parachain
+            actions:
+              - extrinsics:
+                - chain: *relay_chain
+                  signer: *rc_sudo_signer
+                  sudo: true
+                  pallet: xcmPallet
+                  call: send
+                  args: [
+                    *rc->stmt_dest, # destination
+                    {
+                      v2: [ #message
+                        {
+                          Transact: {
+                            originType: Superuser,
+                            requireWeightAtMost: *weight_at_most,
+                            call: $force_create_asset
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                  events:
+                    - name: xcmPallet.Sent
+                    - name: dmpQueue.ExecutedDownward
+                      chain: *stmt_parachain
+                    - name: assets.ForceCreated
+                      chain: *stmt_parachain
+
+          - name: DEPENDANCY | Set metadata
+            actions:
+              - extrinsics:
+                - chain: *stmt_parachain
+                  signer: *stmt_asset_owner_signer
+                  pallet: assets
+                  call: setMetadata
+                  args: [
+                    *stmt_asset_id, # id
+                    *stmt_asset_name, # name
+                    *stmt_asset_symbol, # symbol
+                    *stmt_asset_decimals # decimals
+                  ]
+                  events:
+                    - name: assets.MetadataSet
+
+          - name: DEPENDANCY | Some Assets should be minted for the sender
+            actions:
+              - extrinsics:
+                - chain: *stmt_parachain
+                  signer: *stmt_asset_owner_signer
+                  pallet: assets
+                  call: mint
+                  args: [
+                    *stmt_asset_id,
+                    *stmt_asset_sender_wallet,
+                    *stmt_asset_total_issuance
+                  ]
+                  events:
+                    - name: assets.Issued
+
+          # - name: DEPENDANCY | Create derivative Asset on Watr Parachain
+          #   actions:
+          #     - extrinsics:
+          #         - chain: *watr_parachain
+          #           signer: *watr_asset_owner_signer
+          #           pallet: assets
+          #           call: forceCreate
+          #           sudo: true
+          #           args: [
+          #             *watr_asset_id, # id
+          #             { id: *watr_asset_owner_wallet }, # owner
+          #             *watr_asset_is_sufficient,
+          #             *watr_asset_ed # min balance
+          #           ]
+          #           events:
+          #             - name: assets.ForceCreated
+          #         - chain: *watr_parachain
+          #           signer: *watr_asset_owner_signer
+          #           pallet: assets
+          #           call: setMetadata
+          #           args: [
+          #             *watr_asset_id, # id
+          #             *watr_asset_name, # name
+          #             *watr_asset_symbol, # symbol
+          #             *watr_asset_decimals # decimals
+          #           ]
+          #           events:
+          #             - name: assets.MetadataSet
+
+        its:
+          - name: Statemint Parachain account should be able to reserve transfer Asset to another account in Watr Parachain
+            actions:
+              - extrinsics:
+                - chain: *stmt_parachain
+                  signer: *stmt_asset_sender_signer
+                  pallet: polkadotXcm
+                  call: limitedReserveTransferAssets
+                  args: [
+                    *stmt->watr_dest, # destination
+                    { # beneficiary
+                      V1: {
+                        parents: 0,
+                        interior: {
+                          X1: {
+                            AccountId32: {
+                              network: Any,
+                              id: *watr_asset_receiver_acc
+                            }
+                          }
+                        }
+                      }
+                    },
+                    { # assets
+                      V1: [
+                        {
+                          id: {
+                            Concrete: *stmt_local_asset_location
+                          },
+                          fun: {
+                            Fungible: *stmt_asset_amount_to_send
+                          }
+                        }
+                      ]
+                    },
+                    0, # feeAssetItem
+                    Unlimited # weightLimit
+                  ]
+                  events:
+                    - name: polkadotXcm.Attempted
+                      attributes:
+                        - type: XcmV2TraitsOutcome
+                          xcmOutcome: Complete
+                          threshold: [10, 10]
+                          value: 654,404,000
+                    - name: assets.Transferred
+                      result: {
+                          assetId:  *stmt_asset_id,
+                          from: *stmt_asset_sender_wallet,
+                          to: *watr_sovereign_sibl,
+                          ammount: *stmt_asset_amount_to_send
+                        }
+                    - name: xcmpQueue.Success
+                      chain: *watr_parachain
+                    - name: assets.Issued
+                      chain: *watr_parachain
+                      attributes:
+                        - key: assetId
+                          value: *watr_asset_id
+                        - key: owner
+                          value: *watr_asset_receiver_wallet
+                        - key: totalSupply
+                          value: *stmt_asset_amount_to_send
+                          threshold: [ 10, 0 ] # less fees
+                    - name: assets.Issued
+                      chain: *watr_parachain
+                      attributes:
+                        - key: assetId
+                          value: *watr_asset_id
+                        - key: totalSupply
+                          isRange: true
+                          value: *watr_expected_fees # fees
