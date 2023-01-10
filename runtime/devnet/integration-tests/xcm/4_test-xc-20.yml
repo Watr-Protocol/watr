@@ -1,0 +1,147 @@
+---
+settings:
+  chains:
+    watr_parachain: &watr_parachain
+      wsPort: 9820
+  variables:
+    chains:
+      watr_parachain:
+        amount: &watr_amount_to_transfer '100000000000000000000' # 100 WTRD
+        asset_ower:
+          signer: &watr_asset_owner_signer //Alice
+          wallet: &watr_asset_owner_wallet 2ykmykmyFJQsRjxKKcNs8VPfCwv7yCor31xW3fpT9cb7SYuS # Alice
+        asset_funder:
+          signer: &watr_asset_funder_signer //Bob
+        eth_asset_sender:
+          wallet: &watr_asset_sender_wallet 2vYAKvLR8QKAATwrrhY86hfrNvMHXuu76P9SsPThRrJBDHzV # Corresponds to wallet_eth
+          wallet_eth: &watr_asset_sender_wallet_eth '0xEa4B4Cc944002E6c8a8855E50e0b282b02E3D854'
+        asset_receiver:
+          wallet: &watr_asset_receiver_wallet 2zXaVmcdqbL7XdDQxLkUnAmFqqhV6NNVQEw2fAyBBJJ9A8Mp # Corresponds to wallet_eth
+          wallet_eth: &watr_asset_receiver_wallet_eth '0x90b5ab205c6974c9ea841be688864633dc9ca8a3'
+        asset:
+          id: &watr_asset_id 1984 # Wrapped Tether USD
+          name: &watr_asset_name Wrapped Tether USD
+          symbol: &watr_asset_symbol wxUSDT
+          isSufficient: &watr_asset_is_sufficient true
+          decimals: &watr_asset_decimals 12
+          min_balance: &watr_asset_ed 1000
+          amount: &amount_to_mint 100000000000000 # 100 Assets
+          isFrozen: &watr_asset_is_frozen false
+      ethereum:
+        tx:
+          # gas_price: &gas_price 100000
+          gas_price: &gas_price '0x00'
+          # gas: &gas 30000000
+          gas: &gas '0x00'
+          value: &value '0x00'
+          data: &data '0x00' # signed data to XC-20 contract
+          nonce: &nonce '0x00'
+        contract:
+          xc_20_foreign: '0xFFFFFFFF000000000000000000000000000007C0'
+          xc_20_mintable: '0xFFFFFFFE000000000000000000000000000007C0'
+
+tests:
+  - name: TEST XC-20
+    before:
+      # - name: DEPENDANCY | Asset should exist in Watr Parachain
+      #   actions:
+      #     - extrinsics:
+      #         - chain: *watr_parachain
+      #           signer: *watr_asset_owner_signer
+      #           pallet: assets
+      #           call: forceCreate
+      #           sudo: true
+      #           args: [
+      #             *watr_asset_id, # id
+      #             { id: *watr_asset_owner_wallet }, # owner
+      #             *watr_asset_is_sufficient, # isSufficient
+      #             *watr_asset_ed # min balance
+      #           ]
+      #         - chain: *watr_parachain
+      #           signer: *watr_asset_owner_signer
+      #           pallet: assets
+      #           call: setMetadata
+      #           args: [
+      #             *watr_asset_id, # id
+      #             *watr_asset_name, # name
+      #             *watr_asset_symbol, # symbol
+      #             *watr_asset_decimals # decimals
+      #           ]
+      #           events:
+      #             - name: assets.MetadataSet
+
+      - name: DEPENDANCY | Fund with some native asset the Ethereum signer account to pay the fees for transfering the Assets
+        actions:
+          - extrinsics:
+              - chain: *watr_parachain
+                signer: *watr_asset_owner_signer
+                pallet: balances
+                call: transfer
+                args: [
+                  *watr_asset_sender_wallet,
+                  *watr_amount_to_transfer
+                ]
+                events:
+                  - name: balances.Transfer
+
+      - name: DEPENDANCY | Fund with some Assets the Substrate account of the Ethereum signer
+        actions:
+          - extrinsics:
+            - chain: *watr_parachain
+              signer: *watr_asset_owner_signer
+              pallet: assets
+              call: mint
+              args: [
+                *watr_asset_id,
+                *watr_asset_sender_wallet,
+                *amount_to_mint
+              ]
+              events:
+                - name: assets.Issued
+
+      - name: DEPENDANCY | Make the Eth signer's Substrate account the owner of the asset
+        actions:
+          - extrinsics:
+            - chain: *watr_parachain
+              signer: *watr_asset_owner_signer
+              pallet: assets
+              call: forceAssetStatus
+              sudo: true
+              args: [
+                *watr_asset_id,
+                *watr_asset_sender_wallet, # owner
+                *watr_asset_sender_wallet, # issuer
+                *watr_asset_sender_wallet, # admin
+                *watr_asset_sender_wallet, # freezer
+                *watr_asset_ed, # minBalance
+                *watr_asset_is_sufficient, # isSufficient
+                *watr_asset_is_frozen # isFrozen
+              ]
+              events:
+                - name: assets.AssetStatusChanged
+
+    describes:
+      - name: Read XC-20 metadata
+          # TODO
+      - name: Transfer XC-20 assets
+        its:
+          - name: Should be able to transfer assets
+            actions:
+              - rpcs:
+                  sendAssets:
+                    chain: *watr_parachain
+                    method: eth
+                    call: sendTransaction
+                    args: [
+                      {
+                        from: *watr_asset_sender_wallet_eth,
+                        to: *watr_asset_receiver_wallet_eth,
+                        gas_price: *gas_price,
+                        gas: *gas,
+                        value: *value,
+                        data: *data,
+                        nonce: *nonce
+                      }
+                    ]
+
+# errored: [ethjs-query] while formatting outputs from RPC '{"value":{"code":-32603,"data":{"code":-32603,"message":"fetch runtime account basic failed: Application(UnknownBlock(\"Unknown block number 431\"))"}}}'

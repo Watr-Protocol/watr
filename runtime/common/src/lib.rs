@@ -1,35 +1,11 @@
 #![cfg_attr(not(feature = "std"), no_std)]
+use sp_runtime::Perbill;
 
-use sp_runtime::{
-	traits::{IdentifyAccount, Verify},
-	MultiSignature, Perbill,
-};
+mod impl_on_charge_evm_transaction;
 
 use frame_support::weights::{constants::WEIGHT_PER_SECOND, Weight};
 
-/// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
-pub type Signature = MultiSignature;
-
-/// Some way of identifying an account on the chain. We intentionally make it equivalent
-/// to the public key of our transaction signing scheme.
-pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
-
-/// Balance of an account.
-pub type Balance = u128;
-
-/// Index of a transaction in the chain.
-pub type Index = u32;
-
-/// A hash of some data used by the chain.
-pub type Hash = sp_core::H256;
-
-/// Digest item type.
-pub type DigestItem = sp_runtime::generic::DigestItem;
-
-pub type AuraId = sp_consensus_aura::sr25519::AuthorityId;
-
-/// An index to a block.
-pub type BlockNumber = u32;
+use parachains_common::BlockNumber;
 
 /// This determines the average expected block time that we are targeting.
 /// Blocks will be produced at a minimum duration defined by `SLOT_DURATION`.
@@ -59,4 +35,9 @@ pub const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
 /// We allow for 0.5 of a second of compute with a 12 second average block time.
 pub const MAXIMUM_BLOCK_WEIGHT: Weight = WEIGHT_PER_SECOND.saturating_div(2);
 
-pub const WEIGHT_PER_GAS: u64 = 20_000;
+/// Current approximation of the gas/s consumption considering
+pub const GAS_PER_SECOND: u64 = 160_000_000;
+
+/// Approximate ratio of the amount of Weight per Gas.
+/// u64 works for approximations because Weight is a very small unit compared to gas.
+pub const WEIGHT_PER_GAS: u64 = WEIGHT_PER_SECOND.ref_time() / GAS_PER_SECOND;

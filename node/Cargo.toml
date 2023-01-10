@@ -84,6 +84,7 @@ cumulus-primitives-parachain-inherent = { git = "https://github.com/paritytech/c
 cumulus-relay-chain-inprocess-interface = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.30" }
 cumulus-relay-chain-interface = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.30" }
 cumulus-relay-chain-rpc-interface = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.30" }
+parachains-common = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.30", default-features = false }
 
 # Frontier
 fc-cli = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30" }
@@ -96,9 +97,6 @@ fp-consensus = { git = 'https://github.com/paritytech/frontier.git', branch = "p
 fp-evm = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30" }
 fp-rpc = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30" }
 fp-storage = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30" }
-
-# Contracts
-pallet-contracts-rpc = { git = "https://github.com/paritytech/substrate", package = "pallet-contracts-rpc", branch = "polkadot-v0.9.30" }
 
 [build-dependencies]
 substrate-build-script-utils = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
