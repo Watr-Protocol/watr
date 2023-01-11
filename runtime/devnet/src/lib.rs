@@ -37,7 +37,6 @@ use sp_runtime::{
 	ApplyExtrinsicResult, Percent,
 };
 
-
 use sp_std::{cmp::Ordering, marker::PhantomData, prelude::*};
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;

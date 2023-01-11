@@ -1,7 +1,7 @@
 use super::{
 	weights::ExtrinsicBaseWeight, AccountId, AssetId, Assets, Authorship, Balance, Balances,
 	ParachainInfo, ParachainSystem, PolkadotXcm, Runtime, RuntimeCall, RuntimeEvent, RuntimeOrigin,
-	WeightToFee, XcmpQueue, GIGAWEI, MEGAWEI
+	WeightToFee, XcmpQueue, GIGAWEI, MEGAWEI,
 };
 use core::marker::PhantomData;
 use frame_support::{
@@ -324,10 +324,14 @@ impl<
 		let mut reserve_location = reserve_pallet_location.clone();
 		reserve_location.take_last();
 
-		if reserve_pallet_location.append_with(X1(GeneralIndex(reserve_asset_id))).is_err() { return false };
+		if reserve_pallet_location.append_with(X1(GeneralIndex(reserve_asset_id))).is_err() {
+			return false
+		};
 		let reserve_asset_location = reserve_pallet_location.clone();
 		let self_location = SelfLocation::get();
-		if reserve_pallet_location.reanchor(&reserve_location, &self_location).is_err() { return false };
+		if reserve_pallet_location.reanchor(&reserve_location, &self_location).is_err() {
+			return false
+		};
 		let reserve_asset_location_as_local = reserve_pallet_location.clone();
 		let mut withdraw_amount = 0;
 		let mut buy_amount = 1;
