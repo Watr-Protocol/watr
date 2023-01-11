@@ -5,7 +5,7 @@ use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
-use std::{collections::BTreeMap};
+use std::collections::BTreeMap;
 
 use parachains_common::{AccountId, AuraId, Signature};
 use watr_runtime as mainnet;
@@ -473,8 +473,8 @@ fn mainnet_testnet_genesis(
 				.into_iter()
 				.map(|(acc, aura)| {
 					(
-						acc.clone(),               // account id
-						acc,                       // validator id
+						acc.clone(),                // account id
+						acc,                        // validator id
 						mainnet_session_keys(aura), // session keys
 					)
 				})

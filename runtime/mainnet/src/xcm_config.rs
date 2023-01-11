@@ -20,12 +20,11 @@ use xcm_builder::{
 	SiblingParachainAsNative, SiblingParachainConvertsVia, SignedAccountId32AsNative,
 	SignedToAccountId32, SovereignSignedViaLocation, TakeWeightCredit, UsingComponents,
 };
-use xcm_executor::{
-	traits::{JustTry},
-	XcmExecutor,
-};
+use xcm_executor::{traits::JustTry, XcmExecutor};
 
-use watr_common::xcm_config::{AsForeignToLocal, ReserveAssetsFrom, AllowOnlySendToReservePerAsset};
+use watr_common::xcm_config::{
+	AllowOnlySendToReservePerAsset, AsForeignToLocal, ReserveAssetsFrom,
+};
 
 use cumulus_primitives_utility::{ParentAsUmp, XcmFeesTo32ByteAccount};
 
@@ -120,8 +119,6 @@ pub type FungiblesTransactor = FungiblesAdapter<
 	// The account to use for tracking teleports.
 	CheckingAccount,
 >;
-
-
 
 /// Means for transacting assets on this chain.
 pub type AssetTransactors = (CurrencyTransactor, FungiblesTransactor);

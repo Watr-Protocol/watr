@@ -7,14 +7,12 @@
 use core::marker::PhantomData;
 use frame_support::{
 	log,
-	traits::{Contains, Get },
+	traits::{Contains, Get},
 };
 use sp_std::{borrow::Borrow, result};
 
 use xcm::latest::prelude::*;
-use xcm_executor::{
-	traits::{Convert, FilterAssetLocation },
-};
+use xcm_executor::traits::{Convert, FilterAssetLocation};
 
 pub struct AsForeignToLocal<Prefix, Asset, AssetId, ConvertAssetId>(
 	PhantomData<(Prefix, Asset, AssetId, ConvertAssetId)>,
@@ -93,7 +91,7 @@ impl<
 		SelfLocation: Get<MultiLocation>,
 		ReserveAssetPallet: Get<MultiLocation>,
 		Assets: Get<(u128, u128)>,
-        RuntimeCall,
+		RuntimeCall,
 	> Contains<(MultiLocation, Xcm<RuntimeCall>)>
 	for AllowOnlySendToReservePerAsset<SelfLocation, ReserveAssetPallet, Assets>
 {
