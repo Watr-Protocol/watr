@@ -13,7 +13,7 @@ use sc_client_api::BlockchainEvents;
 use cumulus_client_cli::CollatorOptions;
 // Local Runtime Types
 use watr_runtime::{
-	opaque::Block, AccountId, Balance, BlockNumber, Hash, Index as Nonce, RuntimeApi,
+	opaque::Block, AccountId, Balance, Hash, Index as Nonce, RuntimeApi,
 };
 
 // Cumulus Imports
