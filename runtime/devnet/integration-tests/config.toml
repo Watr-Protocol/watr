@@ -47,6 +47,7 @@ cumulus_based = true
     [[parachains.collators]]
     name = "collator3"
     ws_port = 9820
+    rpc_port = 8833
     command = "./bin/watr-node"
 
     [[parachains.collators]]
