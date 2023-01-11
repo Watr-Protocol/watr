@@ -52,7 +52,7 @@ pub use frame_support::{
 		fungibles::{Balanced, CreditOf},
 		ConstU32, ConstU8, Currency as CurrencyT, EitherOfDiverse, Everything, FindAuthor,
 		Imbalance, InstanceFilter, KeyOwnerProofSystem, LockIdentifier, OnRuntimeUpgrade,
-		OnUnbalanced, PrivilegeCmp, Randomness,
+		OnUnbalanced, PrivilegeCmp,
 	},
 	weights::{
 		constants::WEIGHT_PER_SECOND, ConstantMultiplier, Weight, WeightToFeeCoefficient,
@@ -432,8 +432,6 @@ impl pallet_collator_selection::Config for Runtime {
 	type ValidatorRegistration = Session;
 	type WeightInfo = ();
 }
-
-impl pallet_randomness_collective_flip::Config for Runtime {}
 
 parameter_types! {
 	pub const DepositPerItem: Balance = deposit(1, 0);
@@ -823,7 +821,6 @@ construct_runtime!(
 		} = 1,
 		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent} = 2,
 		ParachainInfo: parachain_info::{Pallet, Storage, Config} = 3,
-		RandomnessCollectiveFlip: pallet_randomness_collective_flip = 4,
 		Sudo: pallet_sudo::{Pallet, Call, Storage, Config<T>, Event<T>} = 5,
 		Scheduler: pallet_scheduler::{Pallet, Call, Storage, Event<T>} = 6,
 		Preimage: pallet_preimage::{Pallet, Call, Storage, Event<T>} = 7,
