@@ -221,7 +221,7 @@ tests:
                           assetId:  *stmt_asset_id,
                           from: *stmt_asset_sender_wallet,
                           to: *watr_sovereign_sibl,
-                          ammount: *stmt_asset_amount_to_send
+                          amount: *stmt_asset_amount_to_send
                         }
                     - name: xcmpQueue.Success
                       chain: *watr_parachain

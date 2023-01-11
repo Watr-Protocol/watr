@@ -22,3 +22,9 @@
 
 # node binaries
 bin/*
+
+#ignore parachains-integrations-tests folder
+parachains-integrations-tests
+
+#ignore node_modules -- used for integration tests
+node_modules
