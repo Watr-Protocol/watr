@@ -1,0 +1,70 @@
+[relaychain]
+default_command = "./bin/polkadot"
+default_args = [ "-lparachain=debug" ]
+chain = "polkadot-local"
+
+    [[relaychain.nodes]]
+    name = "alice"
+    ws_port = 9800
+    validator = true
+
+    [[relaychain.nodes]]
+    name = "bob"
+    ws_port = 9801
+    validator = true
+
+    [[relaychain.nodes]]
+    name = "charlie"
+    ws_port = 9802
+    validator = true
+
+    [[relaychain.nodes]]
+    name = "dave"
+    ws_port = 9803
+    validator = true
+
+[[parachains]]
+id = 1000
+chain = "statemine-local"
+cumulus_based = true
+
+    [[parachains.collators]]
+    name = "collator1"
+    ws_port = 9810
+    command = "./bin/polkadot-parachain"
+
+    [[parachains.collators]]
+    name = "collator2"
+	args = [ "-lxcm::barriers=trace", "-lxcm::execute_xcm_in_credit=trace", "-lxcm::execute_xcm=trace", "-lxcm::weight=trace", "-lxcm::should_execute=trace", "-lxcm::fungibles_adapter=trace", "-lxcm::TransactAsset::withdraw_asset", "-lxcm::matches_fungibles" ]
+    ws_port = 9811
+    command = "./bin/polkadot-parachain"
+
+[[parachains]]
+id = 2000
+chain = "mainnet-local"
+cumulus_based = true
+
+    [[parachains.collators]]
+    name = "collator3"
+    ws_port = 9820
+    rpc_port = 8833
+    command = "./bin/watr-node"
+
+    [[parachains.collators]]
+    name = "collator4"
+	args = [ "-lxcm::barriers=trace", "-lxcm::execute_xcm_in_credit=trace", "-lxcm::execute_xcm=trace", "-lxcm::weight=trace", "-lxcm::should_execute=trace", "-lxcm::fungibles_adapter=trace", "-lxcm::TransactAsset::withdraw_asset", "-lxcm::matches_fungibles" ]
+    ws_port = 9821
+	rpc_port = 8834
+    command = "./bin/watr-node"
+
+# [[hrmp_channels]]
+# sender = 1000
+# recipient = 2000
+# max_capacity = 8
+# max_message_size = 8192
+
+# [[hrmp_channels]]
+# sender = 2000
+# recipient = 1000
+# max_capacity = 8
+# max_message_size = 8192

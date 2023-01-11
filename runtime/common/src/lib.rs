@@ -2,6 +2,7 @@
 use sp_runtime::Perbill;
 
 mod impl_on_charge_evm_transaction;
+pub mod xcm_config;
 
 use frame_support::weights::{constants::WEIGHT_PER_SECOND, Weight};
 

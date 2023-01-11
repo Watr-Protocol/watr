@@ -1,0 +1,37 @@
+[relaychain]
+chain = "rococo-local"
+default_command = "./bin/polkadot"
+
+  [[relaychain.nodes]]
+  name = "alice"
+  validator = true
+
+  [[relaychain.nodes]]
+  name = "bob"
+  validator = true
+
+  [[relaychain.nodes]]
+  name = "charlie"
+  validator = true
+
+  [[relaychain.nodes]]
+  name = "dave"
+  validator = true
+
+[[parachains]]
+id = 2000
+addToGenesis = true
+cumulus_based = true
+chain = "mainnet-local"
+
+  [[parachains.collators]]
+  name = "watr-collator01"
+  command = "./target/release/watr-node"
+  ws_port = 9933
+  rpc_port = 8833
+
+  [[parachains.collators]]
+  name = "watr-collator02"
+  ws_port = 9822
+  rpc_port = 8822
+  command = "./target/release/watr-node"

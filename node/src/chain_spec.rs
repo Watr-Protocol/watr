@@ -3,9 +3,9 @@ use hex_literal::hex;
 use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
-use sp_core::{sr25519, Pair, Public, H160, U256};
+use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
-use std::{collections::BTreeMap, str::FromStr};
+use std::collections::BTreeMap;
 
 use parachains_common::{AccountId, AuraId, Signature};
 use watr_runtime as mainnet;
@@ -186,6 +186,13 @@ pub fn mainnet_development_config() -> MainnetChainSpec {
 					//prefunded EVM account
 					hex!["e1ad20aae239ccbb609aa537d515dc9d53c5936ea67d8acc9fe0618925279f7d"].into(),
 				],
+				// initial councillors
+				sp_runtime::bounded_vec![
+					get_account_id_from_seed::<sr25519::Public>("Alice"),
+					get_account_id_from_seed::<sr25519::Public>("Bob"),
+					get_account_id_from_seed::<sr25519::Public>("Charlie"),
+					get_account_id_from_seed::<sr25519::Public>("Dave"),
+				],
 				PARA_ID.into(),
 				// Total supply
 				Some(12000000 * WATR),
@@ -212,9 +219,9 @@ pub fn devnet_local_testnet_config() -> DevnetChainSpec {
 
 	DevnetChainSpec::from_genesis(
 		// Name
-		"Local Testnet",
+		"Local Watr Devnet",
 		// ID
-		"local_testnet",
+		"local_watr_devnet",
 		ChainType::Local,
 		move || {
 			devnet_testnet_genesis(
@@ -285,9 +292,9 @@ pub fn mainnet_local_testnet_config() -> MainnetChainSpec {
 
 	MainnetChainSpec::from_genesis(
 		// Name
-		"Local Testnet",
+		"Local Watr Mainnet",
 		// ID
-		"local_testnet",
+		"local_watr_mainnet",
 		ChainType::Local,
 		move || {
 			mainnet_testnet_genesis(
@@ -318,6 +325,13 @@ pub fn mainnet_local_testnet_config() -> MainnetChainSpec {
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
 					//prefunded EVM account
 					hex!["e1ad20aae239ccbb609aa537d515dc9d53c5936ea67d8acc9fe0618925279f7d"].into(),
+				],
+				// initial councillors
+				sp_runtime::bounded_vec![
+					get_account_id_from_seed::<sr25519::Public>("Alice"),
+					get_account_id_from_seed::<sr25519::Public>("Bob"),
+					get_account_id_from_seed::<sr25519::Public>("Charlie"),
+					get_account_id_from_seed::<sr25519::Public>("Dave"),
 				],
 				PARA_ID.into(),
 				// Total supply
@@ -421,6 +435,7 @@ fn mainnet_testnet_genesis(
 	root_key: AccountId,
 	invulnerables: Vec<(AccountId, AuraId)>,
 	endowed_accounts: Vec<AccountId>,
+	councillors: sp_runtime::BoundedVec<AccountId, mainnet::CouncilMaxMembers>,
 	id: ParaId,
 	total_issuance: Option<mainnet::Balance>,
 ) -> mainnet::GenesisConfig {
@@ -465,76 +480,27 @@ fn mainnet_testnet_genesis(
 				})
 				.collect(),
 		},
-		sudo: mainnet::SudoConfig { key: Some(root_key) },
+		sudo: mainnet::SudoConfig { key: Some(root_key.clone()) },
 		// no need to pass anything to aura, in fact it will panic if we do. Session will take care
 		// of this.
 		aura: Default::default(),
 		aura_ext: Default::default(),
+		assets: mainnet::AssetsConfig {
+			assets: vec![(1984, root_key, true, 1000)],
+			metadata: vec![(1984, b"Tether USD".to_vec(), b"USDT".to_vec(), 12)],
+			accounts: vec![],
+		},
 		parachain_system: Default::default(),
 		polkadot_xcm: mainnet::PolkadotXcmConfig { safe_xcm_version: Some(SAFE_XCM_VERSION) },
 
-		// EVM compatibility
-		evm: EVMConfig {
-			accounts: {
-				let mut map = BTreeMap::new();
-				map.insert(
-					// H160 address of Alice dev account
-					// Derived from SS58 (42 prefix) address
-					// SS58: 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
-					// hex: 0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d
-					// Using the full hex key, truncating to the first 20 bytes (the first 40 hex chars)
-					H160::from_str("d43593c715fdd31c61141abd04a99fd6822c8558")
-						.expect("internal H160 is valid; qed"),
-					fp_evm::GenesisAccount {
-						balance: U256::from_str("0xffffffffffffffffffffffffffffffff")
-							.expect("internal U256 is valid; qed"),
-						code: Default::default(),
-						nonce: Default::default(),
-						storage: Default::default(),
-					},
-				);
-				map.insert(
-					// H160 address of Metamask dev account
-					// Derived from SS58 (42 prefix) address
-					// SS58: 5HAc4UzLYQuyjHbpEPicC7bAjnofHqRWYStRKqA5WfreMKWk
-					// hex: 0xe1ad20aae239ccbb609aa537d515dc9d53c5936ea67d8acc9fe0618925279f7d
-					// Using the full hex key, truncating to the first 20 bytes (the first 40 hex chars)
-					H160::from_str("0xe31B11A052aFC923259949352B2f573a21301Ba4")
-						.expect("internal H160 is valid; qed"),
-					fp_evm::GenesisAccount {
-						balance: U256::from_str("0xffffffffffffffffffffffffffffffff")
-							.expect("internal U256 is valid; qed"),
-						code: Default::default(),
-						nonce: Default::default(),
-						storage: Default::default(),
-					},
-				);
-				map.insert(
-					// H160 address of CI test runner account
-					H160::from_str("6be02d1d3665660d22ff9624b7be0551ee1ac91b")
-						.expect("internal H160 is valid; qed"),
-					fp_evm::GenesisAccount {
-						balance: U256::from_str("0xffffffffffffffffffffffffffffffff")
-							.expect("internal U256 is valid; qed"),
-						code: Default::default(),
-						nonce: Default::default(),
-						storage: Default::default(),
-					},
-				);
-				map.insert(
-					// H160 address for benchmark usage
-					H160::from_str("1000000000000000000000000000000000000001")
-						.expect("internal H160 is valid; qed"),
-					fp_evm::GenesisAccount {
-						nonce: U256::from(1),
-						balance: U256::from(1_000_000_000_000_000_000_000_000u128),
-						storage: Default::default(),
-						code: vec![0x00],
-					},
-				);
-				map
-			},
+		council_membership: mainnet::CouncilMembershipConfig {
+			members: councillors,
+			phantom: Default::default(),
 		},
+		treasury: Default::default(),
+
+		// EVM compatibility
+		evm: EVMConfig { accounts: { BTreeMap::new() } },
 		ethereum: Default::default(),
 		base_fee: Default::default(),
 	}

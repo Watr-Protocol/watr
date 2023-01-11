@@ -8,7 +8,7 @@
 use jsonrpsee::RpcModule;
 use std::{collections::BTreeMap, sync::Arc};
 
-use watr_runtime::{opaque::Block, AccountId, Balance, BlockNumber, Hash, Index as Nonce};
+use watr_runtime::{opaque::Block, AccountId, Balance, Hash, Index as Nonce};
 
 use sc_client_api::{
 	backend::{AuxStore, Backend, StateBackend, StorageProvider},
