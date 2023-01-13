@@ -503,7 +503,7 @@ impl AddressToAssetId<AssetId> for Runtime {
 }
 
 parameter_types! {
-	pub const AssetDeposit: Balance = 10 * WATRD; // 10 WATRD deposit to create fungible asset class
+	pub const AssetDeposit: Balance = 100 * WATRD; // 100 WATRD deposit to create fungible asset class
 	pub const AssetAccountDeposit: Balance = deposit(1, 16);
 	pub const ApprovalDeposit: Balance = EXISTENTIAL_DEPOSIT;
 	pub const AssetsStringLimit: u32 = 50;
@@ -666,7 +666,7 @@ impl pallet_membership::Config<pallet_membership::Instance1> for Runtime {
 impl pallet_motion::Config for Runtime {
 	type RuntimeCall = RuntimeCall;
 	type RuntimeEvent = RuntimeEvent;
-	type SimpleMajorityOrigin = 
+	type SimpleMajorityOrigin =
 		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 1, 2>;
 	type SuperMajorityOrigin =
 		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 2, 3>;

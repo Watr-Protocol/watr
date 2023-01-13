@@ -1,4 +1,5 @@
 ---
+# Test run with https://www.npmjs.com/package/@parity/parachains-integration-tests
 settings:
   chains:
     relay_chain: &relay_chain
@@ -133,7 +134,7 @@ settings:
       ]
 
 tests:
-  - name: HRMP channel (Watr Parachain → Statemint Parachain)
+  - name: HRMP channel (Watr Parachain → Statemine Parachain)
     beforeEach:
       - name: DEPENDANCY | Watr Parachain Sovereign account in the Relay Chain needs to be funded
         actions:
@@ -149,7 +150,7 @@ tests:
               events:
                 - name: balances.Transfer
 
-      - name: DEPENDANCY | Statemint Parachain Sovereign account in the Relay Chain needs to be funded
+      - name: DEPENDANCY | Statemine Parachain Sovereign account in the Relay Chain needs to be funded
         actions:
           - extrinsics:
             - chain: *relay_chain
@@ -163,9 +164,9 @@ tests:
               events:
                 - name: balances.Transfer
     describes:
-      - name: hrmp.hrmpInitOpenChannel (Watr Parachain → Statemint Parachain)
+      - name: hrmp.hrmpInitOpenChannel (Watr Parachain → Statemine Parachain)
         its:
-          - name: Watr Parachain sends a request to the Relay Chain to open a channel with Statemint Parchain
+          - name: Watr Parachain sends a request to the Relay Chain to open a channel with Statemine Parchain
             actions:
               - extrinsics:
                 - chain: *watr_parachain
@@ -207,7 +208,9 @@ tests:
                       attributes:
                         - type: XcmV2TraitsOutcome
                           xcmOutcome: Complete
-                          value: 4,000,000,000
+                          # value: 4,000,000,000
+                          threshold: [10, 10]
+                          value: 1,160,892,000
                     - name: hrmp.OpenChannelRequested
                       chain: *relay_chain
               - queries:
@@ -228,9 +231,9 @@ tests:
                       ]
                     ]
 
-      - name: hrmp.hrmpAcceptOpenChannel (Statemint Parachain → Watr Parachain)
+      - name: hrmp.hrmpAcceptOpenChannel (Statemine Parachain → Watr Parachain)
         its:
-          - name: Statemint Parachain sends a response to the Relay Chain accepting the Watr Parachain's request for openning a HRMP channel
+          - name: Statemine Parachain sends a response to the Relay Chain accepting the Watr Parachain's request for openning a HRMP channel
             actions:
               - extrinsics:
                 - chain: *relay_chain
@@ -272,7 +275,9 @@ tests:
                       attributes:
                         - type: XcmV2TraitsOutcome
                           xcmOutcome: Complete
-                          value: 4,000,000,000
+                          # value: 4,000,000,000
+                          threshold: [10, 10]
+                          value: 1,160,892,000
                     - name: hrmp.OpenChannelAccepted
                       timeout: 40000
               - queries:
@@ -294,9 +299,9 @@ tests:
                       *channel
                     ]
 
-      - name: hrmp.hrmpInitOpenChannel (Statemint Parachain → Watr Parachain)
+      - name: hrmp.hrmpInitOpenChannel (Statemine Parachain → Watr Parachain)
         its:
-          - name: Statemint Parchain sends a request to the Relay Chain to open a channel with a Watr Parachain
+          - name: Statemine Parchain sends a request to the Relay Chain to open a channel with a Watr Parachain
             actions:
               - extrinsics:
                 - chain: *relay_chain
@@ -338,7 +343,9 @@ tests:
                       attributes:
                         - type: XcmV2TraitsOutcome
                           xcmOutcome: Complete
-                          value: 4,000,000,000
+                          # value: 4,000,000,000
+                          threshold: [10, 10]
+                          value: 1,160,892,000
                     - name: hrmp.OpenChannelRequested
                       timeout: 40000
               - queries:
@@ -359,9 +366,9 @@ tests:
                       ]
                     ]
 
-      - name: hrmp.hrmpAcceptOpenChannel (Watr Parachain → Statemint Parachain)
+      - name: hrmp.hrmpAcceptOpenChannel (Watr Parachain → Statemine Parachain)
         its:
-          - name: Watr Parachain sends a response to the Relay Chain accepting the Statemint Parachain's request for openning a HRMP channel
+          - name: Watr Parachain sends a response to the Relay Chain accepting the Statemine Parachain's request for openning a HRMP channel
             actions:
               - extrinsics:
                 - chain: *watr_parachain
@@ -403,6 +410,8 @@ tests:
                       attributes:
                         - type: XcmV2TraitsOutcome
                           xcmOutcome: Complete
-                          value: 4,000,000,000
+                          # value: 4,000,000,000
+                          threshold: [10, 10]
+                          value: 1,160,892,000
                     - name: hrmp.OpenChannelAccepted
                       chain: *relay_chain

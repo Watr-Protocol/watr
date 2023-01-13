@@ -1,4 +1,5 @@
 ---
+# Test run with https://www.npmjs.com/package/@parity/parachains-integration-tests
 settings:
   chains:
     watr_parachain: &watr_parachain
@@ -26,10 +27,10 @@ settings:
           name: &watr_asset_name Tether USD
           symbol: &watr_asset_symbol USDT
           isSufficient: &watr_asset_is_sufficient true
-          decimals: &watr_asset_decimals 12
+          decimals: &watr_asset_decimals 6
           min_balance: &watr_asset_ed 1000
           amount: &amount_to_mint 100000000000000 # 100 Assets
-          total_supply: &watr_asset_total_supply 450000000000000 
+          total_supply: &watr_asset_total_supply 450000000000000
           amount_to_transfer: &amount_to_transfer 1000000000000 # 1 asset
           isFrozen: &watr_asset_is_frozen false
       ethereum:
@@ -55,7 +56,7 @@ tests:
                 events:
                   - name: balances.Transfer
 
-      - name: DEPENDANCY | Fund with some native asset the Existential Deposit for the Ethereum receiver account  
+      - name: DEPENDANCY | Fund with some native asset the Existential Deposit for the Ethereum receiver account
         actions:
           - extrinsics:
               - chain: *watr_parachain
@@ -107,7 +108,7 @@ tests:
     describes:
       - name: Read XC-20 metadata
         its:
-          - name: Should read metadata for xc-20 asset 
+          - name: Should read metadata for xc-20 asset
             actions:
             - customs:
               - path: ../customs/read-xc20-custom.ts
@@ -117,7 +118,7 @@ tests:
                    rpcPort: *watr_rpc_port,
                    chainId: *eth_chain_id,
                    senderPrivKey: *watr_asset_sender_wallet_eth_priv_key,
-                   xc20PrecompileAddress: *xc_20_foreign_precompile_addr 
+                   xc20PrecompileAddress: *xc_20_foreign_precompile_addr
                   },
                   {
                     balanceOfAddr: *watr_asset_receiver_wallet_eth
@@ -134,7 +135,7 @@ tests:
                       balanceOf: 0,
                     }
                   ]
-      - name: Transfer XC-20 assets 
+      - name: Transfer XC-20 assets
         its:
           - name: Should transfer assets
             actions:
@@ -146,7 +147,7 @@ tests:
                    rpcPort: *watr_rpc_port,
                    chainId: *eth_chain_id,
                    senderPrivKey: *watr_asset_sender_wallet_eth_priv_key,
-                   xc20PrecompileAddress: *xc_20_foreign_precompile_addr 
+                   xc20PrecompileAddress: *xc_20_foreign_precompile_addr
                   },
                   {
                     amount: *amount_to_transfer,
@@ -176,7 +177,7 @@ tests:
                    rpcPort: *watr_rpc_port,
                    chainId: *eth_chain_id,
                    senderPrivKey: *watr_asset_sender_wallet_eth_priv_key,
-                   xc20PrecompileAddress: *xc_20_foreign_precompile_addr 
+                   xc20PrecompileAddress: *xc_20_foreign_precompile_addr
                   },
                   {
                     balanceOfAddr: *watr_asset_receiver_wallet_eth

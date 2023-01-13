@@ -1,7 +1,7 @@
 [relaychain]
 default_command = "./bin/polkadot"
 default_args = [ "-lparachain=debug" ]
-chain = "polkadot-local"
+chain = "rococo-local"
 
     [[relaychain.nodes]]
     name = "alice"

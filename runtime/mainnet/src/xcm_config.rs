@@ -1,7 +1,7 @@
 use super::{
 	weights::ExtrinsicBaseWeight, AccountId, AssetId, Assets, Authorship, Balance, Balances,
 	ParachainInfo, ParachainSystem, PolkadotXcm, Runtime, RuntimeCall, RuntimeEvent, RuntimeOrigin,
-	WeightToFee, XcmpQueue, MEGAWEI,
+	WeightToFee, XcmpQueue, KILOWEI,
 };
 use frame_support::{
 	match_types, parameter_types,
@@ -55,8 +55,7 @@ parameter_types! {
 }
 
 pub fn base_tx_fee() -> Balance {
-	// GIGAWEI
-	MEGAWEI
+	KILOWEI
 }
 
 pub fn default_fee_per_second() -> u128 {

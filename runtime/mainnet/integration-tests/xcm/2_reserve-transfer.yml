@@ -1,4 +1,5 @@
 ---
+# Test run with https://www.npmjs.com/package/@parity/parachains-integration-tests
 settings:
   chains:
     relay_chain: &relay_chain
@@ -21,18 +22,18 @@ settings:
       statemint_parachain:
         asset_ower:
           signer: &stmt_asset_owner_signer //Alice
-          # wallet: &stmt_asset_owner_wallet 15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5 # Alice Statmint
-          wallet: &stmt_asset_owner_wallet HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F # Alice Statmine
+          wallet: &stmt_asset_owner_wallet 15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5 # Alice Statmint
+          # wallet: &stmt_asset_owner_wallet HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F # Alice Statmine
         asset_sender:
           signer: &stmt_asset_sender_signer //Bob
-          # wallet: &stmt_asset_sender_wallet 14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3 # Bob Statmint
-          wallet: &stmt_asset_sender_wallet FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP # Bob Statmine
+          wallet: &stmt_asset_sender_wallet 14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3 # Bob Statmint
+          # wallet: &stmt_asset_sender_wallet FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP # Bob Statmine
         asset:
           id: &stmt_asset_id 1984 # Tether USD
           name: &stmt_asset_name Tether USD
-          symbol: &stmt_asset_symbol USDT
+          symbol: &stmt_asset_symbol USDt
           isSufficient: &stmt_asset_is_sufficient true
-          decimals: &stmt_asset_decimals 12
+          decimals: &stmt_asset_decimals 6
           min_balance: &stmt_asset_ed 1000
           pallet_id: &stmt_assets_pallet_id 50
           total_issuance: &stmt_asset_total_issuance 1000000000000000
@@ -49,8 +50,8 @@ settings:
         destinations:
           watr: &stmt->watr_dest { v1: { parents: 1, interior: { x1: { parachain: *watr_id } }}}
       watr_parachain:
-        # sovereign_account: &watr_sovereign_sibl 13cKp89Msu7M2PiaCuuGr1BzAsD5V3vaVbDMs3YtjMZHdGwR # Statemint
-        sovereign_account: &watr_sovereign_sibl FBeL7EAeUroLWXW1yfKboiqTqVfbRBcsUKd6QqVf4kGBySS # Statemine
+        sovereign_account: &watr_sovereign_sibl 13cKp89Msu7M2PiaCuuGr1BzAsD5V3vaVbDMs3YtjMZHdGwR # Statemint
+        # sovereign_account: &watr_sovereign_sibl FBeL7EAeUroLWXW1yfKboiqTqVfbRBcsUKd6QqVf4kGBySS # Statemine
         asset_ower:
           signer: &watr_asset_owner_signer //Alice
           wallet: &watr_asset_owner_wallet 2ykmykmyFJQsRjxKKcNs8VPfCwv7yCor31xW3fpT9cb7SYuS # Alice
@@ -62,7 +63,7 @@ settings:
           name: &watr_asset_name Wrapped Tether USD
           symbol: &watr_asset_symbol wxUSDT
           isSufficient: &watr_asset_is_sufficient true
-          decimals: &watr_asset_decimals 12
+          decimals: &watr_asset_decimals 6
           min_balance: &watr_asset_ed 1000
         fees: &watr_expected_fees 1000..1000000000
   decodedCalls:
