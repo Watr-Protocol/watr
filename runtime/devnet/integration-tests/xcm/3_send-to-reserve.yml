@@ -1,4 +1,5 @@
 ---
+# Test run with https://www.npmjs.com/package/@parity/parachains-integration-tests
 settings:
   chains:
     relay_chain:
@@ -15,7 +16,6 @@ settings:
       statemint_parachain:
         asset_receiver:
           account: &stmt_asset_receiver_acc '0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48' # Bob
-          # wallet: &stmt_asset_receiver_wallet 14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3 # Bob Statemint
           wallet: &stmt_asset_receiver_wallet FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP # Bob Statemine
         asset:
           id: &stmt_asset_id 1984
@@ -39,9 +39,8 @@ settings:
               ]
             }
           }
-        fees: &stmt_expected_fees 1000..1000000
+        fees: &stmt_expected_fees 1000..10000
       watr_parachain:
-        # sovereign_account: &watr_sovereign_sibl 13cKp89Msu7M2PiaCuuGr1BzAsD5V3vaVbDMs3YtjMZHdGwR # Statemint
         sovereign_account: &watr_sovereign_sibl FBeL7EAeUroLWXW1yfKboiqTqVfbRBcsUKd6QqVf4kGBySS # Statemine
         destinations:
           stmt: &watr->stmt_dest { parents: 1, interior: { X1: { Parachain: *stmt_id } } }
@@ -50,15 +49,15 @@ settings:
           wallet: &watr_asset_sender_wallet 2xBchgbq7aQyGjTotgQvP9Uh76uEWfQWYBpAzJgn5dfsfhsW # Bob
         asset:
           id: &watr_asset_id 1984
-          amount_to_send: &watr_asset_amount_to_send 150000000000000 # half of amount sent by reserve
+          amount_to_send: &watr_asset_amount_to_send 250000000000000 # half of amount sent by reserve
         tx_cost: &watr_buy_execution_amount 100000000000000
 
 tests:
   - name: SEND TO RESERVE
     describes:
-      - name: polkadotXcm.execute (Asset) | Watr Parachain -> Statemint Parachain
+      - name: polkadotXcm.execute (Asset) | Watr Parachain -> Statemine Parachain
         its:
-          - name: Statemint Parachain account should be able to reserve transfer Asset to another account in Watr Parachain
+          - name: Watr Parachain account should be able to reserve transfer back Asset to Statemine
             actions:
               - extrinsics:
                   - chain: *watr_parachain
@@ -75,7 +74,7 @@ tests:
                                 id: {
                                   Concrete: *stmt_remote_asset_location
                                 },
-                                fun: { Fungible: *watr_asset_amount_to_send}
+                                fun: { Fungible: *watr_asset_amount_to_send }
                               }
                             ]
                           },
@@ -144,7 +143,7 @@ tests:
                             value: *stmt_asset_receiver_wallet
                           - key: totalSupply
                             value: *watr_asset_amount_to_send
-                            threshold: [ 10, 0 ] # less fees
+                            threshold: [ 10, 0 ] # amount minus fees
                       - name: assets.Issued
                         chain: *stmt_parachain
                         attributes:
