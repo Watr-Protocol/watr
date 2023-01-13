@@ -666,7 +666,8 @@ impl pallet_membership::Config<pallet_membership::Instance1> for Runtime {
 impl pallet_motion::Config for Runtime {
 	type RuntimeCall = RuntimeCall;
 	type RuntimeEvent = RuntimeEvent;
-	type SimpleMajorityOrigin = MoreThanHalfCouncil;
+	type SimpleMajorityOrigin = 
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 1, 2>;
 	type SuperMajorityOrigin =
 		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 2, 3>;
 	type UnanimousOrigin =
