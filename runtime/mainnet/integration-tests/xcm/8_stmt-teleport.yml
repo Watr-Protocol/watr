@@ -1,0 +1,52 @@
+---
+# Test run with https://www.npmjs.com/package/@parity/parachains-integration-tests
+settings:
+  chains:
+    relay_chain:
+      wsPort: 9800
+    statemint_parachain: &stmt_parachain
+      wsPort: 9810
+    watr_parachain: &watr_parachain
+      wsPort: 9820
+      paraId: &watr_id 2000
+  variables:
+    chains:
+      statemint_parachain:
+        signer: &stmt_signer //Alice
+        destinations:
+          watr: &stmt->watr_dest { v1: { parents: 1, interior: { x1: { parachain: *watr_id } }}}
+        native: &stmt_native { concrete: { parents: 1, interior: { here: true }}}
+        native_fungible: &stmt_native_fungible { id: *stmt_native, fun: { fungible: 1000000000 }}
+      watr_parachain:
+        account: &watr_acc '0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48' # Bob
+        beneficiary: &watr_benef {v1: { parents: 0, interior: { x1: { accountId32: { network: { any: true }, id: *watr_acc }}}}}
+
+tests:
+  - name: STATEMINE | PALLET XCM - TELEPORT
+    describes:
+      - name: polkadotXcm.limitedTeleportAssets
+        its:
+          - name: Watr Parachain SHOULD NOT accept teleports
+            actions:
+              - extrinsics:
+                - chain: *stmt_parachain
+                  signer: *stmt_signer
+                  pallet: polkadotXcm
+                  call: limitedTeleportAssets
+                  args: [
+                    *stmt->watr_dest, # destination
+                    *watr_benef, # beneficiary
+                    { v1: [ *stmt_native_fungible ] }, # assets
+                    0, # feeAssetItem
+                    { unlimited: true } # weightLimit
+                  ]
+                  events:
+                    - name: polkadotXcm.Attempted
+                      attributes:
+                        - type: XcmV2TraitsOutcome
+                          xcmOutcome: Complete
+                    - name: xcmpQueue.Fail
+                      chain: *watr_parachain
+                      attributes:
+                        - type: XcmV2TraitsError
+                          value: UntrustedTeleportLocation

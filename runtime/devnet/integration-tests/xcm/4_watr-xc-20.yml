@@ -1,0 +1,214 @@
+---
+# Test run with https://www.npmjs.com/package/@parity/parachains-integration-tests
+# 'yarn' should be run first to have the 'node_modules' dependencies available for the tests
+settings:
+  chains:
+    watr_parachain: &watr_parachain
+      wsPort: 9821
+  variables:
+    chains:
+      watr_parachain:
+        networkName: &watr_network_name 'watr-devnet'
+        rpcPort: &watr_rpc_port 8833
+        amount: &watr_amount_to_transfer '100000000000000000000' # 100 WTRD
+        asset_ower:
+          signer: &watr_asset_owner_signer //Alice
+        asset_funder:
+          signer: &watr_asset_funder_signer //Bob
+        eth_asset_sender:
+          wallet_eth_priv_key: &watr_asset_sender_wallet_eth_priv_key '0x05306c74d0514acf0d2a02049c31284c17c9200270df88eda11f4421cd04742a' # '0xe31b11a052afc923259949352b2f573a21301ba4'
+          wallet_eth: &watr_asset_sender_wallet_eth '0xe31b11a052afc923259949352b2f573a21301ba4'
+          wallet: &watr_asset_sender_wallet 2z4S7fY4hioG8wJ9Q9V4WPUPsdWu2cwYCp9QB7N9s1BRstvm # Corresponds to wallet_eth '0xe31B11A052aFC923259949352B2f573a21301Ba4'
+        asset_receiver:
+          wallet: &watr_asset_receiver_wallet 2zXaVmcdqbL7XdDQxLkUnAmFqqhV6NNVQEw2fAyBBJJ9A8Mp
+          wallet_eth: &watr_asset_receiver_wallet_eth '0x90b5ab205c6974c9ea841be688864633dc9ca8a3' # Correspond to wallet '2zXaVmcdqbL7XdDQxLkUnAmFqqhV6NNVQEw2fAyBBJJ9A8Mp'
+        asset:
+          id: &watr_asset_id 1984 # Tether USD
+          name: &watr_asset_name Tether USD
+          symbol: &watr_asset_symbol USDt
+          decimals: &watr_asset_decimals 6
+          amount: &amount_to_fund 100000000 # 100 Assets
+          total_supply: &watr_asset_total_supply 250000000000000 # Coming from the previous test
+          amount_to_transfer: &amount_to_transfer 1000000 # 1 Asset
+          too_much_amount_to_transfer: &too_much_amount_to_transfer 200000000 # 200 Asset - Double than the total assets account has
+      ethereum:
+        chainId: &eth_chain_id 688
+        contract:
+          xc_20_foreign: &xc_20_precompile_addr '0xffffffff000000000000000000000000000007c0' # Coming from asset 1984
+
+tests:
+  - name: TEST XC-20
+    before:
+      - name: DEPENDANCY | Fund with some native asset the Ethereum signer account to pay the fees for transfering the Assets
+        actions:
+          - extrinsics:
+              - chain: *watr_parachain
+                signer: *watr_asset_owner_signer
+                pallet: balances
+                call: transfer
+                args: [
+                  *watr_asset_sender_wallet,
+                  *watr_amount_to_transfer
+                ]
+                events:
+                  - name: balances.Transfer
+
+      - name: DEPENDANCY | Fund with some native asset the Existential Deposit for the Ethereum receiver account
+        actions:
+          - extrinsics:
+              - chain: *watr_parachain
+                signer: *watr_asset_funder_signer
+                pallet: balances
+                call: transfer
+                args: [
+                  *watr_asset_receiver_wallet,
+                  *watr_amount_to_transfer
+                ]
+                events:
+                  - name: balances.Transfer
+
+      - name: DEPENDANCY | Fund with some Assets the Substrate account of the Ethereum sender account
+        actions:
+          - extrinsics:
+            - chain: *watr_parachain
+              signer: *watr_asset_funder_signer
+              pallet: assets
+              call: transfer
+              args: [
+                *watr_asset_id,
+                *watr_asset_sender_wallet,
+                *amount_to_fund
+              ]
+              events:
+                - name: assets.Transferred
+
+    describes:
+      - name: Read XC-20 metadata
+        its:
+          - name: Should read corret metadata from xc-20 asset
+            actions:
+              - customs:
+                - path: ../customs/read-xc20-custom.ts
+                  args: [
+                    {
+                      networkName: *watr_network_name,
+                      rpcPort: *watr_rpc_port,
+                      chainId: *eth_chain_id,
+                      senderPrivKey: *watr_asset_sender_wallet_eth_priv_key,
+                      xc20PrecompileAddress: *xc_20_precompile_addr
+                    },
+                    {
+                      balanceOfAddr: *watr_asset_receiver_wallet_eth
+                    }
+                  ]
+              - asserts:
+                  equal:
+                    args: [
+                      $asset_metadata,
+                      {
+                        name: *watr_asset_name,
+                        symbol: *watr_asset_symbol,
+                        decimals: *watr_asset_decimals,
+                        totalSupply: *watr_asset_total_supply,
+                        balanceOf: 0,
+                      }
+                    ]
+
+      - name: Transfer XC-20 assets
+        its:
+          - name: SHOULD transfer assets if enough balance
+            actions:
+              - customs:
+                - path: ../customs/transfer-xc20-custom.ts
+                  args: [
+                    {
+                      networkName: *watr_network_name,
+                      rpcPort: *watr_rpc_port,
+                      chainId: *eth_chain_id,
+                      senderPrivKey: *watr_asset_sender_wallet_eth_priv_key,
+                      xc20PrecompileAddress: *xc_20_precompile_addr
+                    },
+                    {
+                      amount: *amount_to_transfer,
+                      to: *watr_asset_receiver_wallet_eth
+                    },
+                  ]
+                  events:
+                    - name: assets.Transferred
+                      chain: *watr_parachain
+                      result: {
+                        assetId: *watr_asset_id,
+                        from: *watr_asset_sender_wallet,
+                        to: *watr_asset_receiver_wallet,
+                        amount: *amount_to_transfer
+                      }
+                    - name: evm.Log
+                      chain: *watr_parachain
+                      strict: false
+                      result: {
+                        log: { address: *xc_20_precompile_addr }
+                      }
+                    - name: ethereum.Executed
+                      chain: *watr_parachain
+                      strict: false
+                      result: {
+                        from: *watr_asset_sender_wallet_eth,
+                        to: *xc_20_precompile_addr,
+                        exitReason: { Succeed: Returned }
+                      }
+
+          - name: Should read corret metadata from xc-20 asset after the transfer
+            actions:
+              - customs:
+                - path: ../customs/read-xc20-custom.ts
+                  args: [
+                    {
+                    networkName: *watr_network_name,
+                    rpcPort: *watr_rpc_port,
+                    chainId: *eth_chain_id,
+                    senderPrivKey: *watr_asset_sender_wallet_eth_priv_key,
+                    xc20PrecompileAddress: *xc_20_precompile_addr
+                    },
+                    {
+                      balanceOfAddr: *watr_asset_receiver_wallet_eth
+                    }
+                  ]
+              - asserts:
+                  equal:
+                    args: [
+                      $asset_metadata,
+                      {
+                        name: *watr_asset_name,
+                        symbol: *watr_asset_symbol,
+                        decimals: *watr_asset_decimals,
+                        totalSupply: *watr_asset_total_supply,
+                        balanceOf: *amount_to_transfer,
+                      }
+                    ]
+
+          - name: SHOULD NOT transfer assets if NOT enough balance
+            actions:
+              - customs:
+                - path: ../customs/transfer-xc20-custom.ts
+                  args: [
+                    {
+                      networkName: *watr_network_name,
+                      rpcPort: *watr_rpc_port,
+                      chainId: *eth_chain_id,
+                      senderPrivKey: *watr_asset_sender_wallet_eth_priv_key,
+                      xc20PrecompileAddress: *xc_20_precompile_addr
+                    },
+                    {
+                      amount: *too_much_amount_to_transfer,
+                      to: *watr_asset_receiver_wallet_eth
+                    },
+                  ]
+                  events:
+                    - name: ethereum.Executed
+                      chain: *watr_parachain
+                      strict: false
+                      result: {
+                        from: *watr_asset_sender_wallet_eth,
+                        to: *xc_20_precompile_addr,
+                        exitReason: { Revert: Reverted }
+                      }
