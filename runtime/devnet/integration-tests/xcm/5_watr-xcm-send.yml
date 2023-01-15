@@ -1,0 +1,57 @@
+---
+# Test run with https://www.npmjs.com/package/@parity/parachains-integration-tests
+settings:
+  chains:
+    relay_chain: &relay_chain
+      wsPort: 9800
+    statemint_parachain:
+      wsPort: 9810
+      paraId: &stmt_id 1000
+    watr_parachain: &watr_parachain
+      wsPort: 9820
+  variables:
+    common:
+      require_weight_at_most: &weight_at_most 100000000000
+    chains:
+      watr_parachain:
+        signer: &watr_signer //Bob
+        destinations:
+          stmt: &watr->stmt_dest { v1: { parents: 1, interior: { X1: { Parachain: *stmt_id }}}}
+  decodedCalls:
+    system_remark:
+      chain: *relay_chain
+      pallet: system
+      call: remark
+      args: [ 0x0011 ]
+
+tests:
+  - name: WATR | PALLET XCM - SEND
+    describes:
+      - name: polkadotXcm.send | Native - Transact(system.remark)
+        its:
+          - name: Watr Parachain SHOULD NOT be able to dispatch arbitrary 'send' call
+            actions:
+              - extrinsics:
+                - chain: *watr_parachain
+                  signer: *watr_signer
+                  pallet: polkadotXcm
+                  call: send
+                  args: [
+                    *watr->stmt_dest, # destination
+                    {
+                      v2: [ #message
+                        {
+                          Transact: {
+                            originType: Native,
+                            requireWeightAtMost: *weight_at_most,
+                            call: $system_remark
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                  events:
+                    - name: system.ExtrinsicFailed
+                      attributes:
+                        - type: SpRuntimeDispatchError
+                          value: BadOrigin
