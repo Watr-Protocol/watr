@@ -8,7 +8,7 @@ settings:
   variables:
     chains:
       watr_parachain:
-        networkName: &watr_network_name 'watr-devnet'
+        networkName: &watr_network_name 'watr-mainnet'
         rpcPort: &watr_rpc_port 8833
         amount: &watr_amount_to_transfer '100000000000000000000' # 100 WTRD
         asset_ower:
@@ -88,7 +88,7 @@ tests:
           - name: Should read corret metadata from xc-20 asset
             actions:
               - customs:
-                - path: ../customs/read-xc20-custom.ts
+                - path: ../../../customs/read-xc20-custom.ts
                   args: [
                     {
                       networkName: *watr_network_name,
@@ -119,7 +119,7 @@ tests:
           - name: SHOULD transfer assets if enough balance
             actions:
               - customs:
-                - path: ../customs/transfer-xc20-custom.ts
+                - path: ../../../customs/transfer-xc20-custom.ts
                   args: [
                     {
                       networkName: *watr_network_name,
@@ -160,7 +160,7 @@ tests:
           - name: Should read corret metadata from xc-20 asset after the transfer
             actions:
               - customs:
-                - path: ../customs/read-xc20-custom.ts
+                - path: ../../../customs/read-xc20-custom.ts
                   args: [
                     {
                     networkName: *watr_network_name,
@@ -189,7 +189,7 @@ tests:
           - name: SHOULD NOT transfer assets if NOT enough balance
             actions:
               - customs:
-                - path: ../customs/transfer-xc20-custom.ts
+                - path: ../../../customs/transfer-xc20-custom.ts
                   args: [
                     {
                       networkName: *watr_network_name,

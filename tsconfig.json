@@ -24,6 +24,6 @@
     "noImplicitAny": false,
     "skipLibCheck": true
   },
-  "include": [ "runtime" ],
+  "include": [ "integration-tests/customs" ],
   "exclude": ["node_modules", "dist"]
 }
