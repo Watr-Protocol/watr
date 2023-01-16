@@ -53,20 +53,6 @@ tests:
                 events:
                   - name: balances.Transfer
 
-      - name: DEPENDANCY | Fund with some native asset the Existential Deposit for the Ethereum receiver account
-        actions:
-          - extrinsics:
-              - chain: *watr_parachain
-                signer: *watr_asset_funder_signer
-                pallet: balances
-                call: transfer
-                args: [
-                  *watr_asset_receiver_wallet,
-                  *watr_amount_to_transfer
-                ]
-                events:
-                  - name: balances.Transfer
-
       - name: DEPENDANCY | Fund with some Assets the Substrate account of the Ethereum sender account
         actions:
           - extrinsics:
