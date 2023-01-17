@@ -25,16 +25,17 @@ use smallvec::smallvec;
 use sp_api::impl_runtime_apis;
 use sp_core::{
 	crypto::{ByteArray, KeyTypeId},
+	sr25519,
 	OpaqueMetadata, H160, H256, U256,
 };
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
 		AccountIdLookup, BlakeTwo256, Block as BlockT, DispatchInfoOf, Dispatchable,
-		PostDispatchInfoOf, UniqueSaturatedInto,
+		PostDispatchInfoOf, UniqueSaturatedInto, Zero, IdentifyAccount
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
-	ApplyExtrinsicResult, Percent,
+	ApplyExtrinsicResult, MultiSigner, Percent,
 };
 
 use sp_std::{cmp::Ordering, marker::PhantomData, prelude::*};
@@ -58,7 +59,7 @@ pub use frame_support::{
 		constants::WEIGHT_PER_SECOND, ConstantMultiplier, Weight, WeightToFeeCoefficient,
 		WeightToFeeCoefficients, WeightToFeePolynomial,
 	},
-	ConsensusEngineId, PalletId, RuntimeDebug, StorageValue,
+	ConsensusEngineId, Hashable, PalletId, RuntimeDebug, StorageValue,
 };
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
@@ -130,7 +131,61 @@ pub type Executive = frame_executive::Executive<
 	frame_system::ChainContext<Runtime>,
 	Runtime,
 	AllPalletsWithSystem,
+	PopulateCouncil
 >;
+
+/// Assets -> 0x682a59d51ab9e48a8c8cc418ff9708d2
+/// Asset -> 0xd34371a193a751eea5883e9553457b2e
+// Key fot Asset 1984 ->  0x682a59d51ab9e48a8c8cc418ff9708d2d34371a193a751eea5883e9553457b2e1c821877eb97fdd1844c0beb70101cb6c0070000000000000000000000000000
+/// Storage upgrade to populate USDt Asset
+// pub struct PopulateAssets;
+// impl frame_support::traits::OnRuntimeUpgrade for PopulateAssets {
+// 	fn on_runtime_upgrade() -> Weight {
+// 		let sudo_account: [u8; 32] = [225,173,32,170,226,57,204,187,96,154,165,55,213,21,220,157,83,197,147,110,166,125,138,204,159,224,97,137,37,39,159,125];
+// 		let sudo = MultiSigner::Sr25519(sr25519::Public(sudo_account));
+
+// 		let asset: pallet_assets::AssetDetails::<Balance, AccountId, Balance> = pallet_assets::AssetDetails {
+// 			owner: sudo.clone().into_account(),
+// 			issuer: sudo.clone().into_account(),
+// 			admin: sudo.clone().into_account(),
+// 			freezer: sudo.clone().into_account(),
+// 			supply: Zero::zero(),
+// 			deposit: Zero::zero(),
+// 			min_balance: 100_000,
+// 			is_sufficient: true,
+// 			accounts: 0,
+// 			sufficients: 0,
+// 			approvals: 0,
+// 			is_frozen: false,
+// 		};
+
+// 		let asset_id: AssetId = 1984;
+// 		let key = asset_id.blake2_128_concat();
+// 		frame_support::migration::put_storage_value(b"Assets", b"Asset", &key, asset);
+
+// 		<Runtime as frame_system::Config>::DbWeight::get().writes(1)
+// 	}
+// }
+
+pub struct PopulateCouncil;
+impl frame_support::traits::OnRuntimeUpgrade for PopulateCouncil {
+	fn on_runtime_upgrade() -> Weight {
+		use sp_std::collections::btree_set::BTreeSet;
+		let sudo_account: [u8; 32] = [132,93,175,50,8,133,143,204,200,4,138,125,170,36,186,174,52,96,186,165,218,138,116,229,67,178,108,15,127,130,12,86];
+		let sudo = MultiSigner::Sr25519(sr25519::Public(sudo_account));
+
+		let members: &[AccountId] = &[sudo.into_account()];
+		let members_set: BTreeSet<_> = members.iter().collect();
+		assert_eq!(
+			members_set.len(),
+			members.len(),
+			"Members cannot contain duplicate accounts."
+		);
+		pallet_collective::Members::<Runtime, CouncilCollective>::put(members);
+		<Runtime as frame_system::Config>::DbWeight::get().writes(1)
+	}
+}
+
 
 /// Handles converting a weight scalar to a fee value, based on the scale and granularity of the
 /// node's balance type.
@@ -185,7 +240,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	spec_name: create_runtime_str!("watr-devnet"),
 	impl_name: create_runtime_str!("watr-devnet"),
 	authoring_version: 1,
-	spec_version: 1100,
+	spec_version: 1200,
 	impl_version: 0,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
