@@ -60,7 +60,7 @@ settings:
           }
         fees: &stmt_expected_fees 1000..10000
       watr_parachain:
-        sovereign_account: &watr_sovereign_sibl 13cKp89Msu7M2PiaCuuGr1BzAsD5V3vaVbDMs3YtjMZHdGwR # Statemint
+        sovereign_account: &watr_sovereign_sibl 13cKp88gCrt9hrrXLFurrbvTU6Bbs6F65CQmY588ZSwvK7Q8 # Statemint
         destinations:
           stmt: &watr->stmt_dest { parents: 1, interior: { X1: { Parachain: *stmt_id } } }
           wrong: &watr->wrong_dest { parents: 1, interior: { X1: { Parachain: 3000 } } }
