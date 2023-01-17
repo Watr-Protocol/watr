@@ -9,7 +9,7 @@ settings:
       paraId: &stmt_id 1000
     watr_parachain: &watr_parachain
       wsPort: 9820
-      paraId: &watr_id 2000
+      paraId: &watr_id 2058
   variables:
     common:
       xcm_verison: &xcm_version '2'

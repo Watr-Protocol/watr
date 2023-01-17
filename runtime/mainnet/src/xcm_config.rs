@@ -1,7 +1,7 @@
 use super::{
-	weights::ExtrinsicBaseWeight, AccountId, AssetId, Assets, Authorship, Balance, Balances,
-	ParachainInfo, ParachainSystem, PolkadotXcm, Runtime, RuntimeCall, RuntimeEvent, RuntimeOrigin,
-	WeightToFee, XcmpQueue, KILOWEI,
+	weights, weights::ExtrinsicBaseWeight, AccountId, AssetId, Assets, Authorship, Balance,
+	Balances, ParachainInfo, ParachainSystem, PolkadotXcm, Runtime, RuntimeCall, RuntimeEvent,
+	RuntimeOrigin, WeightToFee, XcmpQueue, KILOWEI,
 };
 use frame_support::{
 	match_types, parameter_types,
@@ -246,7 +246,7 @@ impl cumulus_pallet_xcmp_queue::Config for Runtime {
 	type ExecuteOverweightOrigin = EnsureRoot<AccountId>;
 	type ControllerOrigin = EnsureRoot<AccountId>;
 	type ControllerOriginConverter = XcmOriginToTransactDispatchOrigin;
-	type WeightInfo = ();
+	type WeightInfo = weights::cumulus_pallet_xcmp_queue::WeightInfo<Runtime>;
 }
 
 impl cumulus_pallet_dmp_queue::Config for Runtime {

@@ -40,7 +40,7 @@ cumulus_based = true
     command = "./bin/polkadot-parachain"
 
 [[parachains]]
-id = 2000
+id = 2058
 chain = "devnet-local"
 cumulus_based = true
 
@@ -59,12 +59,12 @@ cumulus_based = true
 
 # [[hrmp_channels]]
 # sender = 1000
-# recipient = 2000
+# recipient = 2058
 # max_capacity = 8
 # max_message_size = 8192
 
 # [[hrmp_channels]]
-# sender = 2000
+# sender = 2058
 # recipient = 1000
 # max_capacity = 8
 # max_message_size = 8192
