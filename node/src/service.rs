@@ -329,7 +329,7 @@ where
 			frontier_backend.clone(),
 			3,
 			0,
-			SyncStrategy::Normal,
+			SyncStrategy::Parachain,
 		)
 		.for_each(|()| future::ready(())),
 	);
