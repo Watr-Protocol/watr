@@ -283,7 +283,7 @@ impl frame_system::Config for Runtime {
 	/// The basic call filter to use in dispatchable.
 	type BaseCallFilter = Everything;
 	/// Weight information for the extrinsics of this pallet.
-	type SystemWeightInfo = ();
+	type SystemWeightInfo = weights::frame_system::WeightInfo<Runtime>;
 	/// Block & extrinsics weights: base values and limits.
 	type BlockWeights = RuntimeBlockWeights;
 	/// The maximum length of a block (in bytes).
@@ -309,7 +309,7 @@ impl pallet_timestamp::Config for Runtime {
 	type Moment = u64;
 	type OnTimestampSet = ();
 	type MinimumPeriod = MinimumPeriod;
-	type WeightInfo = ();
+	type WeightInfo = weights::pallet_timestamp::WeightInfo<Runtime>;
 }
 
 parameter_types! {
@@ -338,7 +338,7 @@ impl pallet_balances::Config for Runtime {
 	type DustRemoval = ();
 	type ExistentialDeposit = ExistentialDeposit;
 	type AccountStore = System;
-	type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = weights::pallet_balances::WeightInfo<Runtime>;
 	type MaxReserves = MaxReserves;
 	type ReserveIdentifier = [u8; 8];
 }
@@ -395,7 +395,7 @@ impl pallet_session::Config for Runtime {
 	// Essentially just Aura, but lets be pedantic.
 	type SessionHandler = <SessionKeys as sp_runtime::traits::OpaqueKeys>::KeyTypeIdProviders;
 	type Keys = SessionKeys;
-	type WeightInfo = ();
+	type WeightInfo = weights::pallet_session::WeightInfo<Runtime>;
 }
 
 impl pallet_aura::Config for Runtime {
@@ -430,7 +430,7 @@ impl pallet_collator_selection::Config for Runtime {
 	type ValidatorId = <Self as frame_system::Config>::AccountId;
 	type ValidatorIdOf = pallet_collator_selection::IdentityCollator;
 	type ValidatorRegistration = Session;
-	type WeightInfo = ();
+	type WeightInfo = weights::pallet_collator_selection::WeightInfo<Runtime>;
 }
 
 parameter_types! {
@@ -454,7 +454,7 @@ impl pallet_multisig::Config for Runtime {
 	type DepositBase = DepositBase;
 	type DepositFactor = DepositFactor;
 	type MaxSignatories = MaxSignatories;
-	type WeightInfo = pallet_multisig::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = weights::pallet_multisig::WeightInfo<Runtime>;
 }
 
 parameter_types! {
@@ -478,7 +478,7 @@ impl pallet_identity::Config for Runtime {
 	type Slashed = ();
 	type ForceOrigin = frame_system::EnsureRoot<AccountId>;
 	type RegistrarOrigin = frame_system::EnsureRoot<AccountId>;
-	type WeightInfo = pallet_identity::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = weights::pallet_identity::WeightInfo<Runtime>;
 }
 
 use pallet_evm_precompile_assets_erc20::AddressToAssetId;
@@ -526,7 +526,7 @@ impl pallet_assets::Config for Runtime {
 	type StringLimit = AssetsStringLimit;
 	type Freezer = ();
 	type Extra = ();
-	type WeightInfo = pallet_assets::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = weights::pallet_assets::WeightInfo<Runtime>;
 	type AssetAccountDeposit = AssetAccountDeposit;
 }
 
@@ -534,7 +534,7 @@ impl pallet_utility::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type RuntimeCall = RuntimeCall;
 	type PalletsOrigin = OriginCaller;
-	type WeightInfo = pallet_utility::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = weights::pallet_utility::WeightInfo<Runtime>;
 }
 
 parameter_types! {
@@ -575,7 +575,7 @@ impl pallet_scheduler::Config for Runtime {
 	type MaximumWeight = MaximumSchedulerWeight;
 	type ScheduleOrigin = MoreThanHalfCouncil;
 	type MaxScheduledPerBlock = MaxScheduledPerBlock;
-	type WeightInfo = pallet_scheduler::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = weights::pallet_scheduler::WeightInfo<Runtime>;
 	type OriginPrivilegeCmp = OriginPrivilegeCmp;
 	type PreimageProvider = Preimage;
 	type NoPreimagePostponement = NoPreimagePostponement;
@@ -588,7 +588,7 @@ parameter_types! {
 }
 
 impl pallet_preimage::Config for Runtime {
-	type WeightInfo = pallet_preimage::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = weights::pallet_preimage::WeightInfo<Runtime>;
 	type RuntimeEvent = RuntimeEvent;
 	type Currency = Balances;
 	type ManagerOrigin = EnsureRoot<AccountId>;
@@ -647,7 +647,7 @@ impl pallet_collective::Config<CouncilCollective> for Runtime {
 	type MaxProposals = CouncilMaxProposals;
 	type MaxMembers = CouncilMaxMembers;
 	type DefaultVote = pallet_collective::PrimeDefaultVote;
-	type WeightInfo = pallet_collective::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = weights::pallet_collective::WeightInfo<Runtime>;
 }
 
 impl pallet_membership::Config<pallet_membership::Instance1> for Runtime {
@@ -660,7 +660,7 @@ impl pallet_membership::Config<pallet_membership::Instance1> for Runtime {
 	type MembershipInitialized = Council;
 	type MembershipChanged = Council;
 	type MaxMembers = CouncilMaxMembers;
-	type WeightInfo = pallet_membership::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = weights::pallet_membership::WeightInfo<Runtime>;
 }
 
 impl pallet_motion::Config for Runtime {
@@ -713,7 +713,7 @@ impl pallet_treasury::Config for Runtime {
 	type BurnDestination = ();
 	type SpendFunds = ();
 	type MaxApprovals = MaxApprovals;
-	type WeightInfo = pallet_treasury::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = weights::pallet_treasury::WeightInfo<Runtime>;
 	type SpendOrigin = frame_support::traits::NeverEnsureOrigin<Balance>;
 }
 
@@ -847,6 +847,7 @@ construct_runtime!(
 
 		//Governance
 		Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>} = 44,
+		Motion: pallet_motion::{Pallet, Call, Storage,  Event<T>} = 45,
 		CouncilMembership: pallet_membership::<Instance1>::{Pallet, Call, Storage, Event<T>, Config<T>} = 46,
 		Treasury: pallet_treasury::{Pallet, Call, Storage, Config, Event<T>} = 47,
 
@@ -860,8 +861,6 @@ construct_runtime!(
 		Ethereum: pallet_ethereum::{Pallet, Call, Storage, Event, Origin, Config} = 50,
 		EVM: pallet_evm::{Pallet, Config, Call, Storage, Event<T>} = 51,
 		BaseFee: pallet_base_fee::{Pallet, Call, Storage, Config<T>, Event} = 52,
-
-		Motion: pallet_motion::{Pallet, Call, Storage,  Event<T>} = 60,
 
 		Sudo: pallet_sudo::{Pallet, Call, Storage, Config<T>, Event<T>} = 255,
 	}
@@ -968,6 +967,7 @@ mod benches {
 		[pallet_scheduler, Scheduler]
 		[pallet_treasury, Treasury]
 		[pallet_membership, CouncilMembership]
+		[pallet_preimage, Preimage]
 	);
 }
 

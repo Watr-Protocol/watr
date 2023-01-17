@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-steps=2
-repeat=2
+steps=50
+repeat=20
 runtimeName=$1
 benchmarkOutput=./runtime/$runtimeName/src/weights
 benchmarkRuntimeName="$runtimeName-dev"
@@ -12,6 +12,7 @@ if [[ $runtimeName == "devnet" ]] || [[ $runtimeName == "mainnet" ]]; then
         pallet_assets
         pallet_balances
         pallet_multisig
+        pallet_preimage
         pallet_session
         pallet_utility
         pallet_timestamp
