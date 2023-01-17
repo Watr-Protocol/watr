@@ -9,7 +9,7 @@ settings:
       paraId: &stmt_id 1000
     watr_parachain: &watr_parachain
       wsPort: 9820
-      paraId: &watr_id 2000
+      paraId: &watr_id 2058
   variables:
     common:
       amount: &amount 2000000000000
@@ -36,13 +36,13 @@ settings:
         dot: &rc_dot { concrete: { 0, interior: { here: true }}}
         dot_fungible: &rc_dot_fungible { id: *rc_dot, fun: { fungible: *amount }}
       statemint_parachain:
-        sovereign_account: &stmt_sovereign 13YMK2edbuhwMBxeUWm9c643A2wyYHwSVh1bCM7tShtg7Dtk
+        sovereign_account: &stmt_sovereign 5Ec4AhPZk8STuex8Wsi9TwDtJQxKqzPJRCH7348Xtcs9vZLJ
         destinations:
           relay_chain: &stmt->rc_dest { v1: { parents: 1, interior: { here: true }}}
       watr_parachain:
         sudo:
           signer: &watr_sudo_signer //Alice
-        sovereign_account: &watr_sovereign 13YMK2eYoAvStnzReuxBjMrAvPXmmdsURwZvc62PrdXimbNy
+        sovereign_account: &watr_sovereign 5Ec4AhNoGMRn8j7rpcumbokVMzWeTNdqw42r7pcH8dtqH29G
         destinations:
           relay_chain: &watr->rc_dest { v1: { parents: 1, interior: { here: true }}}
   decodedCalls:

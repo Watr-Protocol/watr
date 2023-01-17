@@ -8,7 +8,7 @@ settings:
       wsPort: 9810
     watr_parachain: &watr_parachain
       wsPort: 9820
-      paraId: &watr_id 2000
+      paraId: &watr_id 2058
   variables:
     chains:
       statemint_parachain:

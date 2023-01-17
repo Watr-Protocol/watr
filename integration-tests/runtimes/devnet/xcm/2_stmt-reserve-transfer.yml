@@ -9,7 +9,7 @@ settings:
       paraId: &stmt_id 1000
     watr_parachain: &watr_parachain
       wsPort: 9820
-      paraId: &watr_id 2000
+      paraId: &watr_id 2058
   variables:
     common:
       require_weight_at_most: &weight_at_most 1000000000
@@ -58,7 +58,7 @@ settings:
         destinations:
           watr: &stmt->watr_dest { v1: { parents: 1, interior: { x1: { parachain: *watr_id } }}}
       watr_parachain:
-        sovereign_account: &watr_sovereign_sibl FBeL7EAeUroLWXW1yfKboiqTqVfbRBcsUKd6QqVf4kGBySS # Statemine
+        sovereign_account: &watr_sovereign_sibl FBeL7DUySdc1yfT9KfucQTJm4UByTW8T5X2mSQjVA8tstTf # Statemine
         asset_receiver:
           account: &watr_asset_receiver_acc '0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48' # Bob
           wallet: &watr_asset_receiver_wallet 2xBchgbq7aQyGjTotgQvP9Uh76uEWfQWYBpAzJgn5dfsfhsW # Bob

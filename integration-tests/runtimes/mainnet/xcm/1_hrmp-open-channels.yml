@@ -9,7 +9,7 @@ settings:
       paraId: &stmt_id 1000
     watr_parachain: &watr_parachain
       wsPort: 9820
-      paraId: &watr_id 2000
+      paraId: &watr_id 2058
   variables:
     common:
       amount: &amount 2000000000000
@@ -42,7 +42,7 @@ settings:
       watr_parachain:
         sudo:
           signer: &watr_sudo_signer //Alice
-        sovereign_account: &watr_sovereign 13YMK2eYoAvStnzReuxBjMrAvPXmmdsURwZvc62PrdXimbNy
+        sovereign_account: &watr_sovereign 13YMK2ds88hFaG8NnFxmjxaeDcWJ9gBz1YmLH7bdgivMTcq4
         destinations:
           relay_chain: &watr->rc_dest { v1: { parents: 1, interior: { here: true }}}
   decodedCalls:
