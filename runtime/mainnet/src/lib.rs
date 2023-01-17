@@ -344,7 +344,7 @@ impl pallet_balances::Config for Runtime {
 }
 
 parameter_types! {
-	pub const TransactionByteFee: Balance = 1 * MILLI_WATR;
+	pub const TransactionByteFee: Balance = 100 * MICRO_WATR;
 	pub const OperationalFeeMultiplier: u8 = 5;
 }
 
@@ -784,8 +784,8 @@ impl pallet_ethereum::Config for Runtime {
 }
 
 parameter_types! {
-	pub DefaultBaseFeePerGas: U256 = (GIGAWEI * 10_000).into();
-	pub DefaultElasticity: Permill = Permill::from_parts(125_000);
+	pub DefaultBaseFeePerGas: U256 = (GIGAWEI * 1000).into();
+	pub DefaultElasticity: Permill = Permill::zero();
 }
 
 pub struct BaseFeeThreshold;
