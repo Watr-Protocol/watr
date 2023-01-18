@@ -1,6 +1,6 @@
 <p align="center">
-  <a href="https://www.watr.org/">
-		<img src="https://user-images.githubusercontent.com/23270067/191095552-260f6a1b-0f32-4f89-b818-7bfc7280b0db.svg" width="460">
+	<a href="https://www.watr.org/">
+		<img src="https://user-images.githubusercontent.com/23270067/213279777-545afe00-7353-47d8-a6f1-657490e39665.svg" width="350"/>
 	</a>
 </p>
 
