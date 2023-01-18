@@ -82,7 +82,7 @@ The initial governance is built using `pallet-collective`, `pallet-membership`, 
             2. Or be executed
                 1. The motion can be executed (closed) early if the voting threshold is met
                     
-                    ![governance_05.png](governance_05.png)
+                    ![governance_05.png](images/governance_05.png)
                     
     9. Vote on the motion using the `Vote` button
         1. A motion may also be voted on via Developer → Extrinsics → `council.vote`
