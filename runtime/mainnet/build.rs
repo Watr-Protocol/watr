@@ -14,6 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Watr.  If not, see <http://www.gnu.org/licenses/>.
 
+// This file was originally forked from Substrate Parachain Template
+// which is generated directly to the upstream Parachain Template in Cumulus
+// https://github.com/paritytech/cumulus/tree/master/parachain-template
+
 use substrate_wasm_builder::WasmBuilder;
 
 fn main() {
