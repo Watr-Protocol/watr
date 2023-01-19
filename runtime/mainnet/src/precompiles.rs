@@ -15,6 +15,7 @@
 // along with Watr.  If not, see <http://www.gnu.org/licenses/>.
 
 // This file was originally copied from the The Astar Network EVM precompiles.
+// https://github.com/AstarNetwork/Astar/blob/master/runtime/astar/src/precompiles.rs
 
 use pallet_evm::{
 	ExitRevert, Precompile, PrecompileFailure, PrecompileHandle, PrecompileResult, PrecompileSet,
