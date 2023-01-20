@@ -1,11 +1,11 @@
 [package]
 name = "watr-node"
 version = "0.9.300"
-authors = ["Anonymous"]
-description = "A new Cumulus FRAME-based Substrate Node, ready for hacking together a parachain."
-license = "Unlicense"
-homepage = "https://substrate.io"
-repository = "https://github.com/paritytech/cumulus/"
+authors = ["Parity Technologies <admin@parity.io>"]
+description = "Watr Node"
+license = "GPL-3.0-only"
+homepage = "https://www.watr.org/"
+repository = "https://github.com/Watr-Protocol/watr"
 edition = "2021"
 build = "build.rs"
 
