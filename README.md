@@ -49,8 +49,8 @@ cargo +nightly test
 ## Guides
 - Governance: [docs/governance/watr-governance-guide.md](docs/governance/watr-governance-guide.md)
 - Release Guidelines: TODO
-- Integrations Tests: TODO
-- Benchmarks: TODO:
+- Integrations Tests: [docs/integration-tests.md](docs/integration-tests.md)
+- Benchmarks: [docs/benchmarks.md](docs/benchmarks.md):
 - Connecting Metamask: TODO
 
 ## Substrate Details
