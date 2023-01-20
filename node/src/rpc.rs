@@ -66,16 +66,12 @@ pub struct FullDeps<C, P, A: ChainApi> {
 	pub deny_unsafe: DenyUnsafe,
 	/// The Node authority flag
 	pub is_authority: bool,
-	/// Whether to enable dev signer
-	// pub enable_dev_signer: bool,
 	/// Network service
 	pub network: Arc<NetworkService<Block, Hash>>,
 	/// EthFilterApi pool.
 	pub filter_pool: Option<FilterPool>,
 	/// Backend.
 	pub backend: Arc<fc_db::Backend<Block>>,
-	/// Maximum number of logs in a query.
-	// pub max_past_logs: u32,
 	/// Fee history cache.
 	pub fee_history_cache: FeeHistoryCache,
 	/// Maximum fee history cache size.
@@ -116,30 +112,6 @@ where
 		schemas: overrides_map,
 		fallback: Box::new(RuntimeApiStorageOverride::new(client)),
 	})
-}
-
-// TODO This is copied from frontier. It should be imported instead after
-// https://github.com/paritytech/frontier/issues/333 is solved
-pub fn open_frontier_backend<C>(
-	client: Arc<C>,
-	config: &sc_service::Configuration,
-) -> Result<Arc<fc_db::Backend<Block>>, String>
-where
-	C: sp_blockchain::HeaderBackend<Block>,
-{
-	let config_dir = config
-		.base_path
-		.as_ref()
-		.map(|base_path| base_path.config_dir(config.chain_spec.id()))
-		.unwrap_or_else(|| {
-			sc_service::BasePath::from_project("", "", "watr").config_dir(config.chain_spec.id())
-		});
-	let path = config_dir.join("frontier").join("db");
-
-	Ok(Arc::new(fc_db::Backend::<Block>::new(
-		client,
-		&fc_db::DatabaseSettings { source: fc_db::DatabaseSource::RocksDb { path, cache_size: 0 } },
-	)?))
 }
 
 /// Instantiate all RPC extensions.
@@ -183,11 +155,9 @@ where
 		graph,
 		deny_unsafe,
 		is_authority,
-		// enable_dev_signer,
 		network,
 		filter_pool,
 		backend,
-		// max_past_logs,
 		fee_history_cache,
 		fee_history_cache_limit,
 		overrides,
@@ -199,12 +169,14 @@ where
 
 	let signers = Vec::new();
 
+	let no_tx_converter: Option<fp_rpc::NoTransactionConverter> = None;
+
 	io.merge(
 		Eth::new(
 			client.clone(),
 			pool.clone(),
 			graph,
-			Some(watr_runtime::TransactionConverter),
+			no_tx_converter,
 			network.clone(),
 			signers,
 			overrides.clone(),
