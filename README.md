@@ -1,6 +1,6 @@
 <p align="center">
-  <a href="https://www.watr.org/">
-		<img src="https://user-images.githubusercontent.com/23270067/191095552-260f6a1b-0f32-4f89-b818-7bfc7280b0db.svg" width="460">
+	<a href="https://www.watr.org/">
+		<img src="https://user-images.githubusercontent.com/23270067/213279777-545afe00-7353-47d8-a6f1-657490e39665.svg" width="350"/>
 	</a>
 </p>
 
@@ -12,18 +12,76 @@
 </div>
 
 # Watr
-Watr is the blockchain protocol and decentralized app ecosystem for a new class of ethical commodities, their financing and trade.
+Watr Protocol is Watr’s decentralized and public blockchain platform that is open to everyone who wants to build, create and collaborate on it. Watr gives developers, entrepreneurs and investors direct access to commodities as a platform.
+It is a Polkadot Parachain, leveraging the shared security of the Polkadot ecosystem as well as high transaction throughput, connectivity with the other parachains and regular upgrades.
 
-## Node Overview
-This node currently contains the following pallets:
-- Balances
-- Multisig
-- Contracts
+## Building & Running Locally
 
-Future releases will include EVM smart contracts.
+- Before starting, please follow the Substrate quick start guide to setup the environment. https://docs.substrate.io/quick-start/.
+- Also, install zombienet: https://github.com/paritytech/zombienet
+
+1. Clone and build the node
+```
+git clone https://github.com/Watr-Protocol/watr.git
+cd watr
+
+# Build. Be patient, it takes a long time :)
+cargo +nightly build --release
+```
+
+2. Start the development network
+
+To start Mainnet:
+```
+zombienet -p native spawn zombienet-config/mainnet.toml
+```
+
+To start Devnet:
+```
+zombienet -p native spawn zombienet-config/devnet.toml
+```
+
+## Run Tests
+```
+cargo +nightly test
+```
+
+## Guides
+- Governance: [docs/governance/watr-governance-guide.md](docs/governance/watr-governance-guide.md)
+- Release Guidelines: TODO
+- Integrations Tests: [docs/integration-tests.md](docs/integration-tests.md)
+- Benchmarks: [docs/benchmarks.md](docs/benchmarks.md):
+- Connecting Metamask: TODO
+
+## Substrate Details
+**Substrate**
+- `pallet-scheduler` allows extrinsic calls to be scheduled for a later time
+- `pallet-balances` maintains the native Watr currency
+- `pallet-sudo` provides a single Root-privileged account. Will be removed
+- `pallet-multisig` allows for several accounts to manage a single multisig account
+- `pallet-identity` is a simple, federated, identity system that allows users to add a nickname, social medias, and more
+- `pallet-collective` creates the Council
+- `pallet-motion` provides root-level origin for the Council
+- `pallet-membership` makes managing Council members easier
+- `pallet-treasury` provides a pot for holding Council governed funds
+- `pallet-assets` creates and manages new tokens
+- `pallet-utility` provides dispatch management (such as batched calls)
+
+**EVM / Frontier**
+- `pallet-ethereum` provides Ethereum compatibilty and RPCs
+- `pallet-evm` Adds an Ethereum Virtual Machine. Provides support for EVM contracts
+- `pallet-base-fee` follows EIP-1559's fee mechanism
+- `pallet-evm-precompile-assets-erc20` (aka XC-20s) allows EVM smart contracts to access `pallet-assets` using an ERC-20 interface
+  
+**XCM**
+- `cumulus-pallet-xcmp-queue`
+- `pallet-xcm`
+- `cumulus-pallet-xcm`
+- `cumulus-pallet-dmp-queue`
+- XCM is configured to allow certain asset transfers to and from Statemint (e.g., USDt)
 
 ## Devnet
-A current devnet is running on the Rococo relay chain with ink! smart contracts enabled.  
+A current devnet is running on the Rococo relay chain.
 Endpoint: [https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.dev.watr.org%3A443#/explorer](https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.dev.watr.org%3A443#/explorer)
 
 ## Cumulus
