@@ -821,7 +821,7 @@ parameter_types! {
 	pub const ChainId: u64 = 688;
 	pub BlockGasLimit: U256 = U256::from(NORMAL_DISPATCH_RATIO * MAXIMUM_BLOCK_WEIGHT.ref_time() / WEIGHT_PER_GAS);
 	pub PrecompilesValue: FrontierPrecompiles<Runtime> = FrontierPrecompiles::<_>::new();
-	pub WeightPerGas: u64 = WEIGHT_PER_GAS;//Weight::from_ref_time(WEIGHT_PER_GAS);
+	pub WeightPerGas: u64 = WEIGHT_PER_GAS;
 }
 
 impl pallet_evm::Config for Runtime {
@@ -930,30 +930,6 @@ construct_runtime!(
 		Sudo: pallet_sudo::{Pallet, Call, Storage, Config<T>, Event<T>} = 255,
 	}
 );
-
-pub struct TransactionConverter;
-
-impl fp_rpc::ConvertTransaction<UncheckedExtrinsic> for TransactionConverter {
-	fn convert_transaction(&self, transaction: pallet_ethereum::Transaction) -> UncheckedExtrinsic {
-		UncheckedExtrinsic::new_unsigned(
-			pallet_ethereum::Call::<Runtime>::transact { transaction }.into(),
-		)
-	}
-}
-
-impl fp_rpc::ConvertTransaction<opaque::UncheckedExtrinsic> for TransactionConverter {
-	fn convert_transaction(
-		&self,
-		transaction: pallet_ethereum::Transaction,
-	) -> opaque::UncheckedExtrinsic {
-		let extrinsic = UncheckedExtrinsic::new_unsigned(
-			pallet_ethereum::Call::<Runtime>::transact { transaction }.into(),
-		);
-		let encoded = extrinsic.encode();
-		opaque::UncheckedExtrinsic::decode(&mut &encoded[..])
-			.expect("Encoded extrinsic is always valid")
-	}
-}
 
 impl fp_self_contained::SelfContainedCall for RuntimeCall {
 	type SignedInfo = H160;
