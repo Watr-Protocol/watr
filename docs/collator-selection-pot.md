@@ -10,6 +10,8 @@ To activate the Pot account, ensure an existential deposit is sent to the follow
 Once this account has an ED, the collators will start receiving a portion of the fees.  
 
 ## Sending ED 
+***Note: The staking account will be preset with a balance for Watr. This section should not need to be performed on Watr***
+
 It is recommended to send the Pot account an ED before any other transactions are made. This ensures the total issuance does not drop via burned fees.
 
 1. Navigate to the Sudo page
