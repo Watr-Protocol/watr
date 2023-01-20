@@ -1,5 +1,5 @@
 # Polkadot should be build with 'fast-runtime' feature
-# cargo build --release --features fast-runtime
+# cargo build --release --features fast-runtime from a branch with sudo pallet
 [relaychain]
 chain = "polkadot-local"
 default_command = "./bin/polkadot"

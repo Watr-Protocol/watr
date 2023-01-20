@@ -1,3 +1,23 @@
+// Copyright 2023 Watr Foundation
+// This file is part of Watr.
+
+// Watr is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// Watr is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Watr.  If not, see <http://www.gnu.org/licenses/>.
+
+// This file was originally forked from Substrate Parachain Template
+// which is generated directly to the upstream Parachain Template in Cumulus
+// https://github.com/paritytech/cumulus/tree/master/parachain-template
+
 #![cfg_attr(not(feature = "std"), no_std)]
 // `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 #![recursion_limit = "256"]
@@ -25,16 +45,16 @@ use smallvec::smallvec;
 use sp_api::impl_runtime_apis;
 use sp_core::{
 	crypto::{ByteArray, KeyTypeId},
-	OpaqueMetadata, H160, H256, U256,
+	sr25519, OpaqueMetadata, H160, H256, U256,
 };
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
 		AccountIdLookup, BlakeTwo256, Block as BlockT, DispatchInfoOf, Dispatchable,
-		PostDispatchInfoOf, UniqueSaturatedInto,
+		IdentifyAccount, PostDispatchInfoOf, UniqueSaturatedInto,
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
-	ApplyExtrinsicResult, Percent,
+	ApplyExtrinsicResult, MultiSigner, Percent,
 };
 
 use sp_std::{cmp::Ordering, marker::PhantomData, prelude::*};
@@ -58,7 +78,7 @@ pub use frame_support::{
 		constants::WEIGHT_PER_SECOND, ConstantMultiplier, Weight, WeightToFeeCoefficient,
 		WeightToFeeCoefficients, WeightToFeePolynomial,
 	},
-	ConsensusEngineId, PalletId, RuntimeDebug, StorageValue,
+	ConsensusEngineId, Hashable, PalletId, RuntimeDebug, StorageValue,
 };
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
@@ -130,7 +150,52 @@ pub type Executive = frame_executive::Executive<
 	frame_system::ChainContext<Runtime>,
 	Runtime,
 	AllPalletsWithSystem,
+	PopulateCouncil,
 >;
+
+pub struct PopulateCouncil;
+impl frame_support::traits::OnRuntimeUpgrade for PopulateCouncil {
+	fn on_runtime_upgrade() -> Weight {
+		use sp_std::collections::btree_set::BTreeSet;
+		// 2yE8JSy4mPHGXNgTwih4cLpvhLSzFA4YxXM1Dh1uMSZRpLJd
+		let councillor_1_account: [u8; 32] = [
+			188, 213, 97, 114, 162, 150, 63, 182, 68, 236, 75, 217, 254, 104, 25, 241, 199, 159,
+			157, 37, 115, 213, 137, 139, 162, 182, 247, 227, 161, 10, 187, 5,
+		];
+		// 2ujjvAK3qfmGuCQf2CHDdyupypxM1e8hqPzwf784VkofnPmk
+		let councillor_2_account: [u8; 32] = [
+			34, 122, 116, 243, 9, 93, 168, 47, 68, 48, 58, 78, 196, 151, 136, 83, 19, 18, 153, 156,
+			76, 149, 158, 234, 4, 63, 68, 195, 161, 101, 239, 86,
+		];
+		// 2vKxTGUhxRgfMuuiR27ogKtfuNoAE2bMc9p7XzTMfG4Z6G8o
+		let councillor_3_account: [u8; 32] = [
+			60, 147, 0, 103, 185, 139, 160, 224, 248, 154, 82, 50, 198, 120, 172, 180, 205, 131,
+			255, 129, 197, 64, 85, 124, 78, 255, 169, 72, 219, 232, 72, 31,
+		];
+		// 2yVfA3LaDrQj9Sqz1wn2rpoSiUZ6GyAUFRnYfhcqAiQXe5dC
+		let councillor_4_account: [u8; 32] = [
+			200, 173, 237, 214, 234, 167, 202, 19, 75, 160, 233, 83, 142, 87, 87, 99, 193, 134,
+			127, 20, 98, 157, 159, 95, 243, 153, 116, 163, 187, 51, 132, 77,
+		];
+
+		let councillor_1 = MultiSigner::Sr25519(sr25519::Public(councillor_1_account));
+		let councillor_2 = MultiSigner::Sr25519(sr25519::Public(councillor_2_account));
+		let councillor_3 = MultiSigner::Sr25519(sr25519::Public(councillor_3_account));
+		let councillor_4 = MultiSigner::Sr25519(sr25519::Public(councillor_4_account));
+
+		let members: &[AccountId] = &[
+			councillor_1.into_account(),
+			councillor_2.into_account(),
+			councillor_3.into_account(),
+			councillor_4.into_account(),
+		];
+		let members_set: BTreeSet<_> = members.iter().collect();
+
+		assert_eq!(members_set.len(), members.len(), "Members cannot contain duplicate accounts.");
+		pallet_collective::Members::<Runtime, CouncilCollective>::put(members);
+		<Runtime as frame_system::Config>::DbWeight::get().writes(1)
+	}
+}
 
 /// Handles converting a weight scalar to a fee value, based on the scale and granularity of the
 /// node's balance type.
