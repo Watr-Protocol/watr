@@ -1,6 +1,8 @@
 <p align="center">
 	<a href="https://www.watr.org/">
 		<img src="https://user-images.githubusercontent.com/23270067/213279777-545afe00-7353-47d8-a6f1-657490e39665.svg" width="350"/>
+	<a href="https://www.watr.org/">
+		<img src="https://user-images.githubusercontent.com/23270067/213279777-545afe00-7353-47d8-a6f1-657490e39665.svg" width="350"/>
 	</a>
 </p>
 
@@ -20,7 +22,7 @@ It is a Polkadot Parachain, leveraging the shared security of the Polkadot ecosy
 - Before starting, please follow the Substrate quick start guide to setup the environment. https://docs.substrate.io/quick-start/.
 - Also, install zombienet: https://github.com/paritytech/zombienet
 
-1. Clone and build the node
+1. Clone and build the Watr node
 ```
 git clone https://github.com/Watr-Protocol/watr.git
 cd watr
@@ -29,7 +31,27 @@ cd watr
 cargo +nightly build --release
 ```
 
-2. Start the development network
+2. Build Polkadot with Sudo, and fast-runtime. 
+
+```
+# clone polkadot with branch that has fast-runtime and Sudo 
+git clone --branch release-v0.9.36-fast-sudo https://github.com/paritytech/polkadot.git
+cd polkadot
+
+# Build with fast-runtime enabled
+cargo build --release --features fast-runtime
+``` 
+
+Save the polkadot binary stored at `target/release/polkadot`.
+
+Place this binary into the `watr/bin` directory.
+
+```
+# In polkadot root. Assuming watr is one directory up.
+cp target/release/polkadot ../watr/bin
+```
+
+3. Start the development network
 
 To start Mainnet:
 ```
@@ -52,6 +74,7 @@ cargo +nightly test
 - Integrations Tests: [docs/integration-tests.md](docs/integration-tests.md)
 - Benchmarks: [docs/benchmarks.md](docs/benchmarks.md):
 - Connecting Metamask: TODO
+- Collator Selection Reward Pot: [docs/collator-selection-pot.md](docs/collator-selection-pot.md)
 
 ## Substrate Details
 **Substrate**
@@ -79,8 +102,21 @@ cargo +nightly test
 - `cumulus-pallet-xcm`
 - `cumulus-pallet-dmp-queue`
 - XCM is configured to allow certain asset transfers to and from Statemint (e.g., USDt)
+**EVM / Frontier**
+- `pallet-ethereum` provides Ethereum compatibilty and RPCs
+- `pallet-evm` Adds an Ethereum Virtual Machine. Provides support for EVM contracts
+- `pallet-base-fee` follows EIP-1559's fee mechanism
+- `pallet-evm-precompile-assets-erc20` (aka XC-20s) allows EVM smart contracts to access `pallet-assets` using an ERC-20 interface
+  
+**XCM**
+- `cumulus-pallet-xcmp-queue`
+- `pallet-xcm`
+- `cumulus-pallet-xcm`
+- `cumulus-pallet-dmp-queue`
+- XCM is configured to allow certain asset transfers to and from Statemint (e.g., USDt)
 
 ## Devnet
+A current devnet is running on the Rococo relay chain.
 A current devnet is running on the Rococo relay chain.
 Endpoint: [https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.dev.watr.org%3A443#/explorer](https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.dev.watr.org%3A443#/explorer)
 
