@@ -20,7 +20,7 @@ It is a Polkadot Parachain, leveraging the shared security of the Polkadot ecosy
 - Before starting, please follow the Substrate quick start guide to setup the environment. https://docs.substrate.io/quick-start/.
 - Also, install zombienet: https://github.com/paritytech/zombienet
 
-1. Clone and build the node
+1. Clone and build the Watr node
 ```
 git clone https://github.com/Watr-Protocol/watr.git
 cd watr
@@ -29,7 +29,27 @@ cd watr
 cargo +nightly build --release
 ```
 
-2. Start the development network
+2. Build Polkadot with Sudo, and fast-runtime. 
+
+```
+# clone polkadot with branch that has fast-runtime and Sudo 
+git clone --branch release-v0.9.36-fast-sudo https://github.com/paritytech/polkadot.git
+cd polkadot
+
+# Build with fast-runtime enabled
+cargo build --release --features fast-runtime
+``` 
+
+Save the polkadot binary stored at `target/release/polkadot`.
+
+Place this binary into the `watr/bin` directory.
+
+```
+# In polkadot root. Assuming watr is one directory up.
+cp target/release/polkadot ../watr/bin
+```
+
+3. Start the development network
 
 To start Mainnet:
 ```
@@ -52,6 +72,7 @@ cargo +nightly test
 - Integrations Tests: [docs/integration-tests.md](docs/integration-tests.md)
 - Benchmarks: [docs/benchmarks.md](docs/benchmarks.md):
 - Connecting Metamask: TODO
+- Collator Selection Reward Pot: [docs/collator-selection-pot.md](docs/collator-selection-pot.md)
 
 ## Substrate Details
 **Substrate**
