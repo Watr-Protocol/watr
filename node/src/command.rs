@@ -18,7 +18,7 @@
 // which is generated directly to the upstream Parachain Template in Cumulus
 // https://github.com/paritytech/cumulus/tree/master/parachain-template
 
-use std::net::SocketAddr;
+use std::{net::SocketAddr, path::PathBuf};
 
 use codec::Encode;
 use cumulus_client_cli::generate_genesis_block;
@@ -43,6 +43,55 @@ use crate::{
 	service::{new_partial, WatrRuntimeExecutor},
 };
 
+/// Helper enum that is used for better distinction of different parachain/runtime configuration
+/// (it is based/calculated on ChainSpec's 'chain_spec' attribute)
+#[derive(Debug, PartialEq, Default)]
+enum Runtime {
+	/// This is the default runtime (actually based on rococo)
+	#[default]
+	Default,
+	Devnet,
+	Mainnet,
+}
+
+trait RuntimeResolver {
+	fn runtime(&self) -> Runtime;
+}
+
+impl RuntimeResolver for dyn ChainSpec {
+	fn runtime(&self) -> Runtime {
+		runtime(self.id())
+	}
+}
+
+/// Implementation, that can resolve [`Runtime`] from any json configuration file
+impl RuntimeResolver for PathBuf {
+	fn runtime(&self) -> Runtime {
+		#[derive(Debug, serde::Deserialize)]
+		struct EmptyChainSpecWithId {
+			id: String,
+		}
+
+		let file = std::fs::File::open(self).expect("Failed to open file");
+		let reader = std::io::BufReader::new(file);
+		let chain_spec: EmptyChainSpecWithId = sp_serializer::from_reader(reader)
+			.expect("Failed to read 'json' file with ChainSpec configuration");
+
+		runtime(&chain_spec.id)
+	}
+}
+
+fn runtime(id: &str) -> Runtime {
+	if id.starts_with("devnet") {
+		Runtime::Devnet
+	} else if id.starts_with("mainnet") {
+		Runtime::Mainnet
+	} else {
+		log::warn!("No specific runtime was recognized for ChainSpec's protocolId: '{}', so Runtime::default() will be used", id);
+		Runtime::default()
+	}
+}
+
 fn load_spec(id: &str) -> std::result::Result<Box<dyn ChainSpec>, String> {
 	Ok(match id {
 		"mainnet-dev" => Box::new(chain_spec::mainnet_development_config()),
@@ -51,8 +100,14 @@ fn load_spec(id: &str) -> std::result::Result<Box<dyn ChainSpec>, String> {
 		"devnet-local" => Box::new(chain_spec::devnet_local_testnet_config()),
 		"dev" => Box::new(chain_spec::devnet_local_testnet_config()),
 		"" | "local" => Box::new(chain_spec::devnet_local_testnet_config()),
-		path =>
-			Box::new(chain_spec::DevnetChainSpec::from_json_file(std::path::PathBuf::from(path))?),
+		path => {
+			let path: PathBuf = path.into();
+			match path.runtime() {
+				Runtime::Devnet => Box::new(chain_spec::DevnetChainSpec::from_json_file(path)?),
+				Runtime::Mainnet => Box::new(chain_spec::MainnetChainSpec::from_json_file(path)?),
+				Runtime::Default => Box::new(chain_spec::DevnetChainSpec::from_json_file(path)?),
+			}
+		},
 	})
 }
 
@@ -84,7 +139,7 @@ impl SubstrateCli for Cli {
 	}
 
 	fn copyright_start_year() -> i32 {
-		2020
+		2023
 	}
 
 	fn load_spec(&self, id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {

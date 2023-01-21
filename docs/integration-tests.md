@@ -1,13 +1,17 @@
 # Integration Tests
 
 1. Install `parachains-integration-tests` [npm package](https://www.npmjs.com/package/@parity/parachains-integration-tests) - [Github](https://github.com/paritytech/parachains-integration-tests) repo
-	- `yarn global add @parity/parachains-integration-tests`
+	```
+	yarn global add @parity/parachains-integration-tests
+	```
 2. Install locally particular npm package dependancies required by the integration tests
-	- `yarn`
+	```
+	yarn
+	```
 3. `polkadot`, `polkadot-parachain` and `watr-node` compiled binaries should be copied to `./bin` folder
 	- The `polkadot` binary should be compiled with `fast-runtime` feature from a release branch with `sudo` pallet on it. An example is this [branch](https://github.com/paritytech/polkadot/tree/it/release-v0.9.36-fast-sudo)
 		```
-			cargo build --release --features fast-runtime
+		cargo build --release --features fast-runtime
 		```
 4. From the repository root folder, run:
 	- For Devnet:

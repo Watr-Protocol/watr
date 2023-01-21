@@ -1,6 +1,6 @@
 {
   "name": "Watr Network",
-  "id": "watr_network",
+  "id": "devnet_watr_network",
   "chainType": "Live",
   "bootNodes": [
     "/dns4/0.dev.watr.org/tcp/30343/p2p/12D3KooWQd5UGCbkRp7HvNLx4S1Gw72fKXVRaAMUKzPnfGUEQgGM",

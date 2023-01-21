@@ -38,8 +38,6 @@ pub use watr_common::{
 	SLOT_DURATION, WEIGHT_PER_GAS,
 };
 
-use codec::{Decode, Encode};
-
 use cumulus_pallet_parachain_system::RelayNumberStrictlyIncreases;
 use smallvec::smallvec;
 use sp_api::impl_runtime_apis;
@@ -495,9 +493,9 @@ impl pallet_identity::Config for Runtime {
 	type MaxSubAccounts = MaxSubAccounts;
 	type MaxAdditionalFields = MaxAdditionalFields;
 	type MaxRegistrars = MaxRegistrars;
-	type Slashed = ();
-	type ForceOrigin = frame_system::EnsureRoot<AccountId>;
-	type RegistrarOrigin = frame_system::EnsureRoot<AccountId>;
+	type Slashed = Treasury;;
+	type ForceOrigin = MoreThanHalfCouncil;
+	type RegistrarOrigin = MoreThanHalfCouncil;
 	type WeightInfo = weights::pallet_identity::WeightInfo<Runtime>;
 }
 
@@ -699,7 +697,7 @@ parameter_types! {
 	pub const ProposalBondMinimum: Balance = 100 * WATR;
 	pub const ProposalBondMaximum: Balance = 500 * WATR;
 	pub const SpendPeriod: BlockNumber = 24 * DAYS;
-	pub const Burn: Permill = Permill::from_percent(1);
+	pub const Burn: Permill = Permill::from_percent(0);
 	pub const TreasuryPalletId: PalletId = PalletId(*b"py/trsry");
 
 	pub const TipCountdown: BlockNumber = 1 * DAYS;

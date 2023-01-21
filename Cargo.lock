@@ -11159,6 +11159,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "sp-serializer"
+version = "4.0.0-dev"
+source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.30#a3ed0119c45cdd0d571ad34e5b3ee7518c8cef8d"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "sp-session"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.30#a3ed0119c45cdd0d571ad34e5b3ee7518c8cef8d"
@@ -12817,6 +12826,7 @@ dependencies = [
  "sp-keystore",
  "sp-offchain",
  "sp-runtime",
+ "sp-serializer",
  "sp-session",
  "sp-timestamp",
  "sp-transaction-pool",

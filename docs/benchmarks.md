@@ -1,4 +1,5 @@
 # Benchmarks
+Weights are generated in a machine with the minimum specs required by a Watr collator: **4 vCPUs @ 3.1GHz | 16 GiB memory**
 
 1. Connect via ssh to your benchmarking machine
     - `ssh <user>@<machine_ip>`
@@ -19,8 +20,8 @@
     Example:
 
     ```bash
-    scp -r <user><machine_ip>:/home/polkadot/watr/runtime/devnet/src/weights <absolute_path_to_watr_repo>/runtime/devnet/src
-    scp -r <user><machine_ip>:/home/polkadot/watr/runtime/mainnet/src/weights <absolute_path_to_watr_repo>/runtime/mainnet/src
+    scp -r <user><machine_ip>:/home/<user>/watr/runtime/devnet/src/weights <absolute_path_to_watr_repo>/runtime/devnet/src
+    scp -r <user><machine_ip>:/home/<user>/watr/runtime/mainnet/src/weights <absolute_path_to_watr_repo>/runtime/mainnet/src
     ```
 
 10. Commit the changes in your local and create a PR
