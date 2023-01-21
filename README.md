@@ -73,7 +73,7 @@ cargo test
 - Connecting Metamask: TODO
 - Collator Selection Reward Pot: [docs/collator-selection-pot.md](docs/collator-selection-pot.md)
 
-## Substrate Details
+## Runtime Details
 **Substrate**
 - `pallet-scheduler` allows extrinsic calls to be scheduled for a later time
 - `pallet-balances` maintains the native Watr currency
