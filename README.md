@@ -38,7 +38,7 @@ It is a Polkadot Parachain, leveraging the shared security of the Polkadot ecosy
 	cargo build --release --features fast-runtime
 	``` 
 
-3. Copy the `polkadot` binary stored at `target/release/polkadot` into the `watr/bin` directory.
+3. Copy the `polkadot` binary stored at `target/release/polkadot` into the `watr/bin` directory
 
 	```shell
 	# In polkadot root. Assuming watr is one directory up.
