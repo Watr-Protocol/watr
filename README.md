@@ -17,7 +17,7 @@ It is a Polkadot Parachain, leveraging the shared security of the Polkadot ecosy
 
 ## Building & Running Locally
 
-- Before starting, please follow the Substrate quick start guide to setup the environment. https://docs.substrate.io/quick-start/.
+- Before starting, please follow the Substrate quick start guide to setup the environment. https://docs.substrate.io/quick-start/
 - Also, install zombienet: https://github.com/paritytech/zombienet
 
 1. Clone and build the Watr node
