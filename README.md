@@ -48,17 +48,17 @@ Place this binary into the `watr/bin` directory.
 cp target/release/polkadot ../watr/bin
 ```
 
-3. Start the development network
+3. Start the local testnet
 
-To start Mainnet:
-```shell
-zombienet -p native spawn zombienet-config/mainnet.toml
-```
+	To start Mainnet:
+	```shell
+	zombienet -p native spawn zombienet-config/mainnet.toml
+	```
 
-To start Devnet:
-```shell
-zombienet -p native spawn zombienet-config/devnet.toml
-```
+	To start Devnet:
+	```shell
+	zombienet -p native spawn zombienet-config/devnet.toml
+	```
 
 ## Run Tests
 ```shell
