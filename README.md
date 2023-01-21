@@ -43,7 +43,7 @@ Save the polkadot binary stored at `target/release/polkadot`.
 
 Place this binary into the `watr/bin` directory.
 
-```
+```shell
 # In polkadot root. Assuming watr is one directory up.
 cp target/release/polkadot ../watr/bin
 ```
