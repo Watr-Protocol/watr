@@ -21,34 +21,31 @@ It is a Polkadot Parachain, leveraging the shared security of the Polkadot ecosy
 - Also, install zombienet: https://github.com/paritytech/zombienet
 
 1. Clone and build the Watr node
-```shell
-git clone https://github.com/Watr-Protocol/watr.git
-cd watr
+	```shell
+	git clone https://github.com/Watr-Protocol/watr.git
+	cd watr
 
-# Build. Be patient, it takes a long time :)
-cargo build --release
-```
+	# Build. Be patient, it can take a long time :)
+	cargo build --release
+	```
 
 2. Build Polkadot 
-```shell
-# clone Polkadot 
-git clone https://github.com/paritytech/polkadot.git
-cd polkadot
+	```shell
+	git clone https://github.com/paritytech/polkadot.git
+	cd polkadot
 
-# Build with fast-runtime enabled
-cargo build --release --features fast-runtime
-``` 
+	# Build with fast-runtime enabled
+	cargo build --release --features fast-runtime
+	``` 
 
-Save the polkadot binary stored at `target/release/polkadot`.
+3. Copy the `polkadot` binary stored at `target/release/polkadot` into the `watr/bin` directory.
 
-Place this binary into the `watr/bin` directory.
+	```shell
+	# In polkadot root. Assuming watr is one directory up.
+	cp target/release/polkadot ../watr/bin
+	```
 
-```shell
-# In polkadot root. Assuming watr is one directory up.
-cp target/release/polkadot ../watr/bin
-```
-
-3. Start the local testnet
+4. Start the local testnet
 
 	To start Mainnet:
 	```shell
@@ -66,12 +63,12 @@ cargo test
 ```
 
 ## Guides
-- Governance: [docs/governance/watr-governance-guide.md](docs/governance/watr-governance-guide.md)
+- [Benchmarks](docs/benchmarks.md)
 - Release Guidelines: TODO
-- Integrations Tests: [docs/integration-tests.md](docs/integration-tests.md)
-- Benchmarks: [docs/benchmarks.md](docs/benchmarks.md):
+- [Integrations Tests](docs/integration-tests.md)
+- [Governance](docs/governance/watr-governance-guide.md)
 - Connecting Metamask: TODO
-- Collator Selection Reward Pot: [docs/collator-selection-pot.md](docs/collator-selection-pot.md)
+- [Collator Selection Reward Pot](docs/collator-selection-pot.md)
 
 ## Runtime Details
 **Substrate**
@@ -102,6 +99,7 @@ cargo test
 
 ## Devnet
 A current Devnet is running on the Rococo relay chain.
+
 Endpoint: [https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.dev.watr.org%3A443#/explorer](https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.dev.watr.org%3A443#/explorer)
 
 ## Cumulus
