@@ -29,11 +29,10 @@ cd watr
 cargo +nightly build --release
 ```
 
-2. Build Polkadot with Sudo, and fast-runtime. 
-
+2. Build Polkadot 
 ```
-# clone polkadot with branch that has fast-runtime and Sudo 
-git clone --branch release-v0.9.36-fast-sudo https://github.com/paritytech/polkadot.git
+# clone Polkadot 
+git clone https://github.com/paritytech/polkadot.git
 cd polkadot
 
 # Build with fast-runtime enabled
