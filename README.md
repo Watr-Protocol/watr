@@ -21,7 +21,7 @@ It is a Polkadot Parachain, leveraging the shared security of the Polkadot ecosy
 - Also, install zombienet: https://github.com/paritytech/zombienet
 
 1. Clone and build the Watr node
-```
+```shell
 git clone https://github.com/Watr-Protocol/watr.git
 cd watr
 
@@ -30,7 +30,7 @@ cargo build --release
 ```
 
 2. Build Polkadot 
-```
+```shell
 # clone Polkadot 
 git clone https://github.com/paritytech/polkadot.git
 cd polkadot
@@ -51,17 +51,17 @@ cp target/release/polkadot ../watr/bin
 3. Start the development network
 
 To start Mainnet:
-```
+```shell
 zombienet -p native spawn zombienet-config/mainnet.toml
 ```
 
 To start Devnet:
-```
+```shell
 zombienet -p native spawn zombienet-config/devnet.toml
 ```
 
 ## Run Tests
-```
+```shell
 cargo test
 ```
 
