@@ -99,22 +99,9 @@ cargo test
 - `cumulus-pallet-xcm`
 - `cumulus-pallet-dmp-queue`
 - XCM is configured to allow certain asset transfers to and from Statemint (e.g., USDt)
-**EVM / Frontier**
-- `pallet-ethereum` provides Ethereum compatibilty and RPCs
-- `pallet-evm` Adds an Ethereum Virtual Machine. Provides support for EVM contracts
-- `pallet-base-fee` follows EIP-1559's fee mechanism
-- `pallet-evm-precompile-assets-erc20` (aka XC-20s) allows EVM smart contracts to access `pallet-assets` using an ERC-20 interface
-  
-**XCM**
-- `cumulus-pallet-xcmp-queue`
-- `pallet-xcm`
-- `cumulus-pallet-xcm`
-- `cumulus-pallet-dmp-queue`
-- XCM is configured to allow certain asset transfers to and from Statemint (e.g., USDt)
 
 ## Devnet
-A current devnet is running on the Rococo relay chain.
-A current devnet is running on the Rococo relay chain.
+A current Devnet is running on the Rococo relay chain.
 Endpoint: [https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.dev.watr.org%3A443#/explorer](https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.dev.watr.org%3A443#/explorer)
 
 ## Cumulus
