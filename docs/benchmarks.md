@@ -1,7 +1,5 @@
 # Benchmarks
-Weights are generated in a machine with the minimum specs required by a Watr collator:
-
-**4 vCPUs @ 3.1GHz | 16 GiB memory | Intel(R) Xeon(R) CPU @ 2.80GHz**
+Weights are generated in a machine with the minimum specs required by a Watr collator: **4 vCPUs @ 3.1GHz | 16 GiB memory**
 
 1. Connect via ssh to your benchmarking machine
     - `ssh <user>@<machine_ip>`
