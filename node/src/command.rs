@@ -103,14 +103,11 @@ fn load_spec(id: &str) -> std::result::Result<Box<dyn ChainSpec>, String> {
 		path => {
 			let path: PathBuf = path.into();
 			match path.runtime() {
-				Runtime::Devnet =>
-					Box::new(chain_spec::DevnetChainSpec::from_json_file(path)?),
-				Runtime::Mainnet =>
-					Box::new(chain_spec::MainnetChainSpec::from_json_file(path)?),
-				Runtime::Default =>
-					Box::new(chain_spec::DevnetChainSpec::from_json_file(path)?),
+				Runtime::Devnet => Box::new(chain_spec::DevnetChainSpec::from_json_file(path)?),
+				Runtime::Mainnet => Box::new(chain_spec::MainnetChainSpec::from_json_file(path)?),
+				Runtime::Default => Box::new(chain_spec::DevnetChainSpec::from_json_file(path)?),
 			}
-		}
+		},
 	})
 }
 
