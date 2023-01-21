@@ -38,8 +38,6 @@ pub use watr_common::{
 	SLOT_DURATION, WEIGHT_PER_GAS,
 };
 
-use codec::{Decode, Encode};
-
 use cumulus_pallet_parachain_system::RelayNumberStrictlyIncreases;
 use smallvec::smallvec;
 use sp_api::impl_runtime_apis;
