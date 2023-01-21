@@ -26,7 +26,7 @@ git clone https://github.com/Watr-Protocol/watr.git
 cd watr
 
 # Build. Be patient, it takes a long time :)
-cargo +nightly build --release
+cargo build --release
 ```
 
 2. Build Polkadot 
@@ -62,7 +62,7 @@ zombienet -p native spawn zombienet-config/devnet.toml
 
 ## Run Tests
 ```
-cargo +nightly test
+cargo test
 ```
 
 ## Guides
