@@ -88,16 +88,16 @@ cumulus-relay-chain-rpc-interface = { git = "https://github.com/paritytech/cumul
 parachains-common = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.30", default-features = false }
 
 # Frontier
-fc-cli = { git = 'https://github.com/AstarNetwork/frontier.git', branch = "polkadot-v0.9.30" }
-fc-consensus = { git = 'https://github.com/AstarNetwork/frontier.git', branch = "polkadot-v0.9.30" }
-fc-db = { git = 'https://github.com/AstarNetwork/frontier.git', branch = "polkadot-v0.9.30" }
-fc-mapping-sync = { git = 'https://github.com/AstarNetwork/frontier.git', branch = "polkadot-v0.9.30" }
-fc-rpc = { git = 'https://github.com/AstarNetwork/frontier.git', branch = "polkadot-v0.9.30" }
-fc-rpc-core = { git = 'https://github.com/AstarNetwork/frontier.git', branch = "polkadot-v0.9.30" }
-fp-consensus = { git = 'https://github.com/AstarNetwork/frontier.git', branch = "polkadot-v0.9.30" }
-fp-evm = { git = 'https://github.com/AstarNetwork/frontier.git', branch = "polkadot-v0.9.30" }
-fp-rpc = { git = 'https://github.com/AstarNetwork/frontier.git', branch = "polkadot-v0.9.30" }
-fp-storage = { git = 'https://github.com/AstarNetwork/frontier.git', branch = "polkadot-v0.9.30" }
+fc-cli = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30" }
+fc-consensus = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30" }
+fc-db = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30" }
+fc-mapping-sync = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30" }
+fc-rpc = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30" }
+fc-rpc-core = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30" }
+fp-consensus = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30" }
+fp-evm = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30" }
+fp-rpc = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30" }
+fp-storage = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30" }
 
 [build-dependencies]
 substrate-build-script-utils = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }

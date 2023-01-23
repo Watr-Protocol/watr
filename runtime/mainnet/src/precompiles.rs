@@ -15,6 +15,7 @@
 // along with Watr.  If not, see <http://www.gnu.org/licenses/>.
 
 // This file was originally copied from the The Astar Network EVM precompiles.
+// and used in terms of GPLv3.
 // https://github.com/AstarNetwork/Astar/blob/master/runtime/astar/src/precompiles.rs
 
 use pallet_evm::{
@@ -33,7 +34,7 @@ use sp_std::{fmt::Debug, marker::PhantomData};
 /// to Erc20AssetsPrecompileSet
 pub const ASSET_PRECOMPILE_ADDRESS_PREFIX: &[u8] = &[255u8; 4];
 
-/// The PrecompileSet installed in the Astar runtime.
+/// The PrecompileSet installed in the Watr runtime.
 #[derive(Debug, Default, Clone, Copy)]
 pub struct FrontierPrecompiles<R>(PhantomData<R>);
 
