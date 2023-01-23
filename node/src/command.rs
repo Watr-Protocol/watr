@@ -35,12 +35,11 @@ use sc_service::{
 };
 use sp_core::hexdisplay::HexDisplay;
 use sp_runtime::traits::{AccountIdConversion, Block as BlockT};
-use watr_runtime::{Block, RuntimeApi};
 
 use crate::{
 	chain_spec,
 	cli::{Cli, RelayChainCli, Subcommand},
-	service::{new_partial, WatrRuntimeExecutor},
+	service::{new_partial, Block, WatrDevnetRuntimeExecutor, WatrRuntimeExecutor},
 };
 
 /// Helper enum that is used for better distinction of different parachain/runtime configuration
@@ -103,9 +102,8 @@ fn load_spec(id: &str) -> std::result::Result<Box<dyn ChainSpec>, String> {
 		path => {
 			let path: PathBuf = path.into();
 			match path.runtime() {
-				Runtime::Devnet => Box::new(chain_spec::DevnetChainSpec::from_json_file(path)?),
+				Runtime::Devnet | Runtime::Default => Box::new(chain_spec::DevnetChainSpec::from_json_file(path)?),
 				Runtime::Mainnet => Box::new(chain_spec::MainnetChainSpec::from_json_file(path)?),
-				Runtime::Default => Box::new(chain_spec::DevnetChainSpec::from_json_file(path)?),
 			}
 		},
 	})
@@ -135,7 +133,7 @@ impl SubstrateCli for Cli {
 	}
 
 	fn support_url() -> String {
-		"https://github.com/paritytech/cumulus/issues/new".into()
+		"https://github.com/Watr-Protocol/watr/issues/new".into()
 	}
 
 	fn copyright_start_year() -> i32 {
@@ -146,8 +144,11 @@ impl SubstrateCli for Cli {
 		load_spec(id)
 	}
 
-	fn native_runtime_version(_: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
-		&watr_runtime::VERSION
+	fn native_runtime_version(chain_spec: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
+		match chain_spec.runtime() {
+			Runtime::Devnet | Runtime::Default => &watr_devnet_runtime::VERSION,
+			Runtime::Mainnet => &watr_runtime::VERSION,
+		}
 	}
 }
 
@@ -175,11 +176,11 @@ impl SubstrateCli for RelayChainCli {
 	}
 
 	fn support_url() -> String {
-		"https://github.com/paritytech/cumulus/issues/new".into()
+		"https://github.com/Watr-Protocol/watr/issues/new".into()
 	}
 
 	fn copyright_start_year() -> i32 {
-		2020
+		2023
 	}
 
 	fn load_spec(&self, id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
@@ -191,21 +192,61 @@ impl SubstrateCli for RelayChainCli {
 	}
 }
 
+/// Creates partial components for the runtimes that are supported by the benchmarks.
+macro_rules! construct_benchmark_partials {
+	($config:expr, |$partials:ident| $code:expr) => {
+		match $config.chain_spec.runtime() {
+			Runtime::Devnet | Runtime::Default => {
+				let $partials = new_partial::<watr_devnet_runtime::RuntimeApi, WatrDevnetRuntimeExecutor, _>(
+					&$config,
+					crate::service::parachain_build_import_queue::<_, WatrDevnetRuntimeExecutor>,
+				)?;
+				$code
+			},
+			Runtime::Mainnet => {
+				let $partials = new_partial::<watr_runtime::RuntimeApi, WatrRuntimeExecutor, _>(
+					&$config,
+					crate::service::parachain_build_import_queue::<_, WatrRuntimeExecutor>,
+				)?;
+				$code
+			}
+		}
+	};
+}
+
 macro_rules! construct_async_run {
 	(|$components:ident, $cli:ident, $cmd:ident, $config:ident| $( $code:tt )* ) => {{
 		let runner = $cli.create_runner($cmd)?;
-		runner.async_run(|$config| {
-			let $components = new_partial::<
-				RuntimeApi,
-				WatrRuntimeExecutor,
-				_
-			>(
-				&$config,
-				crate::service::parachain_build_import_queue,
-			)?;
-			let task_manager = $components.task_manager;
-			{ $( $code )* }.map(|v| (v, task_manager))
-		})
+		match runner.config().chain_spec.runtime() {
+			Runtime::Devnet | Runtime::Default => {
+				runner.async_run(|$config| {
+					let $components = new_partial::<
+						watr_devnet_runtime::RuntimeApi,
+						WatrDevnetRuntimeExecutor,
+						_
+					>(
+						&$config,
+						crate::service::parachain_build_import_queue::<_, WatrDevnetRuntimeExecutor>,
+					)?;
+					let task_manager = $components.task_manager;
+					{ $( $code )* }.map(|v| (v, task_manager))
+				})
+			},
+			Runtime::Mainnet => {
+				runner.async_run(|$config| {
+					let $components = new_partial::<
+						watr_runtime::RuntimeApi,
+						WatrRuntimeExecutor,
+						_
+					>(
+						&$config,
+						crate::service::parachain_build_import_queue::<_, WatrRuntimeExecutor>,
+					)?;
+					let task_manager = $components.task_manager;
+					{ $( $code )* }.map(|v| (v, task_manager))
+				})
+			},
+		}
 	}}
 }
 
@@ -270,7 +311,7 @@ pub fn run() -> Result<()> {
 			runner.sync_run(|_config| {
 				let spec = cli.load_spec(&cmd.shared_params.chain.clone().unwrap_or_default())?;
 				let state_version = Cli::native_runtime_version(&spec).state_version();
-				cmd.run::<Block>(&*spec, state_version)
+				cmd.run::<crate::service::Block>(&*spec, state_version)
 			})
 		},
 		Some(Subcommand::ExportGenesisWasm(cmd)) => {
@@ -286,18 +327,19 @@ pub fn run() -> Result<()> {
 			match cmd {
 				BenchmarkCmd::Pallet(cmd) =>
 					if cfg!(feature = "runtime-benchmarks") {
-						runner.sync_run(|config| cmd.run::<Block, WatrRuntimeExecutor>(config))
+						runner.sync_run(|config| match config.chain_spec.runtime() {
+							Runtime::Devnet | Runtime::Default =>
+								cmd.run::<Block, WatrDevnetRuntimeExecutor>(config),
+							Runtime::Mainnet =>
+								cmd.run::<Block, WatrRuntimeExecutor>(config),
+						})
 					} else {
 						Err("Benchmarking wasn't enabled when building the node. \
 					You can enable it with `--features runtime-benchmarks`."
 							.into())
 					},
 				BenchmarkCmd::Block(cmd) => runner.sync_run(|config| {
-					let partials = new_partial::<RuntimeApi, WatrRuntimeExecutor, _>(
-						&config,
-						crate::service::parachain_build_import_queue,
-					)?;
-					cmd.run(partials.client)
+					construct_benchmark_partials!(config, |partials| cmd.run(partials.client))
 				}),
 				#[cfg(not(feature = "runtime-benchmarks"))]
 				BenchmarkCmd::Storage(_) =>
@@ -309,14 +351,12 @@ pub fn run() -> Result<()> {
 					.into()),
 				#[cfg(feature = "runtime-benchmarks")]
 				BenchmarkCmd::Storage(cmd) => runner.sync_run(|config| {
-					let partials = new_partial::<RuntimeApi, WatrRuntimeExecutor, _>(
-						&config,
-						crate::service::parachain_build_import_queue,
-					)?;
-					let db = partials.backend.expose_db();
-					let storage = partials.backend.expose_storage();
+					construct_benchmark_partials!(config, |partials| {
+						let db = partials.backend.expose_db();
+						let storage = partials.backend.expose_storage();
 
-					cmd.run(config, partials.client.clone(), db, storage)
+						cmd.run(config, partials.client.clone(), db, storage)
+					})
 				}),
 				BenchmarkCmd::Machine(cmd) =>
 					runner.sync_run(|config| cmd.run(&config, SUBSTRATE_REFERENCE_HARDWARE.clone())),
@@ -336,9 +376,14 @@ pub fn run() -> Result<()> {
 					TaskManager::new(runner.config().tokio_handle.clone(), *registry)
 						.map_err(|e| format!("Error: {:?}", e))?;
 
-				runner.async_run(|config| {
-					Ok((cmd.run::<Block, WatrRuntimeExecutor>(config), task_manager))
-				})
+				match runner.config().chain_spec.runtime() {
+					Runtime::Devnet | Runtime::Default => runner.async_run(|config| {
+						Ok((cmd.run::<Block, WatrDevnetRuntimeExecutor>(config), task_manager))
+					}),
+					Runtime::Mainnet => runner.async_run(|config| {
+						Ok((cmd.run::<Block, WatrRuntimeExecutor>(config), task_manager))
+					}),
+				}
 			} else {
 				Err("Try-runtime must be enabled by `--features try-runtime`.".into())
 			}
@@ -373,7 +418,7 @@ pub fn run() -> Result<()> {
 					AccountIdConversion::<polkadot_primitives::v2::AccountId>::into_account_truncating(&id);
 
 				let state_version = Cli::native_runtime_version(&config.chain_spec).state_version();
-				let block: Block = generate_genesis_block(&*config.chain_spec, state_version)
+				let block: crate::service::Block = generate_genesis_block(&*config.chain_spec, state_version)
 					.map_err(|e| format!("{:?}", e))?;
 				let genesis_state = format!("0x{:?}", HexDisplay::from(&block.header().encode()));
 
@@ -387,18 +432,36 @@ pub fn run() -> Result<()> {
 				info!("Parachain genesis state: {}", genesis_state);
 				info!("Is collating: {}", if config.role.is_authority() { "yes" } else { "no" });
 
-				sp_core::crypto::set_default_ss58_version(watr_runtime::SS58Prefix::get().into());
+				match config.chain_spec.runtime() {
+					Runtime::Devnet | Runtime::Default => {
+						sp_core::crypto::set_default_ss58_version(watr_devnet_runtime::SS58Prefix::get().into());
 
-				crate::service::start_parachain_node(
-					config,
-					polkadot_config,
-					collator_options,
-					id,
-					hwbench,
-				)
-				.await
-				.map(|r| r.0)
-				.map_err(Into::into)
+						crate::service::start_parachain_node::<watr_devnet_runtime::RuntimeApi, WatrDevnetRuntimeExecutor>(
+							config,
+							polkadot_config,
+							collator_options,
+							id,
+							hwbench,
+						)
+						.await
+						.map(|r| r.0)
+						.map_err(Into::into)
+					},
+					Runtime::Mainnet => {
+						sp_core::crypto::set_default_ss58_version(watr_runtime::SS58Prefix::get().into());
+
+						crate::service::start_parachain_node::<watr_runtime::RuntimeApi, WatrRuntimeExecutor>(
+							config,
+							polkadot_config,
+							collator_options,
+							id,
+							hwbench,
+						)
+						.await
+						.map(|r| r.0)
+						.map_err(Into::into)
+					},
+				}
 			})
 		},
 	}

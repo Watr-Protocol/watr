@@ -29,7 +29,7 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 mod weights;
 pub mod xcm_config;
 
-pub use parachains_common::{
+pub use watr_common::{
 	impls::{AccountIdOf, DealWithFees, ToStakingPot},
 	AccountId, AuraId, Balance, BlockNumber, Hash, Index, Signature,
 };

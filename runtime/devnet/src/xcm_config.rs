@@ -42,15 +42,12 @@ use xcm_builder::{
 };
 use xcm_executor::{traits::JustTry, XcmExecutor};
 
-use watr_common::xcm_config::{
-	AllowOnlySendToReservePerAsset, AsForeignToLocal, ReserveAssetsFrom,
-};
-
 use cumulus_primitives_utility::{ParentAsUmp, XcmFeesTo32ByteAccount};
 
-use parachains_common::{
+use watr_common::{
 	impls::DealWithFees,
-	xcm_config::{DenyReserveTransferToRelayChain, DenyThenTry},
+	xcm_config::{AllowOnlySendToReservePerAsset, AsForeignToLocal, ReserveAssetsFrom},
+	xcm_config_parachains::{DenyReserveTransferToRelayChain, DenyThenTry},
 };
 
 use frame_system::EnsureRoot;
