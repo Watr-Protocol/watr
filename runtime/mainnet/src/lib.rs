@@ -765,7 +765,7 @@ where
 	}
 }
 
-// Frontier's default OnChargeEVMTransaction burns apart of the fees
+// Frontier's default OnChargeEVMTransaction burns a portion of the fees.
 watr_common::impl_on_charge_evm_transaction!();
 
 parameter_types! {

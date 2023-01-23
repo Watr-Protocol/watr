@@ -278,7 +278,7 @@ parameter_types! {
 	pub const Version: RuntimeVersion = VERSION;
 
 	// This part is copied from Substrate's `bin/node/runtime/src/lib.rs`.
-	//  The `RuntimeBlockLength` and `RuntimeBlockWeights` exist here because the
+	// The `RuntimeBlockLength` and `RuntimeBlockWeights` exist here because the
 	// `DeletionWeightLimit` and `DeletionQueueDepth` depend on those to parameterize
 	// the lazy contract deletion.
 	pub RuntimeBlockLength: BlockLength =
@@ -810,7 +810,7 @@ where
 	}
 }
 
-// Frontier's default OnChargeEVMTransaction burns apart of the fees
+// Frontier's default OnChargeEVMTransaction burns a portion of the fees
 watr_common::impl_on_charge_evm_transaction!();
 
 parameter_types! {

@@ -114,6 +114,9 @@ where
 	})
 }
 
+// Do not import directly from Frontier.
+// The DB path will be different, and the chains must be synced
+// from the start again.
 pub fn open_frontier_backend<C>(
 	client: Arc<C>,
 	config: &sc_service::Configuration,
