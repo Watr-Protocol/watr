@@ -28,8 +28,9 @@ use futures::{future, StreamExt};
 use sc_client_api::BlockchainEvents;
 
 use cumulus_client_cli::CollatorOptions;
+
 // Local Runtime Types
-use watr_runtime::{opaque::Block, AccountId, Balance, Hash, Index as Nonce, RuntimeApi};
+pub use watr_common::{AuraId, Block, AccountId, Balance, Hash, Index as Nonce};
 
 // Cumulus Imports
 use cumulus_client_consensus_aura::{AuraConsensus, BuildAuraConsensusParams, SlotProportion};
@@ -45,7 +46,7 @@ use cumulus_relay_chain_rpc_interface::{create_client_and_start_worker, RelayCha
 
 // Substrate Imports
 use sc_cli::SubstrateCli;
-use sc_executor::NativeElseWasmExecutor;
+use sc_executor::{NativeElseWasmExecutor, NativeExecutionDispatch};
 use sc_network::{NetworkBlock, NetworkService};
 use sc_service::{
 	BasePath, Configuration, PartialComponents, TFullBackend, TFullClient, TaskManager,
@@ -53,8 +54,9 @@ use sc_service::{
 use sc_telemetry::{Telemetry, TelemetryHandle, TelemetryWorker, TelemetryWorkerHandle};
 use sp_api::ConstructRuntimeApi;
 use sp_keystore::SyncCryptoStorePtr;
-use sp_runtime::traits::BlakeTwo256;
+use sp_runtime::{app_crypto::AppKey, traits::BlakeTwo256};
 use substrate_prometheus_endpoint::Registry;
+use sp_core::Pair;
 
 // Frontier
 use fc_consensus::FrontierBlockImport;
@@ -67,8 +69,27 @@ use crate::cli::Cli;
 use polkadot_service::CollatorPair;
 
 /// Native executor instance.
+pub struct WatrDevnetRuntimeExecutor;
+impl NativeExecutionDispatch for WatrDevnetRuntimeExecutor {
+	/// Only enable the benchmarking host functions when we actually want to benchmark.
+	#[cfg(feature = "runtime-benchmarks")]
+	type ExtendHostFunctions = frame_benchmarking::benchmarking::HostFunctions;
+	/// Otherwise we only use the default Substrate host functions.
+	#[cfg(not(feature = "runtime-benchmarks"))]
+	type ExtendHostFunctions = ();
+
+	fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
+		watr_devnet_runtime::api::dispatch(method, data)
+	}
+
+	fn native_version() -> sc_executor::NativeVersion {
+		watr_devnet_runtime::native_version()
+	}
+}
+
+/// Native executor instance.
 pub struct WatrRuntimeExecutor;
-impl sc_executor::NativeExecutionDispatch for WatrRuntimeExecutor {
+impl NativeExecutionDispatch for WatrRuntimeExecutor {
 	/// Only enable the benchmarking host functions when we actually want to benchmark.
 	#[cfg(feature = "runtime-benchmarks")]
 	type ExtendHostFunctions = frame_benchmarking::benchmarking::HostFunctions;
@@ -521,12 +542,12 @@ where
 
 /// Build the import queue for the parachain runtime.
 #[allow(clippy::type_complexity)]
-pub fn parachain_build_import_queue(
-	client: Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<WatrRuntimeExecutor>>>,
+pub fn parachain_build_import_queue<RuntimeApi, RuntimeExecutor: NativeExecutionDispatch + 'static>(
+	client: Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<RuntimeExecutor>>>,
 	block_import: FrontierBlockImport<
 		Block,
-		Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<WatrRuntimeExecutor>>>,
-		TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<WatrRuntimeExecutor>>,
+		Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<RuntimeExecutor>>>,
+		TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<RuntimeExecutor>>,
 	>,
 	config: &Configuration,
 	telemetry: Option<TelemetryHandle>,
@@ -534,10 +555,29 @@ pub fn parachain_build_import_queue(
 ) -> Result<
 	sc_consensus::DefaultImportQueue<
 		Block,
-		TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<WatrRuntimeExecutor>>,
+		TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<RuntimeExecutor>>,
 	>,
 	sc_service::Error,
-> {
+>
+where
+	RuntimeApi: ConstructRuntimeApi<Block, TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<RuntimeExecutor>>>
+		+ Send
+		+ Sync
+		+ 'static,
+	RuntimeApi::RuntimeApi: sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block>
+		+ sp_api::Metadata<Block>
+		+ sp_session::SessionKeys<Block>
+		+ sp_api::ApiExt<
+			Block,
+			StateBackend = sc_client_api::StateBackendFor<TFullBackend<Block>, Block>,
+		>
+		+ sp_offchain::OffchainWorkerApi<Block>
+		+ sp_block_builder::BlockBuilder<Block>
+		+ sp_consensus_aura::AuraApi<Block, <<AuraId as AppKey>::Pair as Pair>::Public>
+		+ fp_rpc::EthereumRuntimeRPCApi<Block>
+		+ fp_rpc::ConvertTransactionRuntimeApi<Block>
+		+ substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>
+{
 	let slot_duration = cumulus_client_consensus_aura::slot_duration(&*client)?;
 
 	cumulus_client_consensus_aura::import_queue::<
@@ -569,7 +609,7 @@ pub fn parachain_build_import_queue(
 }
 
 /// Start a parachain node.
-pub async fn start_parachain_node(
+pub async fn start_parachain_node<RuntimeApi, RuntimeExecutor: NativeExecutionDispatch + 'static>(
 	parachain_config: Configuration,
 	polkadot_config: Configuration,
 	collator_options: CollatorOptions,
@@ -577,14 +617,34 @@ pub async fn start_parachain_node(
 	hwbench: Option<sc_sysinfo::HwBench>,
 ) -> sc_service::error::Result<(
 	TaskManager,
-	Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<WatrRuntimeExecutor>>>,
-)> {
-	start_node_impl::<RuntimeApi, WatrRuntimeExecutor, _, _>(
+	Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<RuntimeExecutor>>>,
+)>
+where
+	RuntimeApi: ConstructRuntimeApi<Block, TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<RuntimeExecutor>>>
+		+ Send
+		+ Sync
+		+ 'static,
+	RuntimeApi::RuntimeApi: sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block>
+		+ sp_api::Metadata<Block>
+		+ sp_session::SessionKeys<Block>
+		+ sp_api::ApiExt<
+			Block,
+			StateBackend = sc_client_api::StateBackendFor<TFullBackend<Block>, Block>,
+		> + sp_offchain::OffchainWorkerApi<Block>
+		+ sp_block_builder::BlockBuilder<Block>
+		+ cumulus_primitives_core::CollectCollationInfo<Block>
+		+ sp_consensus_aura::AuraApi<Block, <<AuraId as AppKey>::Pair as Pair>::Public>
+		+ pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>
+		+ substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>
+		+ fp_rpc::EthereumRuntimeRPCApi<Block>
+		+ fp_rpc::ConvertTransactionRuntimeApi<Block>
+{
+	start_node_impl::<RuntimeApi, RuntimeExecutor, _, _>(
 		parachain_config,
 		polkadot_config,
 		collator_options,
 		id,
-		parachain_build_import_queue,
+		parachain_build_import_queue::<RuntimeApi, RuntimeExecutor>,
 		|client,
 		 prometheus_registry,
 		 telemetry,
