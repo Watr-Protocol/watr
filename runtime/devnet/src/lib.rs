@@ -262,7 +262,7 @@ pub const MILLI_WATRD: Balance = 1_000 * MICRO_WATRD;
 pub const CENTI_WATRD: Balance = 10 * MILLI_WATRD;
 pub const WATRD: Balance = 100 * CENTI_WATRD;
 
-pub const EXISTENTIAL_DEPOSIT: Balance = 10 * CENTI_WATRD;
+pub const EXISTENTIAL_DEPOSIT: Balance = CENTI_WATRD;
 
 const fn deposit(items: u32, bytes: u32) -> Balance {
 	(items as Balance * 20 * WATRD + (bytes as Balance) * 100 * MILLI_WATRD) / 100

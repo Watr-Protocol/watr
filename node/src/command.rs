@@ -59,11 +59,7 @@ trait RuntimeResolver {
 
 impl RuntimeResolver for dyn ChainSpec {
 	fn runtime(&self) -> Runtime {
-		let id = match self.protocol_id() {
-			Some(protocol_id) => protocol_id,
-			None => "",
-		};
-		runtime(id)
+		runtime(self.id())
 	}
 }
 
@@ -72,7 +68,7 @@ impl RuntimeResolver for PathBuf {
 	fn runtime(&self) -> Runtime {
 		#[derive(Debug, serde::Deserialize)]
 		struct EmptyChainSpecWithId {
-			protocol_id: String,
+			id: String,
 		}
 
 		let file = std::fs::File::open(self).expect("Failed to open file");
@@ -80,17 +76,17 @@ impl RuntimeResolver for PathBuf {
 		let chain_spec: EmptyChainSpecWithId = sp_serializer::from_reader(reader)
 			.expect("Failed to read 'json' file with ChainSpec configuration");
 
-		runtime(&chain_spec.protocol_id)
+		runtime(&chain_spec.id)
 	}
 }
 
 fn runtime(id: &str) -> Runtime {
-	if id.starts_with("watrdevnet") {
+	if id.starts_with("watr_network") {
 		Runtime::Devnet
-	} else if id.starts_with("watrmainnet") {
+	} else if id.starts_with("mainnet_watr_network") {
 		Runtime::Mainnet
 	} else {
-		log::warn!("No specific runtime was recognized for ChainSpec's protocolId: '{}', so Runtime::default() will be used", id);
+		log::warn!("No specific runtime was recognized for ChainSpec's Id: '{}', so Runtime::default() will be used", id);
 		Runtime::default()
 	}
 }
