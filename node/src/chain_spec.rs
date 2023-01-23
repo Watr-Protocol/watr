@@ -105,9 +105,9 @@ pub fn devnet_development_config() -> DevnetChainSpec {
 
 	DevnetChainSpec::from_genesis(
 		// Name
-		"Development",
+		"Development Watr Mainnet",
 		// ID
-		"dev",
+		"watr_network_dev",
 		ChainType::Development,
 		move || {
 			devnet_testnet_genesis(
@@ -153,7 +153,7 @@ pub fn devnet_development_config() -> DevnetChainSpec {
 		},
 		Vec::new(),
 		None,
-		None,
+		Some("watrdevnet"),
 		None,
 		None,
 		Extensions {
@@ -172,9 +172,9 @@ pub fn mainnet_development_config() -> MainnetChainSpec {
 
 	MainnetChainSpec::from_genesis(
 		// Name
-		"Development",
+		"Development Watr Devnet",
 		// ID
-		"dev",
+		"mainnet_watr_network_dev",
 		ChainType::Development,
 		move || {
 			mainnet_testnet_genesis(
@@ -220,7 +220,7 @@ pub fn mainnet_development_config() -> MainnetChainSpec {
 		},
 		Vec::new(),
 		None,
-		None,
+		Some("watrmainnet"),
 		None,
 		None,
 		Extensions {
@@ -241,7 +241,7 @@ pub fn devnet_local_testnet_config() -> DevnetChainSpec {
 		// Name
 		"Local Watr Devnet",
 		// ID
-		"local_watr_devnet",
+		"watr_network_local",
 		ChainType::Local,
 		move || {
 			devnet_testnet_genesis(
@@ -290,7 +290,7 @@ pub fn devnet_local_testnet_config() -> DevnetChainSpec {
 		// Telemetry
 		None,
 		// Protocol ID
-		Some("watr-network"),
+		Some("watrdevnet"),
 		// Fork ID
 		None,
 		// Properties
@@ -314,7 +314,7 @@ pub fn mainnet_local_testnet_config() -> MainnetChainSpec {
 		// Name
 		"Local Watr Mainnet",
 		// ID
-		"local_watr_mainnet",
+		"mainnet_watr_network_local",
 		ChainType::Local,
 		move || {
 			mainnet_testnet_genesis(
@@ -363,7 +363,7 @@ pub fn mainnet_local_testnet_config() -> MainnetChainSpec {
 		// Telemetry
 		None,
 		// Protocol ID
-		Some("watr-network"),
+		Some("watrmainnet"),
 		// Fork ID
 		None,
 		// Properties
@@ -431,7 +431,7 @@ fn devnet_testnet_genesis(
 		aura: Default::default(),
 		aura_ext: Default::default(),
 		assets: devnet::AssetsConfig {
-			assets: vec![(1984, root_key, true, 100_000)],
+			assets: vec![(1984, root_key, true, 10_000)],
 			metadata: vec![(1984, b"Tether USD".to_vec(), b"USDt".to_vec(), 6)],
 			accounts: vec![],
 		},
@@ -506,7 +506,7 @@ fn mainnet_testnet_genesis(
 		aura: Default::default(),
 		aura_ext: Default::default(),
 		assets: mainnet::AssetsConfig {
-			assets: vec![(1984, root_key, true, 100_000)],
+			assets: vec![(1984, root_key, true, 10_000)],
 			metadata: vec![(1984, b"Tether USD".to_vec(), b"USDt".to_vec(), 6)],
 			accounts: vec![],
 		},

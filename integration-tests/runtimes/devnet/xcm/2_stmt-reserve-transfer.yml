@@ -64,7 +64,7 @@ settings:
           wallet: &watr_asset_receiver_wallet 2xBchgbq7aQyGjTotgQvP9Uh76uEWfQWYBpAzJgn5dfsfhsW # Bob
         asset:
           id: &watr_asset_id 1984 # Tether USD
-        fees: &watr_expected_fees 320000
+        fees: &watr_expected_fees 32000
   decodedCalls:
     force_create_asset:
       chain: *stmt_parachain
