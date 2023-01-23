@@ -72,7 +72,7 @@ parameter_types! {
 }
 
 pub fn base_tx_fee() -> Balance {
-	KILOWEI
+	KILOWEI / 10
 }
 
 pub fn default_fee_per_second() -> u128 {
