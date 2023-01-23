@@ -71,7 +71,7 @@ tests:
     describes:
       - name: Read XC-20 metadata
         its:
-          - name: Should read corret metadata from xc-20 asset
+          - name: Should read correct metadata from xc-20 asset
             actions:
               - customs:
                 - path: ../../../customs/read-xc20-custom.ts
@@ -143,7 +143,7 @@ tests:
                         exitReason: { Succeed: Returned }
                       }
 
-          - name: Should read corret metadata from xc-20 asset after the transfer
+          - name: Should read correct metadata from xc-20 asset after the transfer
             actions:
               - customs:
                 - path: ../../../customs/read-xc20-custom.ts
