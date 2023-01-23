@@ -102,7 +102,8 @@ fn load_spec(id: &str) -> std::result::Result<Box<dyn ChainSpec>, String> {
 		path => {
 			let path: PathBuf = path.into();
 			match path.runtime() {
-				Runtime::Devnet | Runtime::Default => Box::new(chain_spec::DevnetChainSpec::from_json_file(path)?),
+				Runtime::Devnet | Runtime::Default =>
+					Box::new(chain_spec::DevnetChainSpec::from_json_file(path)?),
 				Runtime::Mainnet => Box::new(chain_spec::MainnetChainSpec::from_json_file(path)?),
 			}
 		},
@@ -197,10 +198,11 @@ macro_rules! construct_benchmark_partials {
 	($config:expr, |$partials:ident| $code:expr) => {
 		match $config.chain_spec.runtime() {
 			Runtime::Devnet | Runtime::Default => {
-				let $partials = new_partial::<watr_devnet_runtime::RuntimeApi, WatrDevnetRuntimeExecutor, _>(
-					&$config,
-					crate::service::parachain_build_import_queue::<_, WatrDevnetRuntimeExecutor>,
-				)?;
+				let $partials =
+					new_partial::<watr_devnet_runtime::RuntimeApi, WatrDevnetRuntimeExecutor, _>(
+						&$config,
+						crate::service::parachain_build_import_queue::<_, WatrDevnetRuntimeExecutor>,
+					)?;
 				$code
 			},
 			Runtime::Mainnet => {
@@ -209,7 +211,7 @@ macro_rules! construct_benchmark_partials {
 					crate::service::parachain_build_import_queue::<_, WatrRuntimeExecutor>,
 				)?;
 				$code
-			}
+			},
 		}
 	};
 }
@@ -330,8 +332,7 @@ pub fn run() -> Result<()> {
 						runner.sync_run(|config| match config.chain_spec.runtime() {
 							Runtime::Devnet | Runtime::Default =>
 								cmd.run::<Block, WatrDevnetRuntimeExecutor>(config),
-							Runtime::Mainnet =>
-								cmd.run::<Block, WatrRuntimeExecutor>(config),
+							Runtime::Mainnet => cmd.run::<Block, WatrRuntimeExecutor>(config),
 						})
 					} else {
 						Err("Benchmarking wasn't enabled when building the node. \
@@ -418,8 +419,9 @@ pub fn run() -> Result<()> {
 					AccountIdConversion::<polkadot_primitives::v2::AccountId>::into_account_truncating(&id);
 
 				let state_version = Cli::native_runtime_version(&config.chain_spec).state_version();
-				let block: crate::service::Block = generate_genesis_block(&*config.chain_spec, state_version)
-					.map_err(|e| format!("{:?}", e))?;
+				let block: crate::service::Block =
+					generate_genesis_block(&*config.chain_spec, state_version)
+						.map_err(|e| format!("{:?}", e))?;
 				let genesis_state = format!("0x{:?}", HexDisplay::from(&block.header().encode()));
 
 				let tokio_handle = config.tokio_handle.clone();
@@ -434,29 +436,27 @@ pub fn run() -> Result<()> {
 
 				match config.chain_spec.runtime() {
 					Runtime::Devnet | Runtime::Default => {
-						sp_core::crypto::set_default_ss58_version(watr_devnet_runtime::SS58Prefix::get().into());
+						sp_core::crypto::set_default_ss58_version(
+							watr_devnet_runtime::SS58Prefix::get().into(),
+						);
 
-						crate::service::start_parachain_node::<watr_devnet_runtime::RuntimeApi, WatrDevnetRuntimeExecutor>(
-							config,
-							polkadot_config,
-							collator_options,
-							id,
-							hwbench,
-						)
+						crate::service::start_parachain_node::<
+							watr_devnet_runtime::RuntimeApi,
+							WatrDevnetRuntimeExecutor,
+						>(config, polkadot_config, collator_options, id, hwbench)
 						.await
 						.map(|r| r.0)
 						.map_err(Into::into)
 					},
 					Runtime::Mainnet => {
-						sp_core::crypto::set_default_ss58_version(watr_runtime::SS58Prefix::get().into());
+						sp_core::crypto::set_default_ss58_version(
+							watr_runtime::SS58Prefix::get().into(),
+						);
 
-						crate::service::start_parachain_node::<watr_runtime::RuntimeApi, WatrRuntimeExecutor>(
-							config,
-							polkadot_config,
-							collator_options,
-							id,
-							hwbench,
-						)
+						crate::service::start_parachain_node::<
+							watr_runtime::RuntimeApi,
+							WatrRuntimeExecutor,
+						>(config, polkadot_config, collator_options, id, hwbench)
 						.await
 						.map(|r| r.0)
 						.map_err(Into::into)

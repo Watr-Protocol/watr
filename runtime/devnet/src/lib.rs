@@ -31,11 +31,9 @@ pub mod xcm_config;
 
 pub use watr_common::{
 	impls::{AccountIdOf, DealWithFees, ToStakingPot},
-	AccountId, AuraId, Balance, BlockNumber, Hash, Index, Signature,
-};
-pub use watr_common::{
-	AVERAGE_ON_INITIALIZE_RATIO, DAYS, HOURS, MAXIMUM_BLOCK_WEIGHT, MINUTES, NORMAL_DISPATCH_RATIO,
-	SLOT_DURATION, WEIGHT_PER_GAS,
+	AccountId, AuraId, Balance, BlockNumber, Hash, Index, Signature, AVERAGE_ON_INITIALIZE_RATIO,
+	DAYS, HOURS, MAXIMUM_BLOCK_WEIGHT, MINUTES, NORMAL_DISPATCH_RATIO, SLOT_DURATION,
+	WEIGHT_PER_GAS,
 };
 
 use cumulus_pallet_parachain_system::RelayNumberStrictlyIncreases;

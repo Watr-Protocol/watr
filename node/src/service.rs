@@ -30,7 +30,7 @@ use sc_client_api::BlockchainEvents;
 use cumulus_client_cli::CollatorOptions;
 
 // Local Runtime Types
-pub use watr_common::{AuraId, Block, AccountId, Balance, Hash, Index as Nonce};
+pub use watr_common::{AccountId, AuraId, Balance, Block, Hash, Index as Nonce};
 
 // Cumulus Imports
 use cumulus_client_consensus_aura::{AuraConsensus, BuildAuraConsensusParams, SlotProportion};
@@ -53,10 +53,10 @@ use sc_service::{
 };
 use sc_telemetry::{Telemetry, TelemetryHandle, TelemetryWorker, TelemetryWorkerHandle};
 use sp_api::ConstructRuntimeApi;
+use sp_core::Pair;
 use sp_keystore::SyncCryptoStorePtr;
 use sp_runtime::{app_crypto::AppKey, traits::BlakeTwo256};
 use substrate_prometheus_endpoint::Registry;
-use sp_core::Pair;
 
 // Frontier
 use fc_consensus::FrontierBlockImport;
@@ -542,7 +542,10 @@ where
 
 /// Build the import queue for the parachain runtime.
 #[allow(clippy::type_complexity)]
-pub fn parachain_build_import_queue<RuntimeApi, RuntimeExecutor: NativeExecutionDispatch + 'static>(
+pub fn parachain_build_import_queue<
+	RuntimeApi,
+	RuntimeExecutor: NativeExecutionDispatch + 'static,
+>(
 	client: Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<RuntimeExecutor>>>,
 	block_import: FrontierBlockImport<
 		Block,
@@ -560,8 +563,10 @@ pub fn parachain_build_import_queue<RuntimeApi, RuntimeExecutor: NativeExecution
 	sc_service::Error,
 >
 where
-	RuntimeApi: ConstructRuntimeApi<Block, TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<RuntimeExecutor>>>
-		+ Send
+	RuntimeApi: ConstructRuntimeApi<
+			Block,
+			TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<RuntimeExecutor>>,
+		> + Send
 		+ Sync
 		+ 'static,
 	RuntimeApi::RuntimeApi: sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block>
@@ -570,13 +575,12 @@ where
 		+ sp_api::ApiExt<
 			Block,
 			StateBackend = sc_client_api::StateBackendFor<TFullBackend<Block>, Block>,
-		>
-		+ sp_offchain::OffchainWorkerApi<Block>
+		> + sp_offchain::OffchainWorkerApi<Block>
 		+ sp_block_builder::BlockBuilder<Block>
 		+ sp_consensus_aura::AuraApi<Block, <<AuraId as AppKey>::Pair as Pair>::Public>
 		+ fp_rpc::EthereumRuntimeRPCApi<Block>
 		+ fp_rpc::ConvertTransactionRuntimeApi<Block>
-		+ substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>
+		+ substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>,
 {
 	let slot_duration = cumulus_client_consensus_aura::slot_duration(&*client)?;
 
@@ -620,8 +624,10 @@ pub async fn start_parachain_node<RuntimeApi, RuntimeExecutor: NativeExecutionDi
 	Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<RuntimeExecutor>>>,
 )>
 where
-	RuntimeApi: ConstructRuntimeApi<Block, TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<RuntimeExecutor>>>
-		+ Send
+	RuntimeApi: ConstructRuntimeApi<
+			Block,
+			TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<RuntimeExecutor>>,
+		> + Send
 		+ Sync
 		+ 'static,
 	RuntimeApi::RuntimeApi: sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block>
@@ -637,7 +643,7 @@ where
 		+ pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>
 		+ substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>
 		+ fp_rpc::EthereumRuntimeRPCApi<Block>
-		+ fp_rpc::ConvertTransactionRuntimeApi<Block>
+		+ fp_rpc::ConvertTransactionRuntimeApi<Block>,
 {
 	start_node_impl::<RuntimeApi, RuntimeExecutor, _, _>(
 		parachain_config,
