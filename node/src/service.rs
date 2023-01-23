@@ -21,7 +21,7 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
 // std
-use std::{collections::BTreeMap, path::PathBuf, sync::Arc, time::Duration};
+use std::{collections::BTreeMap, sync::Arc, time::Duration};
 
 use futures::{future, StreamExt};
 
@@ -45,12 +45,9 @@ use cumulus_relay_chain_interface::{RelayChainError, RelayChainInterface, RelayC
 use cumulus_relay_chain_rpc_interface::{create_client_and_start_worker, RelayChainRpcInterface};
 
 // Substrate Imports
-use sc_cli::SubstrateCli;
 use sc_executor::{NativeElseWasmExecutor, NativeExecutionDispatch};
 use sc_network::{NetworkBlock, NetworkService};
-use sc_service::{
-	BasePath, Configuration, PartialComponents, TFullBackend, TFullClient, TaskManager,
-};
+use sc_service::{Configuration, PartialComponents, TFullBackend, TFullClient, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryHandle, TelemetryWorker, TelemetryWorkerHandle};
 use sp_api::ConstructRuntimeApi;
 use sp_core::Pair;
@@ -60,12 +57,10 @@ use substrate_prometheus_endpoint::Registry;
 
 // Frontier
 use fc_consensus::FrontierBlockImport;
-use fc_db::Backend as FrontierBackend;
 use fc_mapping_sync::{MappingSyncWorker, SyncStrategy};
 use fc_rpc::EthTask;
 use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
 
-use crate::cli::Cli;
 use polkadot_service::CollatorPair;
 
 /// Native executor instance.
@@ -104,17 +99,6 @@ impl NativeExecutionDispatch for WatrRuntimeExecutor {
 	fn native_version() -> sc_executor::NativeVersion {
 		watr_runtime::native_version()
 	}
-}
-
-pub(crate) fn db_config_dir(config: &Configuration) -> PathBuf {
-	config
-		.base_path
-		.as_ref()
-		.map(|base_path| base_path.config_dir(config.chain_spec.id()))
-		.unwrap_or_else(|| {
-			BasePath::from_project("", "", &Cli::executable_name())
-				.config_dir(config.chain_spec.id())
-		})
 }
 
 /// Starts a `ServiceBuilder` for a full service.
@@ -217,11 +201,7 @@ where
 		client.clone(),
 	);
 
-	let frontier_backend = Arc::new(FrontierBackend::open(
-		Arc::clone(&client),
-		&config.database,
-		&db_config_dir(config),
-	)?);
+	let frontier_backend = crate::rpc::open_frontier_backend(client.clone(), config)?;
 
 	let frontier_block_import =
 		FrontierBlockImport::new(client.clone(), client.clone(), frontier_backend.clone());

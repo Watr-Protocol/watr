@@ -153,7 +153,7 @@ pub fn devnet_development_config() -> DevnetChainSpec {
 		},
 		Vec::new(),
 		None,
-		None,
+		Some("watrdevnet"),
 		None,
 		None,
 		Extensions {
@@ -220,7 +220,7 @@ pub fn mainnet_development_config() -> MainnetChainSpec {
 		},
 		Vec::new(),
 		None,
-		None,
+		Some("watrmainnet"),
 		None,
 		None,
 		Extensions {
@@ -290,7 +290,7 @@ pub fn devnet_local_testnet_config() -> DevnetChainSpec {
 		// Telemetry
 		None,
 		// Protocol ID
-		Some("watr-network"),
+		Some("watrdevnet"),
 		// Fork ID
 		None,
 		// Properties
@@ -363,7 +363,7 @@ pub fn mainnet_local_testnet_config() -> MainnetChainSpec {
 		// Telemetry
 		None,
 		// Protocol ID
-		Some("watr-network"),
+		Some("watrmainnet"),
 		// Fork ID
 		None,
 		// Properties
