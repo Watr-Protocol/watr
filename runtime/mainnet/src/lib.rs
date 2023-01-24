@@ -50,7 +50,7 @@ use sp_runtime::{
 		PostDispatchInfoOf, UniqueSaturatedInto,
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
-	ApplyExtrinsicResult, Percent,
+	ApplyExtrinsicResult,
 };
 
 use sp_std::{cmp::Ordering, marker::PhantomData, prelude::*};
@@ -98,9 +98,6 @@ use precompiles::{FrontierPrecompiles, ASSET_PRECOMPILE_ADDRESS_PREFIX};
 use polkadot_runtime_common::{BlockHashCount, SlowAdjustingFeeUpdate};
 
 use weights::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight};
-
-// XCM Imports
-use xcm::latest::prelude::BodyId;
 
 /// The address format for describing accounts.
 pub type Address = MultiAddress<AccountId, ()>;
@@ -398,6 +395,7 @@ impl cumulus_pallet_aura_ext::Config for Runtime {}
 parameter_types! {
 	pub const Period: u32 = 6 * HOURS;
 	pub const Offset: u32 = 0;
+	pub const MaxAuthorities: u32 = 100_000;
 }
 
 impl pallet_session::Config for Runtime {
@@ -425,9 +423,7 @@ parameter_types! {
 	pub const PotId: PalletId = PalletId(*b"PotStake");
 	pub const MaxCandidates: u32 = 1000;
 	pub const MinCandidates: u32 = 5;
-	pub const SessionLength: BlockNumber = 6 * HOURS;
 	pub const MaxInvulnerables: u32 = 100;
-	pub const ExecutiveBody: BodyId = BodyId::Executive;
 }
 
 // We allow root only to execute privileged collator selection operations.
@@ -450,7 +446,6 @@ impl pallet_collator_selection::Config for Runtime {
 }
 
 parameter_types! {
-	pub const DepositPerItem: Balance = deposit(1, 0);
 	pub const DepositPerByte: Balance = deposit(0, 1);
 	pub const DeletionQueueDepth: u32 = 128;
 }
@@ -697,16 +692,7 @@ parameter_types! {
 	pub const SpendPeriod: BlockNumber = 24 * DAYS;
 	pub const Burn: Permill = Permill::from_percent(0);
 	pub const TreasuryPalletId: PalletId = PalletId(*b"py/trsry");
-
-	pub const TipCountdown: BlockNumber = 1 * DAYS;
-	pub const TipFindersFee: Percent = Percent::from_percent(20);
-	pub const TipReportDepositBase: Balance = 1 * WATR;
-	pub const DataDepositPerByte: Balance = 1 * CENTI_WATR;
 	pub const MaxApprovals: u32 = 100;
-	pub const MaxAuthorities: u32 = 100_000;
-	pub const MaxKeys: u32 = 10_000;
-	pub const MaxPeerInHeartbeats: u32 = 10_000;
-	pub const MaxPeerDataEncodingSize: u32 = 1_000;
 }
 
 type ApproveOrigin = EitherOfDiverse<
