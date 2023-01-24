@@ -64,7 +64,7 @@ cargo test
 
 ## Guides
 - [Benchmarks](docs/benchmarks.md)
-- Release Guidelines: TODO
+- [Release Guide](docs/watr-release-guide.md)
 - [Integrations Tests](docs/integration-tests.md)
 - [Governance](docs/governance/watr-governance-guide.md)
 - [Connect Metamask](docs/connecting-metamask/connecting-metamask.md) 
