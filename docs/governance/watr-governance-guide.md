@@ -38,20 +38,23 @@ The initial governance is built using `pallet-collective`, `pallet-membership`, 
         1. From the dropdown, select `councilMembership.addMember`, and provide the desired address
             1. ********note: local testnets are preconfigured with Alice, Bob, Charlie, and Dave********
         2. Submit transaction
-    3. For (re)setting many members in one transaction
+    3. For removing a single member
+        1. From the dropdown, select `councilMembership.removeMember`, and provide the desired address
+        2. Submit transaction
+    4. For (re)setting many members in one transaction
         1. From the dropdown, select `councilMembership.resetMembers`
         2. Click `Add item` to add more members
         3. Submitting the transaction will remove all prior councillors and set the new ones
             
             ![governance_02.png](images/governance_02.png)
             
-    4. Verify new councillors
+    5. Verify new councillors
         1. Via the Governance → Council page
         2. Or, via the Chain State page
             
             ![governance_03.png](images/governance_03.png)
             
-    5. Note: `pallet-collective` (`council`) provides a `setMembers` extrinsic. Do NOT use this.
+    6. Note: `pallet-collective` (`council`) provides a `setMembers` extrinsic. Do NOT use this.
         1. All councillors should be added through `councilMembership`.
         2. Any changes through `councilMembership` will sync, and overwrite, `council`
         3. Any changes through `council` does not sync with `councilMembership`
