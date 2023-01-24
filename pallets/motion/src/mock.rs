@@ -106,7 +106,7 @@ impl pallet_motion::Config for Test {
 	type RuntimeCall = RuntimeCall;
 	type RuntimeEvent = RuntimeEvent;
 	type SimpleMajorityOrigin =
-		pallet_collective::EnsureProportionAtLeast<u64, CouncilCollective, 1, 2>;
+		pallet_collective::EnsureProportionMoreThan<u64, CouncilCollective, 1, 2>;
 	type SuperMajorityOrigin =
 		pallet_collective::EnsureProportionAtLeast<u64, CouncilCollective, 2, 3>;
 	type UnanimousOrigin = pallet_collective::EnsureProportionAtLeast<u64, CouncilCollective, 1, 1>;
@@ -119,7 +119,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 			balances: vec![(1, 10), (2, 20), (3, 30), (4, 40), (5, 50)],
 		},
 		council: pallet_collective::GenesisConfig {
-			members: vec![1, 2, 3, 4],
+			members: vec![1, 2, 3, 4, 5],
 			phantom: Default::default(),
 		},
 	}

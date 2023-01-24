@@ -76,76 +76,10 @@ fn setup_proposal(threshold: u32, motion_type: MotionType) -> Proposal {
 
 #[test]
 fn simple_majority_works() {
+	// 3/5 works
 	new_test_ext().execute_with(|| {
-		let proposal = setup_proposal(2, MotionType::SimpleMajority);
-
-		let hash = proposal.hash;
-		let proposal_len = proposal.len;
-		let proposal_weight = proposal.weight;
-
-		assert_ok!(Council::vote(RuntimeOrigin::signed(1), hash, 0, true));
-		assert_ok!(Council::vote(RuntimeOrigin::signed(2), hash, 0, true));
-
-		System::set_block_number(3);
-
-		assert_ok!(Council::close(
-			RuntimeOrigin::signed(4),
-			hash,
-			0,
-			proposal_weight,
-			proposal_len
-		));
-
-		assert_eq!(
-			System::events(),
-			vec![
-				record(RuntimeEvent::Council(CollectiveEvent::Proposed {
-					account: 1,
-					proposal_index: 0,
-					proposal_hash: hash,
-					threshold: 2
-				})),
-				record(RuntimeEvent::Council(CollectiveEvent::Voted {
-					account: 1,
-					proposal_hash: hash,
-					voted: true,
-					yes: 1,
-					no: 0
-				})),
-				record(RuntimeEvent::Council(CollectiveEvent::Voted {
-					account: 2,
-					proposal_hash: hash,
-					voted: true,
-					yes: 2,
-					no: 0
-				})),
-				record(RuntimeEvent::Council(CollectiveEvent::Closed {
-					proposal_hash: hash,
-					yes: 2,
-					no: 0
-				})),
-				record(RuntimeEvent::Council(CollectiveEvent::Approved { proposal_hash: hash })),
-				record(RuntimeEvent::Balances(pallet_balances::Event::BalanceSet {
-					who: 5,
-					free: 5,
-					reserved: 0,
-				})),
-				record(RuntimeEvent::Motion(MotionEvent::DispatchSimpleMajority {
-					motion_result: Ok(())
-				})),
-				record(RuntimeEvent::Council(CollectiveEvent::Executed {
-					proposal_hash: hash,
-					result: Ok(())
-				}))
-			]
-		);
-	});
-}
-
-#[test]
-fn super_majority_works() {
-	new_test_ext().execute_with(|| {
-		let proposal = setup_proposal(3, MotionType::SuperMajority);
+		let threshold = 3;
+		let proposal = setup_proposal(threshold, MotionType::SimpleMajority);
 
 		let hash = proposal.hash;
 		let proposal_len = proposal.len;
@@ -172,7 +106,7 @@ fn super_majority_works() {
 					account: 1,
 					proposal_index: 0,
 					proposal_hash: hash,
-					threshold: 3
+					threshold
 				})),
 				record(RuntimeEvent::Council(CollectiveEvent::Voted {
 					account: 1,
@@ -206,7 +140,7 @@ fn super_majority_works() {
 					free: 5,
 					reserved: 0,
 				})),
-				record(RuntimeEvent::Motion(MotionEvent::DispatchSuperMajority {
+				record(RuntimeEvent::Motion(MotionEvent::DispatchSimpleMajority {
 					motion_result: Ok(())
 				})),
 				record(RuntimeEvent::Council(CollectiveEvent::Executed {
@@ -219,9 +153,11 @@ fn super_majority_works() {
 }
 
 #[test]
-fn unanimous_works() {
+fn super_majority_works() {
+	// 4/5 works
 	new_test_ext().execute_with(|| {
-		let proposal = setup_proposal(4, MotionType::Unanimous);
+		let threshold = 4;
+		let proposal = setup_proposal(threshold, MotionType::SuperMajority);
 
 		let hash = proposal.hash;
 		let proposal_len = proposal.len;
@@ -249,7 +185,7 @@ fn unanimous_works() {
 					account: 1,
 					proposal_index: 0,
 					proposal_hash: hash,
-					threshold: 4
+					threshold
 				})),
 				record(RuntimeEvent::Council(CollectiveEvent::Voted {
 					account: 1,
@@ -290,6 +226,100 @@ fn unanimous_works() {
 					free: 5,
 					reserved: 0,
 				})),
+				record(RuntimeEvent::Motion(MotionEvent::DispatchSuperMajority {
+					motion_result: Ok(())
+				})),
+				record(RuntimeEvent::Council(CollectiveEvent::Executed {
+					proposal_hash: hash,
+					result: Ok(())
+				}))
+			]
+		);
+	});
+}
+
+#[test]
+fn unanimous_works() {
+	// 5/5 works
+	new_test_ext().execute_with(|| {
+		let threshold = 5;
+		let proposal = setup_proposal(threshold, MotionType::Unanimous);
+
+		let hash = proposal.hash;
+		let proposal_len = proposal.len;
+		let proposal_weight = proposal.weight;
+
+		assert_ok!(Council::vote(RuntimeOrigin::signed(1), hash, 0, true));
+		assert_ok!(Council::vote(RuntimeOrigin::signed(2), hash, 0, true));
+		assert_ok!(Council::vote(RuntimeOrigin::signed(3), hash, 0, true));
+		assert_ok!(Council::vote(RuntimeOrigin::signed(4), hash, 0, true));
+		assert_ok!(Council::vote(RuntimeOrigin::signed(5), hash, 0, true));
+
+		System::set_block_number(3);
+
+		assert_ok!(Council::close(
+			RuntimeOrigin::signed(4),
+			hash,
+			0,
+			proposal_weight,
+			proposal_len
+		));
+
+		assert_eq!(
+			System::events(),
+			vec![
+				record(RuntimeEvent::Council(CollectiveEvent::Proposed {
+					account: 1,
+					proposal_index: 0,
+					proposal_hash: hash,
+					threshold
+				})),
+				record(RuntimeEvent::Council(CollectiveEvent::Voted {
+					account: 1,
+					proposal_hash: hash,
+					voted: true,
+					yes: 1,
+					no: 0
+				})),
+				record(RuntimeEvent::Council(CollectiveEvent::Voted {
+					account: 2,
+					proposal_hash: hash,
+					voted: true,
+					yes: 2,
+					no: 0
+				})),
+				record(RuntimeEvent::Council(CollectiveEvent::Voted {
+					account: 3,
+					proposal_hash: hash,
+					voted: true,
+					yes: 3,
+					no: 0
+				})),
+				record(RuntimeEvent::Council(CollectiveEvent::Voted {
+					account: 4,
+					proposal_hash: hash,
+					voted: true,
+					yes: 4,
+					no: 0
+				})),
+				record(RuntimeEvent::Council(CollectiveEvent::Voted {
+					account: 5,
+					proposal_hash: hash,
+					voted: true,
+					yes: 5,
+					no: 0
+				})),
+				record(RuntimeEvent::Council(CollectiveEvent::Closed {
+					proposal_hash: hash,
+					yes: 5,
+					no: 0
+				})),
+				record(RuntimeEvent::Council(CollectiveEvent::Approved { proposal_hash: hash })),
+				record(RuntimeEvent::Balances(pallet_balances::Event::BalanceSet {
+					who: 5,
+					free: 5,
+					reserved: 0,
+				})),
 				record(RuntimeEvent::Motion(MotionEvent::DispatchUnanimous {
 					motion_result: Ok(())
 				})),
@@ -304,31 +334,10 @@ fn unanimous_works() {
 
 #[test]
 fn simple_majority_fails() {
-	new_test_ext().execute_with(|| {
-		let threshold = 1;
-		let proposal = setup_proposal(threshold, MotionType::SimpleMajority);
-
-		let hash = proposal.hash;
-
-		System::set_block_number(3);
-
-		// No votes or closing necessary. A proposal with threshold 1 is automatically executed
-
-		assert_eq!(
-			System::events(),
-			vec![record(RuntimeEvent::Council(CollectiveEvent::Executed {
-				proposal_hash: hash,
-				result: Err(sp_runtime::DispatchError::BadOrigin)
-			}))]
-		);
-	});
-}
-
-#[test]
-fn super_majority_fails() {
+	// 2/5 fails
 	new_test_ext().execute_with(|| {
 		let threshold = 2;
-		let proposal = setup_proposal(threshold, MotionType::SuperMajority);
+		let proposal = setup_proposal(threshold, MotionType::SimpleMajority);
 
 		let hash = proposal.hash;
 		let proposal_len = proposal.len;
@@ -379,17 +388,18 @@ fn super_majority_fails() {
 				record(RuntimeEvent::Council(CollectiveEvent::Executed {
 					proposal_hash: hash,
 					result: Err(sp_runtime::DispatchError::BadOrigin)
-				}))
+				})),
 			]
 		);
 	});
 }
 
 #[test]
-fn unanimous_fails() {
+fn super_majority_fails() {
+	// 3/5 fails
 	new_test_ext().execute_with(|| {
 		let threshold = 3;
-		let proposal = setup_proposal(threshold, MotionType::Unanimous);
+		let proposal = setup_proposal(threshold, MotionType::SuperMajority);
 
 		let hash = proposal.hash;
 		let proposal_len = proposal.len;
@@ -442,6 +452,84 @@ fn unanimous_fails() {
 				record(RuntimeEvent::Council(CollectiveEvent::Closed {
 					proposal_hash: hash,
 					yes: 3,
+					no: 0
+				})),
+				record(RuntimeEvent::Council(CollectiveEvent::Approved { proposal_hash: hash })),
+				record(RuntimeEvent::Council(CollectiveEvent::Executed {
+					proposal_hash: hash,
+					result: Err(sp_runtime::DispatchError::BadOrigin)
+				}))
+			]
+		);
+	});
+}
+
+#[test]
+fn unanimous_fails() {
+	// 4/5 fails
+	new_test_ext().execute_with(|| {
+		let threshold = 4;
+		let proposal = setup_proposal(threshold, MotionType::Unanimous);
+
+		let hash = proposal.hash;
+		let proposal_len = proposal.len;
+		let proposal_weight = proposal.weight;
+
+		assert_ok!(Council::vote(RuntimeOrigin::signed(1), hash, 0, true));
+		assert_ok!(Council::vote(RuntimeOrigin::signed(2), hash, 0, true));
+		assert_ok!(Council::vote(RuntimeOrigin::signed(3), hash, 0, true));
+		assert_ok!(Council::vote(RuntimeOrigin::signed(4), hash, 0, true));
+
+		System::set_block_number(3);
+
+		assert_ok!(Council::close(
+			RuntimeOrigin::signed(4),
+			hash,
+			0,
+			proposal_weight,
+			proposal_len
+		));
+
+		assert_eq!(
+			System::events(),
+			vec![
+				record(RuntimeEvent::Council(CollectiveEvent::Proposed {
+					account: 1,
+					proposal_index: 0,
+					proposal_hash: hash,
+					threshold,
+				})),
+				record(RuntimeEvent::Council(CollectiveEvent::Voted {
+					account: 1,
+					proposal_hash: hash,
+					voted: true,
+					yes: 1,
+					no: 0
+				})),
+				record(RuntimeEvent::Council(CollectiveEvent::Voted {
+					account: 2,
+					proposal_hash: hash,
+					voted: true,
+					yes: 2,
+					no: 0
+				})),
+				record(RuntimeEvent::Council(CollectiveEvent::Voted {
+					account: 3,
+					proposal_hash: hash,
+					voted: true,
+					yes: 3,
+					no: 0
+				})),
+				record(RuntimeEvent::Council(CollectiveEvent::Voted {
+					account: 4,
+					proposal_hash: hash,
+					voted: true,
+					yes: 4,
+					no: 0
+				})),
+				record(RuntimeEvent::Council(CollectiveEvent::Closed {
+					proposal_hash: hash,
+					yes: 4,
 					no: 0
 				})),
 				record(RuntimeEvent::Council(CollectiveEvent::Approved { proposal_hash: hash })),
