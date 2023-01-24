@@ -282,7 +282,7 @@ pub fn devnet_local_testnet_config() -> DevnetChainSpec {
 				],
 				PARA_ID.into(),
 				// Total supply
-				Some(12000000 * WATRD),
+				Some(13000000 * WATRD),
 			)
 		},
 		// Bootnodes
@@ -355,7 +355,7 @@ pub fn mainnet_local_testnet_config() -> MainnetChainSpec {
 				],
 				PARA_ID.into(),
 				// Total supply
-				Some(12000000 * WATR),
+				Some(13000000 * WATR),
 			)
 		},
 		// Bootnodes
