@@ -67,7 +67,7 @@ cargo test
 - Release Guidelines: TODO
 - [Integrations Tests](docs/integration-tests.md)
 - [Governance](docs/governance/watr-governance-guide.md)
-- Connecting Metamask: TODO
+- [Connect Metamask](docs/connecting-metamask/connecting-metamask.md) 
 - [Collator Selection Reward Pot](docs/collator-selection-pot.md)
 
 ## Runtime Details
