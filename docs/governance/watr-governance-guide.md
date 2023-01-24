@@ -79,7 +79,7 @@ The initial governance is built using `pallet-collective`, `pallet-membership`, 
             
             ![governance_04.png](images/governance_04.png)
             
-    8. Still on the Governance → Council → Motion page, view the new motion
+    8. Still on the Governance → Council → Motion page, view the new motion (refresh the page if you do not see it)
         1. At the end of the `voting end` period, the motion will either
             1. Not be executed due to a lack of Ayes
             2. Or be executed
