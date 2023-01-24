@@ -8,8 +8,8 @@ The initial governance is built using `pallet-collective`, `pallet-membership`, 
 - pallet-collective
     - Allows a group of accounts to vote on a proposal / motion.
     - Accounts can be added and removed.
-    - Contains a prime-voter
-        - A prime-voter *can* decide the default vote for abstentions
+    - Can contain a prime-voter (set to `None` by default)
+        - A prime-voter decides the default vote for abstentions
 - pallet-membership
     - A pallet to more easily manage accounts in a collective (membership)
 - pallet-motion
@@ -21,7 +21,7 @@ The initial governance is built using `pallet-collective`, `pallet-membership`, 
         - Unanimous (1/1)
     - Three wrapper extrinsics
         - simple_majority
-            - Dispatches call if and only if the number of votes are greater than or equal to the SimpleMajority
+            - Dispatches call if and only if the number of votes are greater than the SimpleMajority
         - super_majority
             - Dispatches call if and only if the number of votes are greater than or equal to the SuperMajority
         - unanimous
