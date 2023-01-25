@@ -15,6 +15,7 @@
     2. New RPC URL:
         1. Devnet: `https://rpc.dev.watr.org`
         2. Mainnet: `https://rpc.watr.org`
+        3. Local: `http://127.0.0.1:8833`, the RPC port can be modified in the Zombienet configs
     3. Chain ID: `688`
     4. Currency symbol:
         1. Devnet: `WATRD`
