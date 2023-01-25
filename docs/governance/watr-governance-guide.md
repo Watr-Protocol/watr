@@ -79,6 +79,7 @@ The initial governance is built using `pallet-collective`, `pallet-membership`, 
            1. Supply the block number desired for the runtime upgrade. The block number should account for the 7 day voting period
            2. Enter 0 for priority
            3. Set the call. Select `parachainSystem.authorizeUpgrade` and provide the wasm runtime file. 
+           4. Note: it is not strictly necessary to use the scheduler. It, however, is a recommended practice when performing runtime upgrades.
         4. Click `✅ Propose`
             
             ![governance_runtime_upgrade.png](images/governance_runtime_upgrade.png)
