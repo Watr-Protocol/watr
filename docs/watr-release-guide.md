@@ -46,8 +46,9 @@
     3. Save srtool .wasm file:
         1. `runtime/mainnet/target/srtool/release/wbuild/watr-runtime/watr_runtime.compact.compressed.wasm`
     4. Also save command line outputs (command above outputs to the file `srtool.out`)
-    5. Run `subwasm` to get metadata on build
-        1. TODO, add command
+    5. Run `subwasm` to get Wasm metadata
+        1. `subwasm info <path-to-srtool-built-wasm`
+        2. e.g. `subwasm info runtime/devnet/target/srtool/release/wbuild/watr-devnet-runtime/watr_devnet_runtime.compact.compressed.wasm`
 4. ********************************************************Create New Release on Github********************************************************
     1. Navigate to the [release page](https://github.com/Watr-Protocol/watr/releases)
     2. Press “Draft a new release”
