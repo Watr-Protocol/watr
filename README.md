@@ -5,7 +5,7 @@
 </p>
 
 <div align="center">
-	
+
 [![Twitter URL](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Ftwitter.com%WatrProtocol)](https://twitter.com/WatrProtocol)
 [![Medium](https://img.shields.io/badge/Medium-gray?logo=medium)](https://medium.com/watr-protocol)
 
@@ -29,14 +29,14 @@ It is a Polkadot Parachain, leveraging the shared security of the Polkadot ecosy
 	cargo build --release
 	```
 
-2. Build Polkadot 
+2. Build Polkadot
 	```shell
 	git clone https://github.com/paritytech/polkadot.git
 	cd polkadot
 
 	# Build with fast-runtime enabled
 	cargo build --release --features fast-runtime
-	``` 
+	```
 
 3. Copy the `polkadot` binary stored at `target/release/polkadot` into the `watr/bin` directory
 
@@ -67,9 +67,9 @@ cargo test
 - [Release Guide](docs/watr-release-guide.md)
 - [Integrations Tests](docs/integration-tests.md)
 - [Governance](docs/governance/watr-governance-guide.md)
-- [Connect Metamask](docs/connecting-metamask/connecting-metamask.md) 
+- [Connect Metamask](docs/connecting-metamask/connecting-metamask.md)
 - [Collator Selection Reward Pot](docs/collator-selection-pot.md)
-
+- [Cross Chain Assets Transfer](docs/cross-chain-assets-transfer.md)
 ## Runtime Details
 **Substrate**
 - `pallet-scheduler` allows extrinsic calls to be scheduled for a later time
@@ -89,7 +89,7 @@ cargo test
 - `pallet-evm` Adds an Ethereum Virtual Machine. Provides support for EVM contracts
 - `pallet-base-fee` follows EIP-1559's fee mechanism
 - `pallet-evm-precompile-assets-erc20` (aka XC-20s) allows EVM smart contracts to access `pallet-assets` using an ERC-20 interface
-  
+
 **XCM**
 - `cumulus-pallet-xcmp-queue`
 - `pallet-xcm`
