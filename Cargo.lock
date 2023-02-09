@@ -5873,6 +5873,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-did"
+version = "1.0.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "pallet-balances",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-election-provider-multi-phase"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.30#a3ed0119c45cdd0d571ad34e5b3ee7518c8cef8d"
@@ -12598,7 +12615,7 @@ dependencies = [
 
 [[package]]
 name = "watr-common"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -12619,7 +12636,7 @@ dependencies = [
 
 [[package]]
 name = "watr-devnet-runtime"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",
@@ -12783,7 +12800,7 @@ dependencies = [
 
 [[package]]
 name = "watr-runtime"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",
@@ -12812,6 +12829,7 @@ dependencies = [
  "pallet-base-fee",
  "pallet-collator-selection",
  "pallet-collective",
+ "pallet-did",
  "pallet-ethereum",
  "pallet-evm",
  "pallet-evm-precompile-assets-erc20",
