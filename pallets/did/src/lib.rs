@@ -92,7 +92,9 @@ pub mod pallet {
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
-	pub enum Event<T: Config> {}
+	pub enum Event<T: Config> {
+		DidCreated { controller: AccountIdOf<T>, authenticator: H160, signature: DidSignature }
+	}
 
 	#[pallet::error]
 	pub enum Error<T> {}
@@ -101,13 +103,17 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 
 		#[pallet::weight(1000000)]
-		pub fn register_did(
+		pub fn create_did(
 			origin: OriginFor<T>,
 			authenticator: H160, // Ethereum Address
 			signature: DidSignature
 		) -> DispatchResult {
-			let _ = ensure_signed(origin)?;
-			// Check here the
+			let controller = ensure_signed(origin)?;
+			Self::deposit_event(Event::DidCreated{
+				controller,
+				authenticator,
+				signature
+			});
 			Ok(())
 		}
 	}
