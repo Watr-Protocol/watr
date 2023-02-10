@@ -27,12 +27,18 @@ sp-io = { git = "https://github.com/paritytech/substrate", default-features = fa
 sp-runtime = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.30" }
 sp-std = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.30" }
 
+# Polkadot
 pallet-xcm = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.30" }
 xcm = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.30" }
 xcm-builder = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.30" }
 xcm-executor = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.30" }
 
+# Cumulus
 parachains-common = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.30", default-features = false }
+
+# Local
+pallet-did = { default-features = false, path = "../../pallets/did" }
+
 
 [features]
 default = [
@@ -47,6 +53,7 @@ std = [
 	"sp-runtime/std",
 	"sp-std/std",
 	"pallet-xcm/std",
+	"pallet-did/std",
 	"xcm-builder/std",
 	"xcm-executor/std",
 	"xcm/std",

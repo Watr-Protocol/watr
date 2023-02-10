@@ -12619,6 +12619,7 @@ version = "1.2.0"
 dependencies = [
  "frame-support",
  "frame-system",
+ "pallet-did",
  "pallet-xcm",
  "parachains-common",
  "parity-scale-codec",
@@ -12665,6 +12666,7 @@ dependencies = [
  "pallet-base-fee",
  "pallet-collator-selection",
  "pallet-collective",
+ "pallet-did",
  "pallet-ethereum",
  "pallet-evm",
  "pallet-evm-precompile-assets-erc20",
@@ -12829,7 +12831,6 @@ dependencies = [
  "pallet-base-fee",
  "pallet-collator-selection",
  "pallet-collective",
- "pallet-did",
  "pallet-ethereum",
  "pallet-evm",
  "pallet-evm-precompile-assets-erc20",

@@ -31,7 +31,7 @@ pub mod xcm_config;
 
 pub use watr_common::{
 	impls::{AccountIdOf, DealWithFees, ToStakingPot},
-	AccountId, AuraId, Balance, BlockNumber, Hash, Index, Signature, AVERAGE_ON_INITIALIZE_RATIO,
+	AccountId, AuraId, Balance, BlockNumber, Hash, Index, Signature, DidIdentifier, AVERAGE_ON_INITIALIZE_RATIO,
 	DAYS, HOURS, MAXIMUM_BLOCK_WEIGHT, MINUTES, NORMAL_DISPATCH_RATIO, SLOT_DURATION,
 	WEIGHT_PER_GAS,
 };
@@ -731,6 +731,17 @@ impl pallet_motion::Config for Runtime {
 }
 
 parameter_types! {
+	pub const MaxString: u8 = 100;
+}
+
+impl pallet_did::Config for Runtime {
+	type RuntimeCall = RuntimeCall;
+	type RuntimeEvent = RuntimeEvent;
+	type DidIdentifier = DidIdentifier;
+	type MaxString = MaxString;
+}
+
+parameter_types! {
 	pub const ProposalBond: Permill = Permill::from_percent(5);
 	pub const ProposalBondMinimum: Balance = 100 * WATRD;
 	pub const ProposalBondMaximum: Balance = 500 * WATRD;
@@ -908,6 +919,9 @@ construct_runtime!(
 		Ethereum: pallet_ethereum::{Pallet, Call, Storage, Event, Origin, Config} = 50,
 		EVM: pallet_evm::{Pallet, Config, Call, Storage, Event<T>} = 51,
 		BaseFee: pallet_base_fee::{Pallet, Call, Storage, Config<T>, Event} = 52,
+
+		// DID
+		DID: pallet_did::{Pallet, Call, Storage,  Event<T>} = 60,
 
 		Sudo: pallet_sudo::{Pallet, Call, Storage, Config<T>, Event<T>} = 255,
 	}
