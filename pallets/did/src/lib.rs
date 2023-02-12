@@ -32,7 +32,7 @@ use frame_support::{
 	dispatch::{DispatchResult, Dispatchable, GetDispatchInfo, PostDispatchInfo},
 	ensure,
 	storage::types::StorageMap,
-	traits::{Get, OnUnbalanced, WithdrawReasons},
+	traits::{Currency, Get, OnUnbalanced, WithdrawReasons, ReservableCurrency},
 	Parameter,
 };
 use crate::verification::{DidSignature};
@@ -70,6 +70,10 @@ pub mod pallet {
 	/// Type for a block number.
 	pub type BlockNumberOf<T> = <T as frame_system::Config>::BlockNumber;
 
+	pub type BalanceOf<T> = <CurrencyOf<T> as Currency<AccountIdOf<T>>>::Balance;
+	pub(crate) type CurrencyOf<T> = <T as Config>::Currency;
+	pub(crate) type NegativeImbalanceOf<T> = <<T as Config>::Currency as Currency<AccountIdOf<T>>>::NegativeImbalance;
+
 	// /// Type for a runtime extrinsic callable under DID-based authorisation.
 	// pub type DidCallableOf<T> = <T as Config>::RuntimeCall;
 
@@ -88,6 +92,13 @@ pub mod pallet {
 
 		/// Type for a DID subject identifier.
 		type DidIdentifier: Parameter + DidVerifiableIdentifier + MaxEncodedLen;
+
+		/// The currency trait.
+		type Currency: ReservableCurrency<Self::AccountId>;
+
+		/// The amount held on deposit for a DID creation
+		#[pallet::constant]
+		type DidDeposit: Get<BalanceOf<Self>>;
 
 		// Origin for priviledged actions
 		type GovernanceOrigin: EnsureOrigin<Self::RuntimeOrigin>;

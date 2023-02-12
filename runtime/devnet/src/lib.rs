@@ -733,12 +733,15 @@ impl pallet_motion::Config for Runtime {
 parameter_types! {
 	pub const MaxString: u8 = 100;
 	pub const MaxCredentialsTypes: u8 = 50;
+	pub const DidDeposit: Balance = 10 * WATRD;
 }
 
 impl pallet_did::Config for Runtime {
 	type RuntimeCall = RuntimeCall;
 	type RuntimeEvent = RuntimeEvent;
 	type DidIdentifier = DidIdentifier;
+	type DidDeposit = DidDeposit;
+	type Currency = Balances;
 	type GovernanceOrigin = MoreThanHalfCouncil;
 	type MaxString = MaxString;
 	type MaxCredentialsTypes = MaxCredentialsTypes;
