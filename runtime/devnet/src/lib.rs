@@ -732,13 +732,16 @@ impl pallet_motion::Config for Runtime {
 
 parameter_types! {
 	pub const MaxString: u8 = 100;
+	pub const MaxCredentialsTypes: u8 = 50;
 }
 
 impl pallet_did::Config for Runtime {
 	type RuntimeCall = RuntimeCall;
 	type RuntimeEvent = RuntimeEvent;
 	type DidIdentifier = DidIdentifier;
+	type GovernanceOrigin = MoreThanHalfCouncil;
 	type MaxString = MaxString;
+	type MaxCredentialsTypes = MaxCredentialsTypes;
 }
 
 parameter_types! {

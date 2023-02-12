@@ -36,6 +36,7 @@ use frame_support::{
 	Parameter,
 };
 use crate::verification::{DidSignature};
+use crate::types::{IssuerInfo};
 
 pub use pallet::*;
 use verification::{DidVerifiableIdentifier};
@@ -60,7 +61,10 @@ pub mod pallet {
 	/// Type for a DID subject identifier.
 	pub type DidIdentifierOf<T> = <T as Config>::DidIdentifier;
 
-	/// Type for a Kilt account identifier.
+	/// Type for valid Credentials.
+	pub type CredentialOf<T> = BoundedVec<u8, <T as Config>::MaxString>;
+
+	/// Type for Watr account identifier.
 	pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 
 	/// Type for a block number.
@@ -85,10 +89,36 @@ pub mod pallet {
 		/// Type for a DID subject identifier.
 		type DidIdentifier: Parameter + DidVerifiableIdentifier + MaxEncodedLen;
 
+		// Origin for priviledged actions
+		type GovernanceOrigin: EnsureOrigin<Self::RuntimeOrigin>;
+
 		/// The maximum length of a service ID.
 		#[pallet::constant]
 		type MaxString: Get<u32>;
+
+		/// The maximum Credential types.
+		#[pallet::constant]
+		type MaxCredentialsTypes: Get<u32>;
 	}
+
+	#[pallet::storage]
+	#[pallet::getter(fn issuers)]
+	pub type Issuers<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		DidIdentifierOf<T>,
+		IssuerInfo,
+		ValueQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn credential_types)]
+	// list of valid Credentials types
+	pub(super) type CredentialsTypes<T: Config> = StorageValue<
+		_,
+		BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>,
+		ValueQuery,
+	>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -114,6 +144,46 @@ pub mod pallet {
 				authenticator,
 				signature
 			});
+			Ok(())
+		}
+
+		#[pallet::weight(1000000)]
+		pub fn add_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
+			// Origin ONLY GovernanceOrigin
+			T::GovernanceOrigin::ensure_origin(origin)?;
+			// Add issuer to database with status Active
+			Ok(())
+		}
+
+		#[pallet::weight(1000000)]
+		pub fn revoke_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
+			// Origin ONLY GovernanceOrigin
+			T::GovernanceOrigin::ensure_origin(origin)?;
+			// Change status to Revoked
+			Ok(())
+		}
+
+		#[pallet::weight(1000000)]
+		pub fn delete_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
+			// Called by the user to de
+			T::GovernanceOrigin::ensure_origin(origin)?;
+			// Remove issuer from storage
+			// Should be also called when a Issuer DID is deleted()
+			// because of that prob create a do_delete_issuer() pallet helper method
+			Ok(())
+		}
+
+		#[pallet::weight(1000000)]
+		pub fn add_credential_type(origin: OriginFor<T>, credential: CredentialOf<T>) -> DispatchResult {
+ 			// Origin ONLY GovernanceOrigin
+			T::GovernanceOrigin::ensure_origin(origin)?;
+			Ok(())
+		}
+
+		#[pallet::weight(1000000)]
+		pub fn remove_credential_type(origin: OriginFor<T>, credential: CredentialOf<T>) -> DispatchResult {
+			// Origin ONLY GovernanceOrigin
+			T::GovernanceOrigin::ensure_origin(origin)?;
 			Ok(())
 		}
 	}
