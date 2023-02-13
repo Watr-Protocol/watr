@@ -21,25 +21,26 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+mod errors;
 mod types;
 mod verification;
-mod errors;
 
-use sp_std::prelude::*;
-use sp_core::H160;
+use crate::{
+	types::{IssuerInfo, IssuerStatus},
+	verification::DidSignature,
+};
 use frame_support::{
-	BoundedVec,
 	dispatch::{DispatchResult, Dispatchable, GetDispatchInfo, PostDispatchInfo},
 	ensure,
 	storage::types::StorageMap,
-	traits::{Currency, Get, OnUnbalanced, WithdrawReasons, ReservableCurrency},
-	Parameter,
+	traits::{Currency, Get, OnUnbalanced, ReservableCurrency, WithdrawReasons},
+	BoundedVec, Parameter,
 };
-use crate::verification::{DidSignature};
-use crate::types::{IssuerInfo, IssuerStatus};
+use sp_core::H160;
+use sp_std::prelude::*;
 
 pub use pallet::*;
-use verification::{DidVerifiableIdentifier};
+use verification::DidVerifiableIdentifier;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -72,7 +73,8 @@ pub mod pallet {
 
 	pub type BalanceOf<T> = <CurrencyOf<T> as Currency<AccountIdOf<T>>>::Balance;
 	pub(crate) type CurrencyOf<T> = <T as Config>::Currency;
-	pub(crate) type NegativeImbalanceOf<T> = <<T as Config>::Currency as Currency<AccountIdOf<T>>>::NegativeImbalance;
+	pub(crate) type NegativeImbalanceOf<T> =
+		<<T as Config>::Currency as Currency<AccountIdOf<T>>>::NegativeImbalance;
 
 	// /// Type for a runtime extrinsic callable under DID-based authorisation.
 	// pub type DidCallableOf<T> = <T as Config>::RuntimeCall;
@@ -114,22 +116,14 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn issuers)]
-	pub type Issuers<T: Config> = StorageMap<
-		_,
-		Blake2_128Concat,
-		DidIdentifierOf<T>,
-		IssuerInfo,
-		ValueQuery,
-	>;
+	pub type Issuers<T: Config> =
+		StorageMap<_, Blake2_128Concat, DidIdentifierOf<T>, IssuerInfo, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn credential_types)]
 	// list of valid Credentials types
-	pub(super) type CredentialsTypes<T: Config> = StorageValue<
-		_,
-		BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>,
-		ValueQuery,
-	>;
+	pub(super) type CredentialsTypes<T: Config> =
+		StorageValue<_, BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>, ValueQuery>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -152,33 +146,26 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-
 		#[pallet::call_index(0)]
 		#[pallet::weight(1000000)]
 		pub fn create_did(
 			origin: OriginFor<T>,
 			authenticator: H160, // Ethereum Address
-			signature: DidSignature
+			signature: DidSignature,
 		) -> DispatchResult {
 			let controller = ensure_signed(origin)?;
-			Self::deposit_event(Event::DidCreated{
-				controller,
-				authenticator,
-				signature
-			});
+			Self::deposit_event(Event::DidCreated { controller, authenticator, signature });
 			Ok(())
 		}
 
 		#[pallet::call_index(1)]
 		#[pallet::weight(1000000)]
-		pub fn add_issuer(
-			origin: OriginFor<T>, issuer: DidIdentifierOf<T>,
-		) -> DispatchResult {
+		pub fn add_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
 			// Add issuer to database with status Active
 			Issuers::<T>::insert(issuer.clone(), IssuerInfo { status: IssuerStatus::Active });
-			Self::deposit_event(Event::IssuerStatusActive{issuer});
+			Self::deposit_event(Event::IssuerStatusActive { issuer });
 			Ok(())
 		}
 
@@ -188,11 +175,12 @@ pub mod pallet {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
 			ensure!(
-				Issuers::<T>::get(&issuer) == IssuerInfo { status: IssuerStatus::Active }, 
-				Error::<T>::IssuerNotActive);
+				Issuers::<T>::get(&issuer) == IssuerInfo { status: IssuerStatus::Active },
+				Error::<T>::IssuerNotActive
+			);
 			// Change status to Revoked
 			Issuers::<T>::insert(issuer.clone(), IssuerInfo { status: IssuerStatus::Revoked });
-			Self::deposit_event(Event::IssuerStatusRevoked{issuer});
+			Self::deposit_event(Event::IssuerStatusRevoked { issuer });
 			Ok(())
 		}
 
@@ -203,24 +191,27 @@ pub mod pallet {
 			T::GovernanceOrigin::ensure_origin(origin)?;
 			// Remove issuer from storage
 			Self::do_delete_issuer(issuer.clone())?;
-			Self::deposit_event(Event::IssuerDeleted{issuer});
+			Self::deposit_event(Event::IssuerDeleted { issuer });
 			Ok(())
 		}
 
 		#[pallet::call_index(4)]
 		#[pallet::weight(1000000)]
-		pub fn add_credential_type(origin: OriginFor<T>, credential: CredentialOf<T>) -> DispatchResult {
- 			// Origin ONLY GovernanceOrigin
+		pub fn add_credential_type(
+			origin: OriginFor<T>,
+			credential: CredentialOf<T>,
+		) -> DispatchResult {
+			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
 			let mut credentials_types = CredentialsTypes::<T>::get();
 			ensure!(
-				!Self::credential_exists(&credentials_types, &credential), 
+				!Self::credential_exists(&credentials_types, &credential),
 				Error::<T>::CredentialAlreadyAdded
 			);
 			let pos = credentials_types.len();
 			credentials_types
-					.try_insert(pos, credential)
-					.map_err(|_| Error::<T>::MaxCredentials)?;
+				.try_insert(pos, credential)
+				.map_err(|_| Error::<T>::MaxCredentials)?;
 			CredentialsTypes::<T>::put(credentials_types);
 			Self::deposit_event(Event::CredentialTypeAdded);
 			Ok(())
@@ -228,12 +219,15 @@ pub mod pallet {
 
 		#[pallet::call_index(5)]
 		#[pallet::weight(1000000)]
-		pub fn remove_credential_type(origin: OriginFor<T>, credential: CredentialOf<T>) -> DispatchResult {
+		pub fn remove_credential_type(
+			origin: OriginFor<T>,
+			credential: CredentialOf<T>,
+		) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
 			let mut credentials_types = CredentialsTypes::<T>::get();
 			ensure!(
-				Self::credential_exists(&credentials_types, &credential), 
+				Self::credential_exists(&credentials_types, &credential),
 				Error::<T>::CredentialDoesNotExist
 			);
 			match credentials_types.binary_search(&credential) {
@@ -255,14 +249,13 @@ pub mod pallet {
 			Issuers::<T>::remove(issuer);
 			Ok(())
 		}
-	
+
 		/// Check that a credential already exists.
 		fn credential_exists(
-			credentials: &BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>, 
-			credential: &CredentialOf<T>
+			credentials: &BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>,
+			credential: &CredentialOf<T>,
 		) -> bool {
-				credentials.binary_search(credential).is_ok()
-			}
+			credentials.binary_search(credential).is_ok()
+		}
 	}
 }
-
