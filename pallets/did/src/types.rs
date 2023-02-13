@@ -19,7 +19,7 @@ pub struct KeyAgreement<T: Config> {
 
 #[derive(Decode, Encode, TypeInfo, MaxEncodedLen)]
 pub struct Service<T: Config> {
-	type_id: BoundedVec<u8, T::MaxString>, // E.g: IPFS
+	type_id: BoundedVec<u8, T::MaxString>,          // E.g: IPFS
 	service_endpoint: BoundedVec<u8, T::MaxString>, // E.g: IPFS endopoint
 }
 
@@ -36,7 +36,7 @@ pub struct Document<T: Config> {
 pub enum IssuerStatus {
 	New,
 	Active,
-	Revoked
+	Revoked,
 }
 
 impl Default for IssuerStatus {
@@ -47,5 +47,5 @@ impl Default for IssuerStatus {
 
 #[derive(Clone, Decode, Default, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
 pub struct IssuerInfo {
-	pub status: IssuerStatus
+	pub status: IssuerStatus,
 }
