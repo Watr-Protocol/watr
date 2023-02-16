@@ -31,7 +31,12 @@ async function eth_call() {
     //get balance transfer call hash
     let balancesCall = api.tx.balances.transfer(randomAddress, amountToTransfer);
     let callBytes = balancesCall?.method.toHex() || "";
-    
+
+    let didCreateCallBytes = "0x3c00e31b11a052afc923259949352b2f573a21301ba4022633913d75df1af1d6356aaf0e1d8658c5739a16c53bf79e7ed38c5beb89e2094dcc4ab110635762d0ea795410bfa14dcab09f696995cde1db5d23458ab0121c1b";
+
+    // Define the nonce for the transaction
+    const nonce = await web3.eth.getTransactionCount(senderAddress);
+
     const ethCallObj = {
       from: senderAddress,
       to: dispatchAddress, // Address of the dispatch precompile
@@ -47,9 +52,6 @@ async function eth_call() {
     if (result.error) {
       console.log(result);
     }
-
-    // Define the nonce for the transaction
-    const nonce = await web3.eth.getTransactionCount(senderAddress);
 
     // Create a new transaction object
     const txObject = {
