@@ -44,7 +44,7 @@ type BalanceOf<Runtime> = <<Runtime as pallet_did::Config>::Currency as Currency
 >>::Balance;
 
 /// Alias for the Asset Id type for the provided Runtime and Instance.
-pub type AssetIdOf<Runtime, Instance = ()> = <Runtime as pallet_assets::Config<Instance>>::AssetId;
+// pub type AssetIdOf<Runtime, Instance = ()> = <Runtime as pallet_assets::Config<Instance>>::AssetId;
 
 #[precompile_utils::generate_function_selector]
 #[derive(Debug, PartialEq)]
@@ -109,6 +109,7 @@ where
         let signature = input.read::<U256>()?;
 
         // let origin = Runtime::AddressMapping::into_account_id(handle.context().caller);
+        let origin = T::AddressMapping::into_account_id(context.caller);
 
         // Dispatch call (if enough gas).
         // RuntimeHelper::<Runtime>::try_dispatch(

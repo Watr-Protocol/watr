@@ -85,6 +85,7 @@ where
 			a if a == hash(7) => Some(Bn128Mul::execute(handle)),
 			a if a == hash(8) => Some(Bn128Pairing::execute(handle)),
 			a if a == hash(9) => Some(Blake2F::execute(handle)),
+			//TODO: update to proper addresses. 0xA and 0xB are easy to test.
 			a if a == hash(10) => Some(Dispatch::<R>::execute(handle)),
 			a if a == hash(11) => Some(DidPrecompile::execute(handle)),
 			// Non-Frontier specific nor Ethereum precompiles :

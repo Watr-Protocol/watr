@@ -99,7 +99,7 @@ pallet-evm-precompile-simple = { git = 'https://github.com/paritytech/frontier.g
 pallet-evm-precompile-blake2 = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30", default-features = false }
 pallet-evm-precompile-bn128 = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30", default-features = false }
 pallet-evm-precompile-dispatch = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30", default-features = false }
-pallet-evm-precompile-pallet-did = {path = "../../precompiles/pallet-did"}
+pallet-evm-precompile-pallet-did = {path = "../../precompiles/pallet-did", default-features = false}
 
 pallet-multisig = {git = "https://github.com/paritytech/substrate", package = "pallet-multisig", default-features = false, branch = "polkadot-v0.9.30" }
 pallet-identity = {git = "https://github.com/paritytech/substrate", package = "pallet-identity", default-features = false, branch = "polkadot-v0.9.30" }
@@ -183,6 +183,7 @@ std = [
 	"pallet-evm-precompile-assets-erc20/std",
 	"pallet-evm-precompile-blake2/std",
 	"pallet-evm-precompile-bn128/std",
+	"pallet-evm-precompile-pallet-did/std",
 ]
 runtime-benchmarks = [
 	"hex-literal",

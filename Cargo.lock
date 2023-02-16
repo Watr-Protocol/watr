@@ -6065,7 +6065,6 @@ dependencies = [
  "frame-system",
  "log",
  "num_enum",
- "pallet-assets",
  "pallet-balances",
  "pallet-did",
  "pallet-evm",
