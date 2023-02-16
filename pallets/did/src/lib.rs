@@ -22,7 +22,7 @@ mod mock;
 mod tests;
 
 mod types;
-mod verification;
+pub mod verification;
 mod errors;
 
 use sp_std::prelude::*;

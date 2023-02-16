@@ -27,6 +27,8 @@ use pallet_evm_precompile_bn128::{Bn128Add, Bn128Mul, Bn128Pairing};
 use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, Identity, Ripemd160, Sha256};
+use pallet_evm_precompile_dispatch::Dispatch;
+use pallet_evm_precompile_pallet_did::DidPrecompile;
 use sp_core::H160;
 use sp_std::{fmt::Debug, marker::PhantomData};
 
@@ -58,6 +60,7 @@ impl<R> FrontierPrecompiles<R> {
 impl<R> pallet_evm::PrecompileSet for FrontierPrecompiles<R>
 where
 	Erc20AssetsPrecompileSet<R>: PrecompileSet,
+	Dispatch<R>: Precompile,
 	R: pallet_evm::Config
 		+ pallet_assets::Config
 		+ pallet_xcm::Config
@@ -82,6 +85,8 @@ where
 			a if a == hash(7) => Some(Bn128Mul::execute(handle)),
 			a if a == hash(8) => Some(Bn128Pairing::execute(handle)),
 			a if a == hash(9) => Some(Blake2F::execute(handle)),
+			a if a == hash(10) => Some(Dispatch::<R>::execute(handle)),
+			a if a == hash(11) => Some(DidPrecompile::execute(handle)),
 			// Non-Frontier specific nor Ethereum precompiles :
 			// nor Ethereum precompiles :
 			a if a == hash(1024) => Some(Sha3FIPS256::execute(handle)),
