@@ -91,7 +91,13 @@ pub mod pallet {
 			+ GetDispatchInfo;
 
 		/// Type for a DID subject identifier.
-		type DidIdentifier: Parameter + DidVerifiableIdentifier + MaxEncodedLen;
+		type DidIdentifier: Parameter + MaxEncodedLen;
+
+		/// Type for the authentication method used by a DID.
+		type AuthenticationMethod: Parameter + DidVerifiableIdentifier + MaxEncodedLen;
+
+		/// Type for the assertion method used by an Issuer DID.
+		type AssertionMethod: Parameter + DidVerifiableIdentifier + MaxEncodedLen;
 
 		/// The currency trait.
 		type Currency: ReservableCurrency<Self::AccountId>;
@@ -134,7 +140,8 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		DidCreated { controller: AccountIdOf<T>, authenticator: H160, signature: DidSignature }
+		DidCreated { controller: AccountIdOf<T>, authenticator: T::AuthenticationMethod, signature: DidSignature }
+		IssuerDidCreated { controller: AccountIdOf<T>, authenticator: T::AuthenticationMethod, signature: DidSignature }
 	}
 
 	#[pallet::error]
@@ -146,14 +153,31 @@ pub mod pallet {
 		#[pallet::weight(1000000)]
 		pub fn create_did(
 			origin: OriginFor<T>,
-			authenticator: H160, // Ethereum Address
-			signature: DidSignature
+			controller: DidIdentifierOf<T>,
+			authenticator: T::AuthenticationMethod,
 		) -> DispatchResult {
 			let controller = ensure_signed(origin)?;
 			Self::deposit_event(Event::DidCreated{
 				controller,
+				authenticator
+			});
+			Ok(())
+		}
+
+		#[pallet::weight(1000000)]
+		pub fn create_issuer_did(
+			origin: OriginFor<T>,
+			controller: DidIdentifierOf<T>,
+			authenticator: T::AuthenticationMethod,
+			assertion_method: T::AssertionMethod,
+			services: Option<Vec<Service<T>>>,
+		) -> DispatchResult {
+			let controller = ensure_signed(origin)?;
+			Self::deposit_event(Event::IssuerDidCreated{
+				controller,
 				authenticator,
-				signature
+				assertion_method,
+				services
 			});
 			Ok(())
 		}

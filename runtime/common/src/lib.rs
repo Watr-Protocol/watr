@@ -24,9 +24,6 @@ use frame_support::weights::{constants::WEIGHT_PER_SECOND, Weight};
 
 pub use parachains_common::{xcm_config as xcm_config_parachains, BlockNumber, *};
 
-/// A Watr DID subject identifier.
-pub type DidIdentifier = AccountId;
-
 /// This determines the average expected block time that we are targeting.
 /// Blocks will be produced at a minimum duration defined by `SLOT_DURATION`.
 /// `SLOT_DURATION` is picked up by `pallet_timestamp` which is in turn picked

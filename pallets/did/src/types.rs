@@ -3,32 +3,31 @@ use codec::{Decode, Encode, MaxEncodedLen, WrapperTypeEncode};
 use scale_info::TypeInfo;
 
 #[derive(Decode, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
-pub struct Authentication<T: Config> {
-	controller: T::DidIdentifier,
+pub struct AuthenticationMethod<T: Config> {
+	controller: T::AuthenticationMethod,
 }
 
 #[derive(Decode, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
 pub struct AssertionMethod<T: Config> {
-	controller: T::DidIdentifier,
+	controller: T::AssertionMethod,
 }
 
-#[derive(Decode, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
-pub struct KeyAgreement<T: Config> {
-	controller: T::DidIdentifier,
+#[derive(Decode, Encode, TypeInfo, MaxEncodedLen)]
+enum ServiceType {
+	VerifiableCredentialFileStorage
 }
 
 #[derive(Decode, Encode, TypeInfo, MaxEncodedLen)]
 pub struct Service<T: Config> {
-	type_id: BoundedVec<u8, T::MaxString>, // E.g: IPFS
-	service_endpoint: BoundedVec<u8, T::MaxString>, // E.g: IPFS endopoint
+	type_id: ServiceType,
+	service_endpoint: BoundedVec<u8, T::MaxString>,
 }
 
 #[derive(Decode, Encode, TypeInfo, MaxEncodedLen)]
 pub struct Document<T: Config> {
-	controller: AccountIdOf<T>,
-	authentication: Authentication<T>,
+	controller: DidIdentifierOf<T>,
+	authentication: AuthenticationMethod<T>,
 	assertion_method: Option<AssertionMethod<T>>,
-	key_agreement: Option<KeyAgreement<T>>,
 	services: Option<Vec<Service<T>>>,
 }
 
