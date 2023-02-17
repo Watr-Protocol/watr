@@ -98,13 +98,13 @@ pub mod pallet {
 		type Currency: ReservableCurrency<Self::AccountId>;
 
 		/// Type for a DID subject identifier.
-		type DidIdentifier: Parameter + MaxEncodedLen + Default;
+		type DidIdentifier: Parameter + MaxEncodedLen + From<Self::AccountId>;
 
 		/// Type for the authentication method used by a DID.
-		type AuthenticationAddress: Parameter + DidVerifiableIdentifier + MaxEncodedLen + Default;
+		type AuthenticationAddress: Parameter + DidVerifiableIdentifier + MaxEncodedLen;
 
 		/// Type for the assertion method used by an Issuer DID.
-		type AssertionAddress: Parameter + DidVerifiableIdentifier + MaxEncodedLen + Default;
+		type AssertionAddress: Parameter + DidVerifiableIdentifier + MaxEncodedLen;
 
 		/// The amount held on deposit for a DID creation
 		#[pallet::constant]
@@ -112,11 +112,11 @@ pub mod pallet {
 
 		/// The maximum number of Service per ID.
 		#[pallet::constant]
-		type MaxServices: Get<u32> + Default;
+		type MaxServices: Get<u32>;
 
 		/// The maximum length of a String
 		#[pallet::constant]
-		type MaxString: Get<u32> + Debug + Clone + PartialEq + Default;
+		type MaxString: Get<u32>;
 
 		/// The maximum length of a Hash
 		#[pallet::constant]
@@ -138,7 +138,7 @@ pub mod pallet {
 		Blake2_128Concat,
 		DidIdentifierOf<T>,
 		Document<T>,
-		ValueQuery,
+		OptionQuery,
 	>;
 
 	#[pallet::storage]
@@ -148,7 +148,7 @@ pub mod pallet {
 		Blake2_128Concat,
 		KeyIdOf<T>,
 		Service<T>,
-		ValueQuery,
+		OptionQuery,
 	>;
 
 	#[pallet::storage]
@@ -217,7 +217,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let did = ensure_signed(origin)?;
 			Self::deposit_event(Event::DidCreated{
-				did,
+				did: T::DidIdentifier::from(did),
 				// document,
 			});
 			Ok(())
@@ -322,7 +322,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let issuer = ensure_signed(origin)?;
 			Self::deposit_event(Event::CredentialsIssued{
-				issuer,
+				issuer: T::DidIdentifier::from(issuer),
 				did,
 				credentials,
 				storage_hash,
