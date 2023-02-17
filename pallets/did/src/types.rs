@@ -7,13 +7,13 @@ use frame_support::pallet_prelude::RuntimeDebugNoBound;
 #[derive(Clone, Decode, Encode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 pub struct AuthenticationMethod<T: Config> {
-	controller: T::AuthenticationAddress,
+	pub controller: T::AuthenticationAddress,
 }
 
 #[derive(Clone, Decode, Encode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 pub struct AssertionMethod<T: Config> {
-	controller: T::AssertionAddress,
+	pub controller: T::AssertionAddress,
 }
 
 #[derive(Clone, Default, Decode, Encode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
@@ -27,16 +27,17 @@ enum ServiceType {
 #[scale_info(skip_type_params(T))]
 pub struct Service<T: Config> {
 	type_id: ServiceType,
-	service_endpoint: BoundedVec<u8, T::MaxString>,
+	pub service_endpoint: BoundedVec<u8, T::MaxString>,
 }
 
+// TODO: manually implement Clone or figure out why #[derive(Clone)] does not work
 #[derive(Clone, Decode, Encode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 pub struct Document<T: Config> {
-	controller: DidIdentifierOf<T>,
-	authentication: AuthenticationMethod<T>,
-	assertion_method: Option<AssertionMethod<T>>,
-	services: Option<BoundedVec<KeyIdOf<T>, T::MaxServices>>,
+	pub controller: DidIdentifierOf<T>,
+	pub authentication: AuthenticationMethod<T>,
+	pub assertion_method: Option<AssertionMethod<T>>,
+	pub services: Option<BoundedVec<KeyIdOf<T>, T::MaxServices>>,
 }
 
 #[derive(Clone, Decode, Default, Encode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
@@ -50,7 +51,7 @@ pub enum IssuerStatus {
 #[derive(Clone, Decode, Default, Encode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 pub struct IssuerInfo {
-	status: IssuerStatus
+	pub status: IssuerStatus
 }
 
 impl<T: Config> Clone for Service<T> {

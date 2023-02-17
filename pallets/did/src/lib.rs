@@ -33,11 +33,12 @@ use frame_support::{
 	ensure,
 	storage::types::StorageMap,
 	traits::{Currency, Get, OnUnbalanced, WithdrawReasons, ReservableCurrency},
+	pallet_prelude::DispatchError,
 	Parameter,
 };
 use sp_runtime::traits::{Hash};
 use crate::verification::{DidSignature};
-use crate::types::{Document, IssuerInfo, Service};
+use crate::types::{AssertionMethod, AuthenticationMethod, Document, IssuerInfo, Service};
 
 pub use pallet::*;
 use verification::{DidVerifiableIdentifier};
@@ -202,7 +203,12 @@ pub mod pallet {
 	}
 
 	#[pallet::error]
-	pub enum Error<T> {}
+	pub enum Error<T> {
+		/// Unable to create DID that already exists
+		DidAlreadyExists,
+		/// Service Endpoint is empty (len == 0)
+		ServiceEndpointEmpty,
+	}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
@@ -211,13 +217,48 @@ pub mod pallet {
 		pub fn create_did(
 			origin: OriginFor<T>,
 			controller: DidIdentifierOf<T>,
-			authenticaton: T::AuthenticationAddress,
+			authentication: T::AuthenticationAddress,
 			assertion: Option<T::AssertionAddress>,
 			services: Option<BoundedVec<Service<T>, T::MaxServices>>,
 		) -> DispatchResult {
-			let did = ensure_signed(origin)?;
+			let origin = ensure_signed(origin)?;
+			let did_id = T::DidIdentifier::from(origin);
+
+			// Check if DID already exists. 
+			if let Some(_) = Did::<T>::get(did_id.clone()) { return Err(Error::<T>::DidAlreadyExists.into())};
+
+			let maybe_hashed_services = if let Some(services) = services {
+				let mut hashed_services: BoundedVec<KeyIdOf<T>, T::MaxServices> = BoundedVec::default();
+				
+				for service in services {
+					let service_hash = match Self::try_add_service(service) {
+						Ok(service_hash) => service_hash,
+						Err(e) => return Err(e)
+					};
+					// TODO: sort this
+					hashed_services.try_push(service_hash);
+				}
+				Some(hashed_services)
+			} else { None };
+
+			// TODO: verify Authentication and Assertion (if exists) 
+
+			let maybe_assertion_method = if let Some(assertion) = assertion {
+				Some( AssertionMethod::<T> { controller: assertion } )
+			} else { None };
+
+			let did_doc = Document {
+				controller,
+				authentication: AuthenticationMethod { controller: authentication },
+				assertion_method: maybe_assertion_method,
+				services: maybe_hashed_services 
+			};
+
+			Did::<T>::insert(did_id.clone(), did_doc);
+
+			//TODO: add the DID document event. Must implement Clone for Document first
 			Self::deposit_event(Event::DidCreated{
-				did: T::DidIdentifier::from(did),
+				did: did_id 
 				// document,
 			});
 			Ok(())
@@ -228,7 +269,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			did: DidIdentifierOf<T>,
 			controller:Option<DidIdentifierOf<T>>,
-			authenticaton: Option<T::AuthenticationAddress>,
+			authentication: Option<T::AuthenticationAddress>,
 			assertion: Option<T::AssertionAddress>,
 			services: Option<BoundedVec<Service<T>, T::MaxServices>>,
 		) -> DispatchResult {
@@ -369,5 +410,16 @@ pub mod pallet {
 			T::GovernanceOrigin::ensure_origin(origin)?;
 			Ok(())
 		}
+	}
+}
+
+
+impl<T: Config> Pallet<T> {
+	fn try_add_service(service: Service<T>) -> Result<KeyIdOf<T>, DispatchError> {
+		//TODO: fine-tune the minimum chars for a service endpoin
+		ensure!(service.service_endpoint.len() > 0, Error::<T>::ServiceEndpointEmpty);
+		let service_hash = T::Hashing::hash_of(&service);
+		Services::<T>::insert(service_hash, service);
+		Ok(service_hash)
 	}
 }
