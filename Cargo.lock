@@ -6056,32 +6056,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-evm-precompile-pallet-did"
-version = "0.5.2"
-dependencies = [
- "derive_more",
- "fp-evm",
- "frame-support",
- "frame-system",
- "log",
- "num_enum",
- "pallet-balances",
- "pallet-did",
- "pallet-evm",
- "pallet-timestamp",
- "parity-scale-codec",
- "precompile-utils",
- "scale-info",
- "serde",
- "sha3 0.10.6",
- "slices",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "pallet-evm-precompile-sha3fips"
 version = "2.0.0-dev"
 source = "git+https://github.com/paritytech/frontier.git?branch=polkadot-v0.9.30#1bd889c001b2a4735777160354cb57b8c17cf756"
@@ -12710,7 +12684,6 @@ dependencies = [
  "pallet-evm-precompile-bn128",
  "pallet-evm-precompile-dispatch",
  "pallet-evm-precompile-modexp",
- "pallet-evm-precompile-pallet-did",
  "pallet-evm-precompile-sha3fips",
  "pallet-evm-precompile-simple",
  "pallet-identity",

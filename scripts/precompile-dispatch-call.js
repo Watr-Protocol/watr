@@ -12,7 +12,7 @@ async function eth_call() {
     let amountToTransfer = 100n * (10n ** 18n);
 
     // Define the address to send the dispatch call to
-    const dispatchAddress = "0x000000000000000000000000000000000000000A";
+    const dispatchAddress = "0x0000000000000000000000000000000000000401";
 
     // Define the sender account address and private key
     const senderAddress = '0xe31B11A052aFC923259949352B2f573a21301Ba4'; 

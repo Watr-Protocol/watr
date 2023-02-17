@@ -28,7 +28,6 @@ use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, Identity, Ripemd160, Sha256};
 use pallet_evm_precompile_dispatch::Dispatch;
-use pallet_evm_precompile_pallet_did::DidPrecompile;
 use sp_core::H160;
 use sp_std::{fmt::Debug, marker::PhantomData};
 
@@ -85,12 +84,10 @@ where
 			a if a == hash(7) => Some(Bn128Mul::execute(handle)),
 			a if a == hash(8) => Some(Bn128Pairing::execute(handle)),
 			a if a == hash(9) => Some(Blake2F::execute(handle)),
-			//TODO: update to proper addresses. 0xA and 0xB are easy to test.
-			a if a == hash(10) => Some(Dispatch::<R>::execute(handle)),
-			a if a == hash(11) => Some(DidPrecompile::execute(handle)),
 			// Non-Frontier specific nor Ethereum precompiles :
 			// nor Ethereum precompiles :
 			a if a == hash(1024) => Some(Sha3FIPS256::execute(handle)),
+			a if a == hash(1025) => Some(Dispatch::<R>::execute(handle)),
 			// If the address matches asset prefix, the we route through the asset precompile set
 			a if &a.to_fixed_bytes()[0..4] == ASSET_PRECOMPILE_ADDRESS_PREFIX =>
 				Erc20AssetsPrecompileSet::<R>::new().execute(handle),
