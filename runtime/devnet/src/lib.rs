@@ -732,21 +732,25 @@ impl pallet_motion::Config for Runtime {
 
 parameter_types! {
 	pub const MaxString: u8 = 100;
+	pub const MaxHash: u8 = 512;
 	pub const MaxCredentialsTypes: u8 = 50;
+	pub const MaxServices: u8 = 10;
 	pub const DidDeposit: Balance = 10 * WATRD;
 }
 
 impl pallet_did::Config for Runtime {
 	type RuntimeCall = RuntimeCall;
 	type RuntimeEvent = RuntimeEvent;
-	type DidIdentifier = AccountId;
-	type AuthenticationMethod = H160;
-	type AssertionMethod = H160;
-	type DidDeposit = DidDeposit;
 	type Currency = Balances;
-	type GovernanceOrigin = MoreThanHalfCouncil;
+	type DidIdentifier = AccountId;
+	type AuthenticationAddress = H160;
+	type AssertionAddress = H160;
+	type DidDeposit = DidDeposit;
 	type MaxString = MaxString;
+	type MaxHash = MaxHash;
 	type MaxCredentialsTypes = MaxCredentialsTypes;
+	type MaxServices = MaxServices;
+	type GovernanceOrigin = MoreThanHalfCouncil;
 }
 
 parameter_types! {

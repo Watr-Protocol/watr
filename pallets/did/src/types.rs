@@ -1,49 +1,54 @@
 use super::*;
 use codec::{Decode, Encode, MaxEncodedLen, WrapperTypeEncode};
 use scale_info::TypeInfo;
+use sp_runtime::{RuntimeDebug};
+use frame_support::pallet_prelude::RuntimeDebugNoBound;
 
-#[derive(Decode, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
+#[derive(Clone, Default, Decode, Encode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(T))]
 pub struct AuthenticationMethod<T: Config> {
-	controller: T::AuthenticationMethod,
+	controller: T::AuthenticationAddress,
 }
 
-#[derive(Decode, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
+#[derive(Clone, Default, Decode, Encode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(T))]
 pub struct AssertionMethod<T: Config> {
-	controller: T::AssertionMethod,
+	controller: T::AssertionAddress,
 }
 
-#[derive(Decode, Encode, TypeInfo, MaxEncodedLen)]
+#[derive(Clone, Default, Decode, Encode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(T))]
 enum ServiceType {
+	#[default]
 	VerifiableCredentialFileStorage
 }
 
-#[derive(Decode, Encode, TypeInfo, MaxEncodedLen)]
+#[derive(Clone, Decode, Default, Encode, PartialEq, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(T))]
 pub struct Service<T: Config> {
 	type_id: ServiceType,
 	service_endpoint: BoundedVec<u8, T::MaxString>,
 }
 
-#[derive(Decode, Encode, TypeInfo, MaxEncodedLen)]
+#[derive(Clone, Decode, Default, Encode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(T))]
 pub struct Document<T: Config> {
 	controller: DidIdentifierOf<T>,
 	authentication: AuthenticationMethod<T>,
 	assertion_method: Option<AssertionMethod<T>>,
-	services: Option<Vec<Service<T>>>,
+	services: Option<BoundedVec<KeyIdOf<T>, T::MaxServices>>,
 }
 
-#[derive(Clone, Decode, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
+#[derive(Clone, Decode, Default, Encode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(T))]
 pub enum IssuerStatus {
+	#[default]
 	Active,
 	Revoked
 }
 
-impl Default for IssuerStatus {
-	fn default() -> Self {
-		Self::Active
-	}
-}
-
-#[derive(Clone, Decode, Default, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
+#[derive(Clone, Decode, Default, Encode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(T))]
 pub struct IssuerInfo {
 	status: IssuerStatus
 }

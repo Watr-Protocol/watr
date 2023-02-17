@@ -25,7 +25,7 @@ mod types;
 mod verification;
 mod errors;
 
-use sp_std::prelude::*;
+use sp_std::{prelude::*, fmt::Debug};
 use sp_core::H160;
 use frame_support::{
 	BoundedVec,
@@ -35,8 +35,9 @@ use frame_support::{
 	traits::{Currency, Get, OnUnbalanced, WithdrawReasons, ReservableCurrency},
 	Parameter,
 };
+use sp_runtime::traits::{Hash};
 use crate::verification::{DidSignature};
-use crate::types::{IssuerInfo};
+use crate::types::{Document, IssuerInfo, Service};
 
 pub use pallet::*;
 use verification::{DidVerifiableIdentifier};
@@ -55,14 +56,17 @@ pub mod pallet {
 	/// Reference to a payload of data of variable size.
 	pub type Payload = [u8];
 
-	// /// Type for a DID key identifier.
-	// pub type KeyIdOf<T> = <T as frame_system::Config>::Hash;
-
 	/// Type for a DID subject identifier.
 	pub type DidIdentifierOf<T> = <T as Config>::DidIdentifier;
 
 	/// Type for valid Credentials.
 	pub type CredentialOf<T> = BoundedVec<u8, <T as Config>::MaxString>;
+
+	/// Type for valid Credentials.
+	pub type HashOf<T> = BoundedVec<u8, <T as Config>::MaxHash>;
+
+	/// Type for a Service hash identifier.
+	pub type KeyIdOf<T> = <T as frame_system::Config>::Hash;
 
 	/// Type for Watr account identifier.
 	pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
@@ -90,33 +94,62 @@ pub mod pallet {
 			+ UnfilteredDispatchable<RuntimeOrigin = Self::RuntimeOrigin>
 			+ GetDispatchInfo;
 
-		/// Type for a DID subject identifier.
-		type DidIdentifier: Parameter + MaxEncodedLen;
-
-		/// Type for the authentication method used by a DID.
-		type AuthenticationMethod: Parameter + DidVerifiableIdentifier + MaxEncodedLen;
-
-		/// Type for the assertion method used by an Issuer DID.
-		type AssertionMethod: Parameter + DidVerifiableIdentifier + MaxEncodedLen;
-
 		/// The currency trait.
 		type Currency: ReservableCurrency<Self::AccountId>;
+
+		/// Type for a DID subject identifier.
+		type DidIdentifier: Parameter + MaxEncodedLen + Default;
+
+		/// Type for the authentication method used by a DID.
+		type AuthenticationAddress: Parameter + DidVerifiableIdentifier + MaxEncodedLen + Default;
+
+		/// Type for the assertion method used by an Issuer DID.
+		type AssertionAddress: Parameter + DidVerifiableIdentifier + MaxEncodedLen + Default;
 
 		/// The amount held on deposit for a DID creation
 		#[pallet::constant]
 		type DidDeposit: Get<BalanceOf<Self>>;
 
-		// Origin for priviledged actions
-		type GovernanceOrigin: EnsureOrigin<Self::RuntimeOrigin>;
-
-		/// The maximum length of a service ID.
+		/// The maximum number of Service per ID.
 		#[pallet::constant]
-		type MaxString: Get<u32>;
+		type MaxServices: Get<u32> + Default;
+
+		/// The maximum length of a String
+		#[pallet::constant]
+		type MaxString: Get<u32> + Debug + Clone + PartialEq + Default;
+
+		/// The maximum length of a Hash
+		#[pallet::constant]
+		type MaxHash: Get<u32>;
 
 		/// The maximum Credential types.
 		#[pallet::constant]
 		type MaxCredentialsTypes: Get<u32>;
+
+		// Origin for priviledged actions
+		type GovernanceOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 	}
+
+	/// DID Resolver
+	#[pallet::storage]
+	#[pallet::getter(fn dids)]
+	pub type Did<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		DidIdentifierOf<T>,
+		Document<T>,
+		ValueQuery,
+	>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn services)]
+	pub type Services<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		KeyIdOf<T>,
+		Service<T>,
+		ValueQuery,
+	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn issuers)]
@@ -140,8 +173,32 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		DidCreated { controller: AccountIdOf<T>, authenticator: T::AuthenticationMethod, signature: DidSignature }
-		IssuerDidCreated { controller: AccountIdOf<T>, authenticator: T::AuthenticationMethod, signature: DidSignature }
+		DidCreated {
+			did: DidIdentifierOf<T>,
+			// document: Document<T>,
+		},
+		DidUpdated {
+			did: DidIdentifierOf<T>,
+			// document: Document<T>,
+		},
+		DidForcedUpdated {
+			did: DidIdentifierOf<T>,
+			// document: Document<T>,
+		},
+		DidRemoved {
+			did: DidIdentifierOf<T>,
+		},
+		DidForcedRemoved {
+			did: DidIdentifierOf<T>,
+		},
+		DidServiceAdded { did: DidIdentifierOf<T>, id: T::Hash },
+		DidServiceRemoved { did: DidIdentifierOf<T>, id: T::Hash },
+		CredentialsIssued {
+			issuer: DidIdentifierOf<T>,
+			did: DidIdentifierOf<T>,
+			credentials: Vec<CredentialOf<T>>,
+			storage_hash: HashOf<T>,
+		}
 	}
 
 	#[pallet::error]
@@ -154,30 +211,121 @@ pub mod pallet {
 		pub fn create_did(
 			origin: OriginFor<T>,
 			controller: DidIdentifierOf<T>,
-			authenticator: T::AuthenticationMethod,
+			authenticaton: T::AuthenticationAddress,
+			assertion: Option<T::AssertionAddress>,
+			services: Option<BoundedVec<Service<T>, T::MaxServices>>,
 		) -> DispatchResult {
-			let controller = ensure_signed(origin)?;
+			let did = ensure_signed(origin)?;
 			Self::deposit_event(Event::DidCreated{
-				controller,
-				authenticator
+				did,
+				// document,
 			});
 			Ok(())
 		}
 
 		#[pallet::weight(1000000)]
-		pub fn create_issuer_did(
+		pub fn update_did(
 			origin: OriginFor<T>,
-			controller: DidIdentifierOf<T>,
-			authenticator: T::AuthenticationMethod,
-			assertion_method: T::AssertionMethod,
-			services: Option<Vec<Service<T>>>,
+			did: DidIdentifierOf<T>,
+			controller:Option<DidIdentifierOf<T>>,
+			authenticaton: Option<T::AuthenticationAddress>,
+			assertion: Option<T::AssertionAddress>,
+			services: Option<BoundedVec<Service<T>, T::MaxServices>>,
 		) -> DispatchResult {
 			let controller = ensure_signed(origin)?;
-			Self::deposit_event(Event::IssuerDidCreated{
-				controller,
-				authenticator,
-				assertion_method,
-				services
+			Self::deposit_event(Event::DidUpdated{
+				did,
+				// document
+			});
+			Ok(())
+		}
+
+		#[pallet::weight(1000000)]
+		pub fn force_update_did(
+			origin: OriginFor<T>,
+			did: DidIdentifierOf<T>,
+			controller:Option<DidIdentifierOf<T>>,
+			authenticaton: Option<T::AuthenticationAddress>,
+			assertion: Option<T::AssertionAddress>,
+			services: Option<BoundedVec<Service<T>, T::MaxServices>>,
+		) -> DispatchResult {
+			// Origin ONLY GovernanceOrigin
+			T::GovernanceOrigin::ensure_origin(origin)?;
+			Self::deposit_event(Event::DidForcedUpdated{
+				did,
+				// document
+			});
+			Ok(())
+		}
+
+		#[pallet::weight(1000000)]
+		pub fn remove_did(
+			origin: OriginFor<T>,
+			did: DidIdentifierOf<T>,
+		) -> DispatchResult {
+			let controller = ensure_signed(origin)?;
+			Self::deposit_event(Event::DidRemoved{
+				did,
+			});
+			Ok(())
+		}
+
+		#[pallet::weight(1000000)]
+		pub fn force_remove_did(
+			origin: OriginFor<T>,
+			did: DidIdentifierOf<T>,
+		) -> DispatchResult {
+			// Origin ONLY GovernanceOrigin
+			T::GovernanceOrigin::ensure_origin(origin)?;
+			Self::deposit_event(Event::DidForcedRemoved{
+				did,
+			});
+			Ok(())
+		}
+
+		#[pallet::weight(1000000)]
+		pub fn add_did_service(
+			origin: OriginFor<T>,
+			did: DidIdentifierOf<T>,
+			service: Service<T>,
+		) -> DispatchResult {
+			let controller = ensure_signed(origin)?;
+			let service_hash = T::Hashing::hash_of(&service);
+			Self::deposit_event(Event::DidServiceAdded{
+				did,
+				id: service_hash,
+			});
+			Ok(())
+		}
+
+		#[pallet::weight(1000000)]
+		pub fn remove_did_service(
+			origin: OriginFor<T>,
+			did: DidIdentifierOf<T>,
+			service: Service<T>,
+		) -> DispatchResult {
+			let controller = ensure_signed(origin)?;
+			let service_hash = T::Hashing::hash_of(&service);
+			Self::deposit_event(Event::DidServiceRemoved{
+				did,
+				id: service_hash
+			});
+			Ok(())
+		}
+
+		#[pallet::weight(1000000)]
+		pub fn issue_credentials(
+			origin: OriginFor<T>,
+			did: DidIdentifierOf<T>,
+			credentials: Vec<CredentialOf<T>>,
+			storage_hash: HashOf<T>,
+		) -> DispatchResult {
+			let issuer = ensure_signed(origin)?;
+			Self::deposit_event(Event::CredentialsIssued{
+				issuer,
+				did,
+				credentials,
+				storage_hash,
 			});
 			Ok(())
 		}
@@ -199,7 +347,7 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(1000000)]
-		pub fn delete_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
+		pub fn remove_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Called by the user to de
 			T::GovernanceOrigin::ensure_origin(origin)?;
 			// Remove issuer from storage
