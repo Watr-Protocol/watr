@@ -65,6 +65,6 @@ impl<T: Config> Clone for Service<T> {
 
 impl<T: Config> PartialEq for Service<T> {
 	fn eq(&self, other: &Self) -> bool {
-		self.type_id == other.type_id && self.service_endpoint == other.service_endpoint	
+		self.type_id == other.type_id && self.service_endpoint == other.service_endpoint
 	}
 }
