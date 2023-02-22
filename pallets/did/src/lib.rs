@@ -192,7 +192,10 @@ pub mod pallet {
 
 		#[pallet::call_index(3)]
 		#[pallet::weight(1000000)]
-		pub fn reactivate_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
+		pub fn reactivate_issuer(
+			origin: OriginFor<T>,
+			issuer: DidIdentifierOf<T>,
+		) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
 			ensure!(Issuers::<T>::contains_key(&issuer), Error::<T>::IssuerDoesNotExist);
@@ -232,16 +235,13 @@ pub mod pallet {
 			T::GovernanceOrigin::ensure_origin(origin)?;
 			let mut credentials_types = CredentialsTypes::<T>::get();
 			let pos = credentials_types.binary_search(&credential);
-			ensure!(
-				!pos.is_ok(),
-				Error::<T>::CredentialAlreadyAdded
-			);
+			ensure!(!pos.is_ok(), Error::<T>::CredentialAlreadyAdded);
 			match pos {
 				Err(pos) => {
 					credentials_types
-				.try_insert(pos, credential.clone())
-				.map_err(|_| Error::<T>::MaxCredentials)?;
-				()
+						.try_insert(pos, credential.clone())
+						.map_err(|_| Error::<T>::MaxCredentials)?;
+					()
 				},
 				Ok(_pos) => (),
 			}
@@ -260,10 +260,7 @@ pub mod pallet {
 			T::GovernanceOrigin::ensure_origin(origin)?;
 			let mut credentials_types = CredentialsTypes::<T>::get();
 			let pos = credentials_types.binary_search(&credential);
-			ensure!(
-				pos.is_ok(),
-				Error::<T>::CredentialDoesNotExist
-			);
+			ensure!(pos.is_ok(), Error::<T>::CredentialDoesNotExist);
 			match pos {
 				Ok(pos) => {
 					credentials_types.remove(pos);
@@ -272,7 +269,7 @@ pub mod pallet {
 				Err(_pos) => (),
 			}
 			CredentialsTypes::<T>::put(credentials_types);
-			Self::deposit_event(Event::CredentialTypeRemoved{ credential });
+			Self::deposit_event(Event::CredentialTypeRemoved { credential });
 			Ok(())
 		}
 	}
