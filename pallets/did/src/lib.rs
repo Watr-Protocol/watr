@@ -231,14 +231,20 @@ pub mod pallet {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
 			let mut credentials_types = CredentialsTypes::<T>::get();
+			let pos = credentials_types.binary_search(&credential);
 			ensure!(
-				!Self::credential_exists(&credentials_types, &credential),
+				!pos.is_ok(),
 				Error::<T>::CredentialAlreadyAdded
 			);
-			let pos = credentials_types.len();
-			credentials_types
+			match pos {
+				Err(pos) => {
+					credentials_types
 				.try_insert(pos, credential.clone())
 				.map_err(|_| Error::<T>::MaxCredentials)?;
+				()
+				},
+				Ok(_pos) => (),
+			}
 			CredentialsTypes::<T>::put(credentials_types);
 			Self::deposit_event(Event::CredentialTypeAdded { credential });
 			Ok(())
@@ -253,16 +259,17 @@ pub mod pallet {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
 			let mut credentials_types = CredentialsTypes::<T>::get();
+			let pos = credentials_types.binary_search(&credential);
 			ensure!(
-				Self::credential_exists(&credentials_types, &credential),
+				pos.is_ok(),
 				Error::<T>::CredentialDoesNotExist
 			);
-			match credentials_types.binary_search(&credential) {
+			match pos {
 				Ok(pos) => {
 					credentials_types.remove(pos);
 					()
 				},
-				_ => (),
+				Err(_pos) => (),
 			}
 			CredentialsTypes::<T>::put(credentials_types);
 			Self::deposit_event(Event::CredentialTypeRemoved{ credential });
@@ -275,14 +282,6 @@ pub mod pallet {
 		pub fn do_delete_issuer(issuer: DidIdentifierOf<T>) -> DispatchResult {
 			Issuers::<T>::remove(issuer);
 			Ok(())
-		}
-
-		/// Check that a credential already exists.
-		fn credential_exists(
-			credentials: &BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>,
-			credential: &CredentialOf<T>,
-		) -> bool {
-			credentials.binary_search(credential).is_ok()
 		}
 	}
 }
