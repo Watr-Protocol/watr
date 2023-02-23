@@ -518,7 +518,7 @@ impl<T: Config> Pallet<T> {
 		Ok(hashed_services)
 	}
 
-	/// Insert a single service into storage 
+	/// Insert a single service into storage
 	fn do_insert_service(service: Service<T>) -> KeyIdOf<T> {
 		let service_hash = T::Hashing::hash_of(&service);
 
@@ -566,12 +566,31 @@ impl<T: Config> Pallet<T> {
 
 		// If present, update the `services` BoundedVec
 		if let Some(services) = services {
-			// Try to insert services to `Service` storage and 
+			// Try to insert services to `Service` storage and
 			// save new vec to the document.
 			did_doc.services = Some( Self::try_insert_services(services)? );
 		}
 
 		Ok(())
+	}
+
+	/// Increment stored service consumers count. Lookup by service hash
+	pub fn inc_consumers(service_hash: KeyIdOf<T>) -> Result<(), DispatchError> {
+		Services::<T>::try_mutate(service_hash, |service| -> Result<(), DispatchError> {
+			let service = service.as_mut().ok_or(Error::<T>::ServiceNotInDid)?;
+			//TODO
+			Ok(())
+		})
+	}
+
+	/// Decrement stored service consumers count. Lookup by service hash.
+	/// Will remove service if `consumers` becomes 0
+	pub fn dec_consumers_with_removal(service_hash: KeyIdOf<T>) -> Result<(), DispatchError> {
+		Services::<T>::try_mutate_exists(service_hash, |service| -> Result<(), DispatchError> {
+			let service = service.as_mut().ok_or(Error::<T>::ServiceNotInDid)?;
+			//TODO
+			Ok(())
+		})
 	}
 
 	/// Ensures that `who` is the controller of the did document
