@@ -26,7 +26,7 @@ mod types;
 mod verification;
 
 use crate::{
-	types::{AssertionMethod, AuthenticationMethod, Document, IssuerInfo, Service},
+	types::{AssertionMethod, AuthenticationMethod, Document, IssuerInfo, IssuerStatus, Service},
 	verification::DidSignature,
 };
 use frame_support::{
@@ -37,6 +37,7 @@ use frame_support::{
 	traits::{Currency, EnsureOrigin, Get, OnUnbalanced, ReservableCurrency, WithdrawReasons},
 	BoundedVec, Parameter,
 };
+use sp_std::prelude::*;
 use frame_system::{ensure_signed, pallet_prelude::OriginFor};
 use sp_core::H160;
 use sp_runtime::traits::Hash;
@@ -151,8 +152,7 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn issuers)]
-	pub type Issuers<T: Config> =
-		StorageMap<_, Blake2_128Concat, DidIdentifierOf<T>, IssuerInfo, ValueQuery>;
+	pub type Issuers<T: Config> = StorageMap<_, Blake2_128Concat, DidIdentifierOf<T>, IssuerInfo>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn credential_types)]
@@ -163,6 +163,8 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
+		CredentialTypeAdded { credential: CredentialOf<T> },
+		CredentialTypeRemoved { credential: CredentialOf<T> },
 		DidCreated {
 			did: DidIdentifierOf<T>,
 			document: Document<T>,
@@ -195,10 +197,22 @@ pub mod pallet {
 			credentials: Vec<CredentialOf<T>>,
 			storage_hash: HashOf<T>,
 		},
+		IssuerDeleted { issuer: DidIdentifierOf<T> },
+		IssuerStatusReactived { issuer: DidIdentifierOf<T> },
+		IssuerStatusActive { issuer: DidIdentifierOf<T> },
+		IssuerStatusRevoked { issuer: DidIdentifierOf<T> },
 	}
 
 	#[pallet::error]
 	pub enum Error<T> {
+		CredentialAlreadyAdded,
+		CredentialDoesNotExist,
+		IssuerAlreadyExists,
+		IssuerDoesNotExist,
+		IssuerNotActive,
+		IssuerNotRevoked,
+		MaxCredentials,
+	
 		/// Unable to create DID that already exists
 		DidAlreadyExists,
 		// Unable to find DID from DidIdentifier
@@ -215,6 +229,7 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+		// #[pallet::call_index(0)]
 		#[pallet::weight(1000000)]
 		pub fn create_did(
 			origin: OriginFor<T>,
@@ -375,32 +390,69 @@ pub mod pallet {
 			Ok(())
 		}
 
+		// #[pallet::call_index(1)]
 		#[pallet::weight(1000000)]
 		pub fn add_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
-			// Add issuer to database with status Active
+			ensure!(!Issuers::<T>::contains_key(&issuer), Error::<T>::IssuerAlreadyExists);
+			// Add issuer to storage with status Active
+			Issuers::<T>::insert(issuer.clone(), IssuerInfo { status: IssuerStatus::Active });
+			Self::deposit_event(Event::IssuerStatusActive { issuer });
 			Ok(())
 		}
 
+		// #[pallet::call_index(2)]
 		#[pallet::weight(1000000)]
 		pub fn revoke_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
-			// Change status to Revoked
-			Ok(())
+
+			// Change issuer status to Revoked
+			Issuers::<T>::try_mutate(issuer.clone(), |maybe_info| -> DispatchResult {
+				let mut info = maybe_info.as_mut().ok_or(Error::<T>::IssuerDoesNotExist)?;
+				ensure!(
+					*info == IssuerInfo { status: IssuerStatus::Active },
+					Error::<T>::IssuerNotActive
+				);
+				*info = IssuerInfo { status: IssuerStatus::Revoked };
+				Self::deposit_event(Event::IssuerStatusRevoked { issuer });
+				Ok(())
+			})
 		}
 
+		// #[pallet::call_index(3)]
+		#[pallet::weight(1000000)]
+		pub fn reactivate_issuer(
+			origin: OriginFor<T>,
+			issuer: DidIdentifierOf<T>,
+		) -> DispatchResult {
+			// Origin ONLY GovernanceOrigin
+			T::GovernanceOrigin::ensure_origin(origin)?;
+
+			// Change issuer status to Active
+			Issuers::<T>::try_mutate(issuer.clone(), |maybe_info| -> DispatchResult {
+				let mut info = maybe_info.as_mut().ok_or(Error::<T>::IssuerDoesNotExist)?;
+				ensure!(
+					*info == IssuerInfo { status: IssuerStatus::Revoked },
+					Error::<T>::IssuerNotRevoked
+				);
+				*info = IssuerInfo { status: IssuerStatus::Active };
+				Self::deposit_event(Event::IssuerStatusReactived { issuer });
+				Ok(())
+			})
+		}
+
+		// #[pallet::call_index(4)]
 		#[pallet::weight(1000000)]
 		pub fn remove_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
-			// Called by the user to de
-			T::GovernanceOrigin::ensure_origin(origin)?;
-			// Remove issuer from storage
-			// Should be also called when a Issuer DID is deleted()
-			// because of that prob create a do_delete_issuer() pallet helper method
+			// Origin ONLY GovernanceOrigin
+			T::GovernanceOrigin::ensure_origin(origin.clone())?;
+			Self::do_remove_issuer(origin, issuer)?;
 			Ok(())
 		}
 
+		// #[pallet::call_index(5)]
 		#[pallet::weight(1000000)]
 		pub fn add_credential_type(
 			origin: OriginFor<T>,
@@ -408,9 +460,21 @@ pub mod pallet {
 		) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
+			let mut credentials_types = CredentialsTypes::<T>::get();
+			let pos = credentials_types
+				.binary_search(&credential)
+				.err()
+				.ok_or(Error::<T>::CredentialAlreadyAdded)?;
+			credentials_types
+				.try_insert(pos, credential.clone())
+				.map_err(|_| Error::<T>::MaxCredentials)?;
+
+			CredentialsTypes::<T>::put(credentials_types);
+			Self::deposit_event(Event::CredentialTypeAdded { credential });
 			Ok(())
 		}
 
+		// #[pallet::call_index(6)]
 		#[pallet::weight(1000000)]
 		pub fn remove_credential_type(
 			origin: OriginFor<T>,
@@ -418,12 +482,37 @@ pub mod pallet {
 		) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
+			let mut credentials_types = CredentialsTypes::<T>::get();
+			let pos = credentials_types
+				.binary_search(&credential)
+				.ok()
+				.ok_or(Error::<T>::CredentialDoesNotExist)?;
+			credentials_types.remove(pos);
+			CredentialsTypes::<T>::put(credentials_types);
+			Self::deposit_event(Event::CredentialTypeRemoved { credential });
 			Ok(())
 		}
 	}
 }
 
 impl<T: Config> Pallet<T> {
+	pub fn do_remove_issuer(
+		origin: OriginFor<T>,
+		issuer: DidIdentifierOf<T>,
+	) -> DispatchResult {
+		T::GovernanceOrigin::ensure_origin(origin)?;
+		Issuers::<T>::try_mutate_exists(issuer.clone(), |maybe_info| -> DispatchResult {
+			let mut info = maybe_info.as_mut().ok_or(Error::<T>::IssuerDoesNotExist)?;
+			ensure!(
+				*info == IssuerInfo { status: IssuerStatus::Revoked },
+				Error::<T>::IssuerNotRevoked
+			);
+			// Remove issuer from storage
+			*maybe_info = None;
+			Self::deposit_event(Event::IssuerDeleted { issuer });
+			Ok(())
+		})
+	}
 	fn try_insert_services(
 		services: BoundedVec<Service<T>, T::MaxServices>,
 		existing_services: Option<ServiceVecOf<T>>,
