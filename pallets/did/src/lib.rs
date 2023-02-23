@@ -249,14 +249,13 @@ pub mod pallet {
 			ensure!(!Did::<T>::contains_key(did.clone()), Error::<T>::DidAlreadyExists);
 
 			// Add assertion method
-			let maybe_assertion_method = if let Some(assertion) = assertion {
-				Some( AssertionMethod::<T> { controller: assertion } )
-			} else { None };
+			let maybe_assertion_method = assertion.map(|assertion| {
+				AssertionMethod::<T> { controller: assertion }
+			});
 
-			// Add services
-			let maybe_services = if let Some(services) = services {
-				Some ( Self::try_insert_services(services, None)? )
-			} else { None };
+			// Add services. Transpose converts from Option<Result> to Result<Option>
+			// allowing for proper error handling.
+			let maybe_services = services.map(|s| Self::try_insert_services(s, None)).transpose()?;
 
 			// Build Document
 			let document = Document {
@@ -336,7 +335,7 @@ pub mod pallet {
 			Did::<T>::try_mutate(did.clone(), |maybe_doc| -> Result<(), DispatchError> {
 				let did_doc = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
 
-				Self::ensure_controller(controller, &did_doc);
+				Self::ensure_controller(controller, &did_doc)?;
 
 				// Insert new services. If did_doc.services is Some, then add services, otherwise create new vec
 				let new_services = Self::try_insert_services(services, did_doc.services.clone())?;
@@ -361,7 +360,7 @@ pub mod pallet {
 			Did::<T>::try_mutate(did.clone(), |maybe_doc| -> Result<(), DispatchError> {
 				let did_doc = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
 				// ensure that the caller is the controller of the DID
-				Self::ensure_controller(controller, &did_doc);
+				Self::ensure_controller(controller, &did_doc)?;
 
 				// Save the removed service hashes
 				let mut removed_services = BoundedVec::default();
