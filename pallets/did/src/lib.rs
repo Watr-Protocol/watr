@@ -116,8 +116,7 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn issuers)]
-	pub type Issuers<T: Config> =
-		StorageMap<_, Blake2_128Concat, DidIdentifierOf<T>, IssuerInfo>;
+	pub type Issuers<T: Config> = StorageMap<_, Blake2_128Concat, DidIdentifierOf<T>, IssuerInfo>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn credential_types)]
@@ -168,12 +167,9 @@ pub mod pallet {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
 			ensure!(!Issuers::<T>::contains_key(&issuer), Error::<T>::IssuerAlreadyExists);
-
-			Issuers::<T>::try_mutate(issuer.clone(), |maybe_info| -> DispatchResult {
-				*maybe_info = Some(IssuerInfo { status: IssuerStatus::Active });
-				Self::deposit_event(Event::IssuerStatusActive { issuer });
-				Ok(())
-			})?;
+			// Add issuer to storage with status Active
+			Issuers::<T>::insert(issuer.clone(), IssuerInfo { status: IssuerStatus::Active });
+			Self::deposit_event(Event::IssuerStatusActive { issuer });
 			Ok(())
 		}
 
@@ -183,8 +179,8 @@ pub mod pallet {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
 
-			// Change status to Revoked
-			Issuers::<T>::try_mutate_exists(issuer.clone(), |maybe_info| -> DispatchResult {
+			// Change issuer status to Revoked
+			Issuers::<T>::try_mutate(issuer.clone(), |maybe_info| -> DispatchResult {
 				let mut info = maybe_info.as_mut().ok_or(Error::<T>::IssuerDoesNotExist)?;
 				ensure!(
 					*info == IssuerInfo { status: IssuerStatus::Active },
@@ -193,8 +189,7 @@ pub mod pallet {
 				*info = IssuerInfo { status: IssuerStatus::Revoked };
 				Self::deposit_event(Event::IssuerStatusRevoked { issuer });
 				Ok(())
-			})?;
-			Ok(())
+			})
 		}
 
 		#[pallet::call_index(3)]
@@ -206,8 +201,8 @@ pub mod pallet {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
 
-			// Change status to Active
-			Issuers::<T>::try_mutate_exists(issuer.clone(), |maybe_info| -> DispatchResult {
+			// Change issuer status to Active
+			Issuers::<T>::try_mutate(issuer.clone(), |maybe_info| -> DispatchResult {
 				let mut info = maybe_info.as_mut().ok_or(Error::<T>::IssuerDoesNotExist)?;
 				ensure!(
 					*info == IssuerInfo { status: IssuerStatus::Revoked },
@@ -216,27 +211,15 @@ pub mod pallet {
 				*info = IssuerInfo { status: IssuerStatus::Active };
 				Self::deposit_event(Event::IssuerStatusReactived { issuer });
 				Ok(())
-			})?;
-			Ok(())
+			})
 		}
 
 		#[pallet::call_index(4)]
 		#[pallet::weight(1000000)]
-		pub fn delete_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
+		pub fn remove_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
-			T::GovernanceOrigin::ensure_origin(origin)?;
-
-			Issuers::<T>::try_mutate_exists(issuer.clone(), |maybe_info| -> DispatchResult {
-				let mut info = maybe_info.as_mut().ok_or(Error::<T>::IssuerDoesNotExist)?;
-				ensure!(
-					*info == IssuerInfo { status: IssuerStatus::Revoked },
-					Error::<T>::IssuerNotRevoked
-				);
-				// Remove issuer from storage
-				*maybe_info = None;
-				Self::deposit_event(Event::IssuerDeleted { issuer });
-				Ok(())
-			})?;
+			T::GovernanceOrigin::ensure_origin(origin.clone())?;
+			Self::do_remove_issuer(origin, issuer)?;
 			Ok(())
 		}
 
@@ -283,11 +266,22 @@ pub mod pallet {
 	}
 
 	impl<T: Config> Pallet<T> {
-		pub fn do_delete_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
+		pub fn do_remove_issuer(
+			origin: OriginFor<T>,
+			issuer: DidIdentifierOf<T>,
+		) -> DispatchResult {
 			T::GovernanceOrigin::ensure_origin(origin)?;
-			ensure!(Issuers::<T>::contains_key(&issuer), Error::<T>::IssuerDoesNotExist);
-			Issuers::<T>::remove(issuer);
-			Ok(())
+			Issuers::<T>::try_mutate_exists(issuer.clone(), |maybe_info| -> DispatchResult {
+				let mut info = maybe_info.as_mut().ok_or(Error::<T>::IssuerDoesNotExist)?;
+				ensure!(
+					*info == IssuerInfo { status: IssuerStatus::Revoked },
+					Error::<T>::IssuerNotRevoked
+				);
+				// Remove issuer from storage
+				*maybe_info = None;
+				Self::deposit_event(Event::IssuerDeleted { issuer });
+				Ok(())
+			})
 		}
 	}
 }
