@@ -281,4 +281,13 @@ pub mod pallet {
 			Ok(())
 		}
 	}
+
+	impl<T: Config> Pallet<T> {
+		pub fn do_delete_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
+			T::GovernanceOrigin::ensure_origin(origin)?;
+			ensure!(Issuers::<T>::contains_key(&issuer), Error::<T>::IssuerDoesNotExist);
+			Issuers::<T>::remove(issuer);
+			Ok(())
+		}
+	}
 }
