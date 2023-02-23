@@ -34,14 +34,13 @@ pub struct Document<T: Config> {
 
 #[derive(Clone, Decode, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
 pub enum IssuerStatus {
-	New,
 	Active,
 	Revoked,
 }
 
 impl Default for IssuerStatus {
 	fn default() -> Self {
-		Self::New
+		Self::Active
 	}
 }
 
