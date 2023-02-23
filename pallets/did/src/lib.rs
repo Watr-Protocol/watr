@@ -32,10 +32,12 @@ use frame_support::{
 	dispatch::{DispatchResult, Dispatchable, GetDispatchInfo, PostDispatchInfo},
 	ensure,
 	storage::types::StorageMap,
-	traits::{Currency, Get, OnUnbalanced, WithdrawReasons, ReservableCurrency},
+	traits::{Currency, EnsureOrigin, Get, OnUnbalanced, WithdrawReasons, ReservableCurrency},
 	pallet_prelude::DispatchError,
 	Parameter,
 };
+use frame_system::pallet_prelude::OriginFor;
+use frame_system::ensure_signed;
 use sp_runtime::traits::{Hash};
 use crate::verification::{DidSignature};
 use crate::types::{AssertionMethod, AuthenticationMethod, Document, IssuerInfo, Service};
@@ -81,6 +83,9 @@ pub mod pallet {
 
 	// /// Type for a runtime extrinsic callable under DID-based authorisation.
 	// pub type DidCallableOf<T> = <T as Config>::RuntimeCall;
+
+	/// Type for a BoundedVec of `Service` hashes
+	pub type ServiceVecOf<T> = BoundedVec<KeyIdOf<T>, <T as Config>::MaxServices>;
 
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
@@ -139,7 +144,6 @@ pub mod pallet {
 		Blake2_128Concat,
 		DidIdentifierOf<T>,
 		Document<T>,
-		OptionQuery,
 	>;
 
 	#[pallet::storage]
@@ -149,7 +153,6 @@ pub mod pallet {
 		Blake2_128Concat,
 		KeyIdOf<T>,
 		Service<T>,
-		OptionQuery,
 	>;
 
 	#[pallet::storage]
@@ -192,8 +195,14 @@ pub mod pallet {
 		DidForcedRemoved {
 			did: DidIdentifierOf<T>,
 		},
-		DidServiceAdded { did: DidIdentifierOf<T>, id: T::Hash },
-		DidServiceRemoved { did: DidIdentifierOf<T>, id: T::Hash },
+		DidServicesAdded {
+			did: DidIdentifierOf<T>,
+			new_services: ServiceVecOf<T>
+		},
+		DidServicesRemoved {
+			did: DidIdentifierOf<T>,
+			removed_services: ServiceVecOf<T>
+		},
 		CredentialsIssued {
 			issuer: DidIdentifierOf<T>,
 			did: DidIdentifierOf<T>,
@@ -208,8 +217,6 @@ pub mod pallet {
 		DidAlreadyExists,
 		// Unable to find DID from DidIdentifier
 		DidNotFound,
-		/// Insufficient funds for DID deposit
-		InsufficientBalance,
 		/// The origin was not the controller of the DID
 		NotController,
 		/// Service already exist in the DID document
@@ -234,9 +241,9 @@ pub mod pallet {
 			let origin = ensure_signed(origin)?;
 			let did = T::DidIdentifier::from(origin.clone());
 
-			// Ensure origin has enough balance for DidDeposit.
-			// ED does not need to be accounted for as the deposit is reserved.
-			ensure!(T::Currency::free_balance(&origin) >= T::DidDeposit::get(), Error::<T>::InsufficientBalance);
+			// Reserve did deposit.
+			// If user does not have enough balance, returns `InsufficientBalance`
+			T::Currency::reserve(&origin, T::DidDeposit::get())?;
 
 			// Check DID does not exist yet
 			ensure!(!Did::<T>::contains_key(did.clone()), Error::<T>::DidAlreadyExists);
@@ -248,7 +255,7 @@ pub mod pallet {
 
 			// Add services
 			let maybe_services = if let Some(services) = services {
-				Some ( Self::try_insert_services(services)? )
+				Some ( Self::try_insert_services(services, None)? )
 			} else { None };
 
 			// Build Document
@@ -258,9 +265,6 @@ pub mod pallet {
 				assertion_method: maybe_assertion_method,
 				services: maybe_services,
 			};
-
-			// Reserve did deposit. Should not fail as free_balance has been checked
-			T::Currency::reserve(&origin, T::DidDeposit::get());
 
 			// Store new DID
 			Did::<T>::insert(did.clone(), document.clone());
@@ -282,32 +286,8 @@ pub mod pallet {
 			assertion: Option<T::AssertionAddress>,
 			services: Option<BoundedVec<Service<T>, T::MaxServices>>,
 		) -> DispatchResult {
-			let caller = ensure_signed(origin)?;
-
-			// Try to mutate the document associated with the given DID identifier.
-			Did::<T>::try_mutate(did.clone(), |maybe_doc| -> Result<(), DispatchError> {
-				// If document exists get mutable reference. Otherwise return error
-				let did_doc = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
-				// ensure that the caller is the controller of the DID
-				Self::ensure_controller(caller, &did_doc);
-
-				// Try to update the document
-				Self::try_update_did(
-					did_doc,
-					did.clone(),
-					controller,
-					authentication,
-					assertion,
-					services
-				)?;
-
-				// Emit event
-				Self::deposit_event(Event::DidUpdated{
-					did,
-					document: did_doc.clone()
-				});
-				Ok(())
-			})
+			Self::try_update_did(origin, did, controller, authentication, assertion, services)?;
+			Ok(())
 		}
 
 		#[pallet::weight(1000000)]
@@ -319,26 +299,9 @@ pub mod pallet {
 			assertion: Option<T::AssertionAddress>,
 			services: Option<BoundedVec<Service<T>, T::MaxServices>>,
 		) -> DispatchResult {
-			// Origin ONLY GovernanceOrigin
-			T::GovernanceOrigin::ensure_origin(origin)?;
-
-			Did::<T>::try_mutate(did.clone(), |maybe_doc| -> Result<(), DispatchError> {
-				let did_doc = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
-
-				Self::try_update_did(
-					did_doc,
-					did.clone(),
-					controller,
-					authentication,
-					assertion,
-					services
-				)?;
-				Self::deposit_event(Event::DidForcedUpdated{
-					did,
-					document: did_doc.clone()
-				});
-				Ok(())
-			})
+			T::GovernanceOrigin::ensure_origin(origin.clone())?;
+			Self::try_update_did(origin, did, controller, authentication, assertion, services)?;
+			Ok(())
 		}
 
 		#[pallet::weight(1000000)]
@@ -346,20 +309,8 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			did: DidIdentifierOf<T>,
 		) -> DispatchResult {
-			let controller = ensure_signed(origin)?;
-
-			//
-			Did::<T>::try_mutate_exists(did.clone(), |maybe_doc| -> Result<(), DispatchError> {
-				let did_doc = maybe_doc.take().ok_or(Error::<T>::DidNotFound)?;
-				// ensure that the caller is the controller of the DID
-				Self::ensure_controller(controller, &did_doc);
-
-				T::Currency::unreserve(&did.clone().into(), T::DidDeposit::get());
-				Self::deposit_event(Event::DidRemoved{
-					did,
-				});
-				Ok(())
-			})
+			Self::try_remove_did(origin, did)?;
+			Ok(())
 		}
 
 		#[pallet::weight(1000000)]
@@ -368,59 +319,42 @@ pub mod pallet {
 			did: DidIdentifierOf<T>,
 		) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
-			T::GovernanceOrigin::ensure_origin(origin)?;
-
-			Did::<T>::try_mutate_exists(did.clone(), |maybe_doc| -> Result<(), DispatchError> {
-				let did_doc = maybe_doc.take().ok_or(Error::<T>::DidNotFound)?;
-				T::Currency::unreserve(&did.clone().into(), T::DidDeposit::get());
-				Self::deposit_event(Event::DidForcedRemoved{
-					did,
-				});
-				Ok(())
-			})
+			T::GovernanceOrigin::ensure_origin(origin.clone())?;
+			Self::try_remove_did(origin, did)?;
+			Ok(())
 		}
 
 		#[pallet::weight(1000000)]
-		pub fn add_did_service(
+		pub fn add_did_services(
 			origin: OriginFor<T>,
 			did: DidIdentifierOf<T>,
-			service: Service<T>,
+			services: BoundedVec<Service<T>, T::MaxServices>,
 		) -> DispatchResult {
 			let controller = ensure_signed(origin)?;
 
+			// Try to mutate document
 			Did::<T>::try_mutate(did.clone(), |maybe_doc| -> Result<(), DispatchError> {
 				let did_doc = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
 
 				Self::ensure_controller(controller, &did_doc);
 
-				let service_hash = Self::do_insert_service(service);
+				// Insert new services. If did_doc.services is Some, then add services, otherwise create new vec
+				let new_services = Self::try_insert_services(services, did_doc.services.clone())?;
+				did_doc.services = Some(new_services.clone());
 
-				// if services exists, insert new service in sorted location
-				// else insert a new BoundedVec with the new service in the did_doc
-				if let Some(mut services) = did_doc.services.as_mut() {
-					let location = services.binary_search(&service_hash).err().ok_or(Error::<T>::ServiceAlreadyInDid)?;
-					services.try_insert(location, service_hash.clone())
-					.map_err(|_| Error::<T>::TooManyServicesInDid)?;
-				} else {
-					let mut services: BoundedVec<KeyIdOf<T>, T::MaxServices> = BoundedVec::default();
-					// Only fails if `MaxServices` is 0
-					services.try_push(service_hash).map_err(|_| Error::<T>::TooManyServicesInDid)?;
-					did_doc.services = Some(services);
-				};
-
-				Self::deposit_event(Event::DidServiceAdded{
+				Self::deposit_event(Event::DidServicesAdded{
 					did,
-					id: service_hash,
+					new_services: new_services,
 				});
 				Ok(())
 			})
 		}
 
 		#[pallet::weight(1000000)]
-		pub fn remove_did_service(
+		pub fn remove_did_services(
 			origin: OriginFor<T>,
 			did: DidIdentifierOf<T>,
-			service: Service<T>,
+			services: BoundedVec<Service<T>, T::MaxServices>,
 		) -> DispatchResult {
 			let controller = ensure_signed(origin)?;
 
@@ -429,17 +363,24 @@ pub mod pallet {
 				// ensure that the caller is the controller of the DID
 				Self::ensure_controller(controller, &did_doc);
 
-				let deleted_hash = if let Some(mut services) = did_doc.services.as_mut() {
-					let service_hash = T::Hashing::hash_of(&service);
-					let location = services.binary_search(&service_hash).ok().ok_or(Error::<T>::ServiceNotInDid)?;
-					services.remove(location)
-				} else {
-					return Err(Error::<T>::ServiceNotInDid)?
-				};
+				// Save the removed service hashes
+				let mut removed_services = BoundedVec::default();
 
-				Self::deposit_event(Event::DidServiceRemoved{
+				// Iterate over each service and remove it from the document
+				for service in services {
+					let deleted_hash = if let Some(mut services) = did_doc.services.as_mut() {
+						let service_hash = T::Hashing::hash_of(&service);
+						let location = services.binary_search(&service_hash).ok().ok_or(Error::<T>::ServiceNotInDid)?;
+						services.remove(location)
+					} else {
+						return Err(Error::<T>::ServiceNotInDid)?
+					};
+					removed_services.try_push(deleted_hash);
+				}
+
+				Self::deposit_event(Event::DidServicesRemoved{
 					did,
-					id: deleted_hash
+					removed_services
 				});
 				Ok(())
 			})
@@ -506,8 +447,10 @@ pub mod pallet {
 
 
 impl<T: Config> Pallet<T> {
-	fn try_insert_services(services: BoundedVec<Service<T>, T::MaxServices>) -> Result<BoundedVec<KeyIdOf<T>, T::MaxServices>, DispatchError> {
-		let mut hashed_services: BoundedVec<KeyIdOf<T>, T::MaxServices> = BoundedVec::default();
+	fn try_insert_services(services: BoundedVec<Service<T>, T::MaxServices>, existing_services: Option<ServiceVecOf<T>>) -> Result<ServiceVecOf<T>, DispatchError> {
+		// if existing_services is Some use that to insert to, otherwise create a new BoundedVec
+		let mut hashed_services = existing_services.unwrap_or_default();
+
 		for service in services {
 			let service_hash = Self::do_insert_service(service);
 			let location = hashed_services.binary_search(&service_hash).err().ok_or(Error::<T>::ServiceAlreadyInDid)?;
@@ -522,20 +465,18 @@ impl<T: Config> Pallet<T> {
 	fn do_insert_service(service: Service<T>) -> KeyIdOf<T> {
 		let service_hash = T::Hashing::hash_of(&service);
 
+		// insert if service does not already exist
 		if !<Services<T>>::contains_key(service_hash) {
 			<Services<T>>::insert(service_hash, service);
-			service_hash
-		} else {
-			// service_hash already exists in storage,
-			service_hash
-		 }
+		}
+
+		// return service_hash
+		 service_hash
 	}
 
 	/// Updates `did_doc` with specified fields. Inserting services may fail.
-	/// Only modifies `did_doc` and does not write to storage.
-	/// Should be used along with `try_mutate`.
 	fn try_update_did(
-		did_doc: &mut Document<T>,
+		origin: OriginFor<T>,
 		did: DidIdentifierOf<T>,
 		controller: Option<DidIdentifierOf<T>>,
 		authentication: Option<T::AuthenticationAddress>,
@@ -543,35 +484,100 @@ impl<T: Config> Pallet<T> {
 		services: Option<BoundedVec<Service<T>, T::MaxServices>>
 	) -> Result<(), DispatchError> {
 
-		// If present, update `controller`
-		if let Some(controller) = controller {
-			did_doc.controller = controller;
-		}
+		Did::<T>::try_mutate(did.clone(), |maybe_doc| -> Result<(), DispatchError> {
+			let did_doc = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
 
-		// If present, update `authentication` method
-		if let Some(authentication) = authentication {
-			// `authentication` is a required field, the struct will already exist
-			did_doc.authentication.controller = authentication;
-		}
+			// Check if governance origin. Save Result.
+			let governance_origin = T::GovernanceOrigin::ensure_origin(origin.clone());
+			// If Err, then it is not governance. Check if DID controller.
+			// Set is_governance to know what type of event to emit
+			let is_governance = if let Err(_) = governance_origin {
+				let caller = ensure_signed(origin)?;
+				Self::ensure_controller(caller, &did_doc)?;
+				false
+			} else {true};
 
-		// If present, update `assertion_method`
-		if let Some(assertion) = assertion {
-			// `assertion_method` is optional, so ensure struct is created
-			did_doc.assertion_method = Some (
-				AssertionMethod {
-					controller: assertion
+			// If present, update `controller`
+			if let Some(controller) = controller {
+				did_doc.controller = controller;
+			}
+
+			// If present, update `authentication` method
+			if let Some(authentication) = authentication {
+				// `authentication` is a required field, the struct will already exist
+				did_doc.authentication.controller = authentication;
+			}
+
+			// If present, update `assertion_method`
+			if let Some(assertion) = assertion {
+				// `assertion_method` is optional, so ensure struct is created
+				did_doc.assertion_method = Some (
+					AssertionMethod {
+						controller: assertion
+					}
+				);
+			}
+
+			// If present, update the `services` BoundedVec
+			if let Some(new_services) = services {
+				// Try to insert services to `Service` storage and
+				// save new vec to the document -- overwriting old services.
+				did_doc.services = Some( Self::try_insert_services(new_services, None)? );
+			}
+
+			match is_governance {
+				true => {
+					Self::deposit_event(Event::DidForcedUpdated{
+						did,
+						document: did_doc.clone()
+					});
 				}
-			);
-		}
+				false => {
+					Self::deposit_event(Event::DidUpdated{
+						did,
+						document: did_doc.clone()
+					});
+				}
+			}
 
-		// If present, update the `services` BoundedVec
-		if let Some(services) = services {
-			// Try to insert services to `Service` storage and
-			// save new vec to the document.
-			did_doc.services = Some( Self::try_insert_services(services)? );
-		}
+			Ok(())
+		})
+	}
 
-		Ok(())
+	pub fn try_remove_did(
+		origin: OriginFor<T>,
+		did: DidIdentifierOf<T>,
+	) -> DispatchResult {
+		Did::<T>::try_mutate(did.clone(), |maybe_doc| -> Result<(), DispatchError> {
+			let did_doc = maybe_doc.take().ok_or(Error::<T>::DidNotFound)?;
+
+			// Check if governance origin. Save Result.
+			let governance_origin = T::GovernanceOrigin::ensure_origin(origin.clone());
+			// If Err, then it is not governance origin. Check if DID controller instead.
+			// Set is_governance to know what type of event to emit
+			let is_governance = if let Err(_) = governance_origin {
+				let caller = ensure_signed(origin)?;
+				Self::ensure_controller(caller, &did_doc)?;
+				false
+			} else {true};
+
+			T::Currency::unreserve(&did.clone().into(), T::DidDeposit::get());
+
+			match is_governance {
+				true => {
+					Self::deposit_event(Event::DidForcedRemoved {
+						did,
+					});
+				}
+				false => {
+					Self::deposit_event(Event::DidRemoved {
+						did,
+					});
+				}
+			}
+
+			Ok(())
+		})
 	}
 
 	/// Increment stored service consumers count. Lookup by service hash
