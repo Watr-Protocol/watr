@@ -49,3 +49,12 @@ all:
   roles:
     - parity.chain.node
 ```
+
+
+#### Cloudwatch Filter Example
+
+```
+fields @timestamp, @message
+| sort @timestamp desc
+| filter @message like /(?i)(Exception|error|fail|warning|warn)/ and @message not like "[Relaychain] Re-finalized block" and @message not like "RequestCollation" and @message not like "CannotUpgrade" and @message not like /WS send error: Networking or low-level protocol error/
+```
