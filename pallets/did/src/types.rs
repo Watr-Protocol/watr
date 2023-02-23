@@ -1,8 +1,8 @@
 use super::*;
 use codec::{Decode, Encode, MaxEncodedLen, WrapperTypeEncode};
-use scale_info::TypeInfo;
-use sp_runtime::{RuntimeDebug, ArithmeticError};
 use frame_support::pallet_prelude::{CloneNoBound, PartialEqNoBound, RuntimeDebugNoBound};
+use scale_info::TypeInfo;
+use sp_runtime::{ArithmeticError, RuntimeDebug};
 
 /// Type used to count the number of references a service has.
 pub type RefCount = u32;
@@ -23,10 +23,19 @@ pub struct AssertionMethod<T: Config> {
 #[scale_info(skip_type_params(T))]
 enum ServiceType {
 	#[default]
-	VerifiableCredentialFileStorage
+	VerifiableCredentialFileStorage,
 }
 
-#[derive(CloneNoBound, PartialEqNoBound, Default, Decode, Encode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
+#[derive(
+	CloneNoBound,
+	PartialEqNoBound,
+	Default,
+	Decode,
+	Encode,
+	RuntimeDebugNoBound,
+	TypeInfo,
+	MaxEncodedLen,
+)]
 #[scale_info(skip_type_params(T))]
 pub struct Service<T: Config> {
 	type_id: ServiceType,
@@ -35,7 +44,9 @@ pub struct Service<T: Config> {
 	consumers: RefCount,
 }
 
-#[derive(CloneNoBound, PartialEqNoBound, Decode, Encode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
+#[derive(
+	CloneNoBound, PartialEqNoBound, Decode, Encode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,
+)]
 #[scale_info(skip_type_params(T))]
 pub struct Document<T: Config> {
 	pub controller: DidIdentifierOf<T>,
@@ -49,13 +60,13 @@ pub struct Document<T: Config> {
 pub enum IssuerStatus {
 	#[default]
 	Active,
-	Revoked
+	Revoked,
 }
 
 #[derive(Clone, Decode, Default, Encode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 pub struct IssuerInfo {
-	pub status: IssuerStatus
+	pub status: IssuerStatus,
 }
 
 impl<T: Config> Service<T> {
