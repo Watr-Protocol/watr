@@ -28,6 +28,9 @@ sp-io = { default-features = false, git = "https://github.com/paritytech/substra
 [dev-dependencies]
 
 pallet-balances = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.30" }
+pallet-collective = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.30" }
+pallet-membership = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.30" }
+watr-common = {path = "../../runtime/common", default-features = false }
 
 [features]
 default = ["std"]
