@@ -293,7 +293,8 @@ pub mod pallet {
 			assertion: Option<T::AssertionAddress>,
 			services: Option<BoundedVec<Service<T>, T::MaxServices>>,
 		) -> DispatchResult {
-			Self::try_update_did(origin, did, controller, authentication, assertion, services)?;
+			let document = Self::try_update_did(origin, did.clone(), controller, authentication, assertion, services)?;
+			Self::deposit_event(Event::DidUpdated { did, document });
 			Ok(())
 		}
 
@@ -307,13 +308,15 @@ pub mod pallet {
 			services: Option<BoundedVec<Service<T>, T::MaxServices>>,
 		) -> DispatchResult {
 			T::GovernanceOrigin::ensure_origin(origin.clone())?;
-			Self::try_update_did(origin, did, controller, authentication, assertion, services)?;
+			let document = Self::try_update_did(origin, did.clone(), controller, authentication, assertion, services)?;
+			Self::deposit_event(Event::DidForcedUpdated { did, document });
 			Ok(())
 		}
 
 		#[pallet::weight(1000000)]
 		pub fn remove_did(origin: OriginFor<T>, did: DidIdentifierOf<T>) -> DispatchResult {
-			Self::try_remove_did(origin, did)?;
+			Self::try_remove_did(origin, did.clone())?;
+			Self::deposit_event(Event::DidRemoved { did });
 			Ok(())
 		}
 
@@ -321,7 +324,8 @@ pub mod pallet {
 		pub fn force_remove_did(origin: OriginFor<T>, did: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin.clone())?;
-			Self::try_remove_did(origin, did)?;
+			Self::try_remove_did(origin, did.clone())?;
+			Self::deposit_event(Event::DidForcedRemoved { did });
 			Ok(())
 		}
 
@@ -335,13 +339,13 @@ pub mod pallet {
 
 			// Try to mutate document
 			Did::<T>::try_mutate(did.clone(), |maybe_doc| -> Result<(), DispatchError> {
-				let did_doc = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
+				let document = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
 
-				Self::ensure_controller(controller, &did_doc)?;
+				Self::ensure_controller(controller, &document)?;
 
-				// Insert new services. If did_doc.services is Some, then add services, otherwise create new vec
-				let new_services = Self::try_insert_services(services, did_doc.services.clone())?;
-				did_doc.services = Some(new_services.clone());
+				// Insert new services. If document.services is Some, then add services, otherwise create new vec
+				let new_services = Self::try_insert_services(services, document.services.clone())?;
+				document.services = Some(new_services.clone());
 
 				Self::deposit_event(Event::DidServicesAdded { did, new_services });
 				Ok(())
@@ -357,16 +361,16 @@ pub mod pallet {
 			let controller = ensure_signed(origin)?;
 
 			Did::<T>::try_mutate(did.clone(), |maybe_doc| -> Result<(), DispatchError> {
-				let did_doc = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
+				let document = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
 				// ensure that the caller is the controller of the DID
-				Self::ensure_controller(controller, &did_doc)?;
+				Self::ensure_controller(controller, &document)?;
 
 				// Save the removed service hashes
 				let mut removed_services = BoundedVec::default();
 
 				// Iterate over each service and remove it from the document
 				for service in services {
-					let deleted_hash = if let Some(mut services) = did_doc.services.as_mut() {
+					let deleted_hash = if let Some(mut services) = document.services.as_mut() {
 						let service_hash = T::Hashing::hash_of(&service);
 						let location = services
 							.binary_search(&service_hash)
@@ -554,7 +558,7 @@ impl<T: Config> Pallet<T> {
 		service_hash
 	}
 
-	/// Updates `did_doc` with specified fields. Inserting services may fail.
+	/// Updates `document` with specified fields. Inserting services may fail.
 	fn try_update_did(
 		origin: OriginFor<T>,
 		did: DidIdentifierOf<T>,
@@ -562,86 +566,48 @@ impl<T: Config> Pallet<T> {
 		authentication: Option<T::AuthenticationAddress>,
 		assertion: Option<T::AssertionAddress>,
 		services: Option<BoundedVec<Service<T>, T::MaxServices>>,
-	) -> Result<(), DispatchError> {
-		Did::<T>::try_mutate(did.clone(), |maybe_doc| -> Result<(), DispatchError> {
-			let did_doc = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
+	) -> Result<Document<T>, DispatchError> {
+		Did::<T>::try_mutate(did.clone(), |maybe_doc| -> Result<Document<T>, DispatchError> {
+			let document = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
 
-			// Check if governance origin. Save Result.
-			let governance_origin = T::GovernanceOrigin::ensure_origin(origin.clone());
-			// If Err, then it is not governance. Check if DID controller.
-			// Set is_governance to know what type of event to emit
-			let is_governance = if let Err(_) = governance_origin {
-				let caller = ensure_signed(origin)?;
-				Self::ensure_controller(caller, &did_doc)?;
-				false
-			} else {
-				true
-			};
+			// Check if origin is either governance or controller
+			Self::ensure_governance_or_controller(origin, &document)?;
 
 			// If present, update `controller`
 			if let Some(controller) = controller {
-				did_doc.controller = controller;
+				document.controller = controller;
 			}
 
 			// If present, update `authentication` method
 			if let Some(authentication) = authentication {
 				// `authentication` is a required field, the struct will already exist
-				did_doc.authentication.controller = authentication;
+				document.authentication.controller = authentication;
 			}
 
 			// If present, update `assertion_method`
 			if let Some(assertion) = assertion {
 				// `assertion_method` is optional, so ensure struct is created
-				did_doc.assertion_method = Some(AssertionMethod { controller: assertion });
+				document.assertion_method = Some(AssertionMethod { controller: assertion });
 			}
 
 			// If present, update the `services` BoundedVec
 			if let Some(new_services) = services {
 				// Try to insert services to `Service` storage and
 				// save new vec to the document -- overwriting old services.
-				did_doc.services = Some(Self::try_insert_services(new_services, None)?);
+				document.services = Some(Self::try_insert_services(new_services, None)?);
 			}
 
-			match is_governance {
-				true => {
-					Self::deposit_event(Event::DidForcedUpdated { did, document: did_doc.clone() });
-				},
-				false => {
-					Self::deposit_event(Event::DidUpdated { did, document: did_doc.clone() });
-				},
-			}
-
-			Ok(())
+			Ok(document.clone())
 		})
 	}
 
 	pub fn try_remove_did(origin: OriginFor<T>, did: DidIdentifierOf<T>) -> DispatchResult {
 		Did::<T>::try_mutate(did.clone(), |maybe_doc| -> Result<(), DispatchError> {
-			let did_doc = maybe_doc.take().ok_or(Error::<T>::DidNotFound)?;
+			let document = maybe_doc.take().ok_or(Error::<T>::DidNotFound)?;
 
-			// Check if governance origin. Save Result.
-			let governance_origin = T::GovernanceOrigin::ensure_origin(origin.clone());
-			// If Err, then it is not governance origin. Check if DID controller instead.
-			// Set is_governance to know what type of event to emit
-			let is_governance = if let Err(_) = governance_origin {
-				let caller = ensure_signed(origin)?;
-				Self::ensure_controller(caller, &did_doc)?;
-				false
-			} else {
-				true
-			};
-
+			// Check if origin is either governance or controller
+			Self::ensure_governance_or_controller(origin, &document)?;
 			T::Currency::unreserve(&did.clone().into(), T::DidDeposit::get());
-
-			match is_governance {
-				true => {
-					Self::deposit_event(Event::DidForcedRemoved { did });
-				},
-				false => {
-					Self::deposit_event(Event::DidRemoved { did });
-				},
-			}
-
 			Ok(())
 		})
 	}
@@ -666,8 +632,16 @@ impl<T: Config> Pallet<T> {
 	}
 
 	/// Ensures that `who` is the controller of the did document
-	fn ensure_controller(who: T::AccountId, did_doc: &Document<T>) -> DispatchResult {
-		ensure!(did_doc.controller == T::DidIdentifier::from(who), Error::<T>::NotController);
+	fn ensure_controller(who: T::AccountId, document: &Document<T>) -> DispatchResult {
+		ensure!(document.controller == T::DidIdentifier::from(who), Error::<T>::NotController);
 		Ok(())
+	}
+
+	// Check if origin is either governance or controller
+	fn ensure_governance_or_controller(origin: OriginFor<T>, document: &Document<T>) -> DispatchResult {
+		T::GovernanceOrigin::ensure_origin(origin.clone()).map_or(
+			Self::ensure_controller(ensure_signed(origin)?, document),
+			|_| Ok(())
+		)
 	}
 }
