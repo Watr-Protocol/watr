@@ -52,7 +52,7 @@ pub struct Document<T: Config> {
 	pub controller: DidIdentifierOf<T>,
 	pub authentication: AuthenticationMethod<T>,
 	pub assertion_method: Option<AssertionMethod<T>>,
-	pub services: Option<BoundedVec<KeyIdOf<T>, T::MaxServices>>,
+	pub services: BoundedVec<KeyIdOf<T>, T::MaxServices>,
 }
 
 #[derive(Clone, Decode, Default, Encode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
