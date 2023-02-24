@@ -29,7 +29,6 @@ enum ServiceType {
 #[derive(
 	CloneNoBound,
 	PartialEqNoBound,
-	Default,
 	Decode,
 	Encode,
 	RuntimeDebugNoBound,
@@ -38,10 +37,24 @@ enum ServiceType {
 )]
 #[scale_info(skip_type_params(T))]
 pub struct Service<T: Config> {
-	type_id: ServiceType,
-	pub service_endpoint: BoundedVec<u8, T::MaxString>,
+	pub info: ServiceInfo<T>,
 	// count of DIDs referencing this service
 	consumers: RefCount,
+}
+
+#[derive(
+	CloneNoBound,
+	PartialEqNoBound,
+	Decode,
+	Encode,
+	RuntimeDebugNoBound,
+	TypeInfo,
+	MaxEncodedLen,
+)]
+#[scale_info(skip_type_params(T))]
+pub struct ServiceInfo<T: Config> {
+	type_id: ServiceType,
+	pub service_endpoint: BoundedVec<u8, T::MaxString>,
 }
 
 #[derive(
@@ -70,6 +83,13 @@ pub struct IssuerInfo {
 }
 
 impl<T: Config> Service<T> {
+	pub fn new(info: ServiceInfo<T>) -> Self {
+		Service {
+			info,
+			// start at 1 because a did is creating this service
+			consumers: 1
+		}
+	}
 	// Increment service consumers count. Returns error upon overflow.
 	pub fn inc_consumers(&mut self) -> Result<(), ArithmeticError> {
 		self.consumers.checked_add(1).ok_or(ArithmeticError::Overflow)?;

@@ -26,7 +26,7 @@ mod types;
 mod verification;
 
 use crate::{
-	types::{AssertionMethod, AuthenticationMethod, Document, IssuerInfo, IssuerStatus, Service},
+	types::{AssertionMethod, AuthenticationMethod, Document, IssuerInfo, IssuerStatus, Service, ServiceInfo},
 	verification::DidSignature,
 };
 use frame_support::{
@@ -40,6 +40,7 @@ use frame_support::{
 use frame_system::{ensure_signed, pallet_prelude::OriginFor};
 use sp_core::H160;
 use sp_runtime::traits::Hash;
+use sp_runtime::ArithmeticError;
 use sp_std::{fmt::Debug, prelude::*};
 
 pub use pallet::*;
@@ -85,7 +86,7 @@ pub mod pallet {
 	// /// Type for a runtime extrinsic callable under DID-based authorisation.
 	// pub type DidCallableOf<T> = <T as Config>::RuntimeCall;
 
-	/// Type for a BoundedVec of `Service` keyes
+	/// Type for a BoundedVec of `Service` keys
 	pub type ServiceKeysOf<T> = BoundedVec<KeyIdOf<T>, <T as Config>::MaxServices>;
 
 	#[pallet::pallet]
@@ -234,6 +235,8 @@ pub mod pallet {
 		ServiceAlreadyInDid,
 		/// The service key was not found in the DID
 		ServiceNotInDid,
+		/// Too many references to a service. Not likely to happen
+		TooManyServiceConsumers,
 		/// The maximum number of Services in the DID has been excedeed
 		TooManyServicesInDid,
 	}
@@ -247,16 +250,16 @@ pub mod pallet {
 			controller: DidIdentifierOf<T>,
 			authentication: T::AuthenticationAddress,
 			assertion: Option<T::AssertionAddress>,
-			services: BoundedVec<Service<T>, T::MaxServices>,
+			services: BoundedVec<ServiceInfo<T>, T::MaxServices>,
 		) -> DispatchResult {
 			let origin = ensure_signed(origin)?;
 			let did = T::DidIdentifier::from(origin.clone());
 
 			// Reserve did deposit.
-			// If user does not have enough balance, returns `InsufficientBalance`
+			// If user does not have enough balance returns `InsufficientBalance`
 			T::Currency::reserve(&origin, T::DidDeposit::get())?;
 
-			// Check DID does not exist yet
+			// Check that DID does not exist yet
 			ensure!(!Did::<T>::contains_key(did.clone()), Error::<T>::DidAlreadyExists);
 
 			// Add assertion method
@@ -293,7 +296,7 @@ pub mod pallet {
 			controller: Option<DidIdentifierOf<T>>,
 			authentication: Option<T::AuthenticationAddress>,
 			assertion: Option<T::AssertionAddress>,
-			services: Option<BoundedVec<Service<T>, T::MaxServices>>,
+			services: Option<BoundedVec<ServiceInfo<T>, T::MaxServices>>,
 		) -> DispatchResult {
 			let document = Self::do_update_did(
 				origin,
@@ -314,7 +317,7 @@ pub mod pallet {
 			controller: Option<DidIdentifierOf<T>>,
 			authentication: Option<T::AuthenticationAddress>,
 			assertion: Option<T::AssertionAddress>,
-			services: Option<BoundedVec<Service<T>, T::MaxServices>>,
+			services: Option<BoundedVec<ServiceInfo<T>, T::MaxServices>>,
 		) -> DispatchResult {
 			T::GovernanceOrigin::ensure_origin(origin.clone())?;
 			let document = Self::do_update_did(
@@ -349,7 +352,7 @@ pub mod pallet {
 		pub fn add_did_services(
 			origin: OriginFor<T>,
 			did: DidIdentifierOf<T>,
-			services: BoundedVec<Service<T>, T::MaxServices>,
+			services: BoundedVec<ServiceInfo<T>, T::MaxServices>,
 		) -> DispatchResult {
 			let controller = ensure_signed(origin)?;
 
@@ -382,31 +385,7 @@ pub mod pallet {
 				// ensure that the caller is the controller of the DID
 				Self::ensure_controller(controller, &document)?;
 
-				// Save the removed service keyes
-				let mut removed_services = BoundedVec::default();
-
-				// TODO - create and call do_remove_services()
-
-				// // Iterate over each service and remove it from the document
-				// for service_key in services_keys {
-				// 	// let deleted_key = if let Some(mut services) = document.services.as_mut() {
-				// 		// let service_key = T::Hashing::hash_of(&service);
-				// 		let pos = credentials_types
-				// 		.binary_search(&credential)
-				// 		.ok()
-				// 		.ok_or(Error::<T>::CredentialDoesNotExist)?;
-				// 		credentials_types.remove(pos);
-
-				// 		let pos = services_keys
-				// 			.binary_search(&service_key)
-				// 			.ok()
-				// 			.ok_or(Error::<T>::ServiceNotInDid)?;
-				// 		services.remove(pos)
-				// 	// } else {
-				// 	// 	return Err(Error::<T>::ServiceNotInDid)?
-				// 	// };
-				// 	removed_services.try_push(deleted_key);
-				// }
+				let removed_services = Self::do_remove_did_services(&mut document.services, services_keys)?;
 
 				Self::deposit_event(Event::DidServicesRemoved { did, removed_services });
 				Ok(())
@@ -552,14 +531,14 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn do_add_did_services(
-		services: BoundedVec<Service<T>, T::MaxServices>,
+		services: BoundedVec<ServiceInfo<T>, T::MaxServices>,
 		existing_services: Option<ServiceKeysOf<T>>,
 	) -> Result<ServiceKeysOf<T>, DispatchError> {
-		// if existing_services is Some use that to insert to, otherwise create a new BoundedVec
+		// if existing_services is `Some` use it to insert into, otherwise create a new BoundedVec
 		let mut services_keys = existing_services.unwrap_or_default();
 
 		for service in services {
-			let service_key = Self::do_add_service(service);
+			let service_key = Self::do_add_service(service)?;
 			let pos = services_keys
 				.binary_search(&service_key)
 				.err()
@@ -571,16 +550,36 @@ impl<T: Config> Pallet<T> {
 		Ok(services_keys)
 	}
 
+	fn do_remove_did_services(document_services: &mut ServiceKeysOf<T>, keys_to_remove: ServiceKeysOf<T>) -> Result<ServiceKeysOf<T>, DispatchError> {
+		// Save the removed service keys
+		let mut removed_services = BoundedVec::default();
+
+		// Iterate over each service and remove it from the document
+		for service_key in keys_to_remove {
+			let pos = document_services
+				.binary_search(&service_key)
+				.ok()
+				.ok_or(Error::<T>::ServiceNotInDid)?;
+			let deleted_key = document_services.remove(pos);
+
+			removed_services.try_push(deleted_key);
+		}
+		Ok(removed_services)
+	}
+
 	/// Insert a single service into storage
-	fn do_add_service(service: Service<T>) -> KeyIdOf<T> {
+	fn do_add_service(service: ServiceInfo<T>) -> Result<KeyIdOf<T>, DispatchError> {
 		let service_key = T::Hashing::hash_of(&service);
 
-		// insert if service does not already exist
-		if !<Services<T>>::contains_key(service_key) {
-			<Services<T>>::insert(service_key, service);
+		// if the service exists, increment its consumers, otherwise insert a new service
+		if let Some(mut existing_service) = Services::<T>::get(service_key.clone()) {
+			// `inc_consumers` may overflow, so handle it just in case
+			existing_service.inc_consumers().map_err(|_| Error::<T>::TooManyServiceConsumers)?;
+		} else {
+			<Services<T>>::insert(service_key, Service::<T>::new(service));
 		}
 
-		service_key
+		Ok(service_key)
 	}
 
 	/// Updates `document` with specified fields. Inserting services may fail.
@@ -590,7 +589,7 @@ impl<T: Config> Pallet<T> {
 		controller: Option<DidIdentifierOf<T>>,
 		authentication: Option<T::AuthenticationAddress>,
 		assertion: Option<T::AssertionAddress>,
-		services: Option<BoundedVec<Service<T>, T::MaxServices>>,
+		services: Option<BoundedVec<ServiceInfo<T>, T::MaxServices>>,
 	) -> Result<Document<T>, DispatchError> {
 		Did::<T>::try_mutate(did.clone(), |maybe_doc| -> Result<Document<T>, DispatchError> {
 			let document = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
