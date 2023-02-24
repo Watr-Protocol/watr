@@ -37,7 +37,6 @@ use frame_support::{
 	traits::{Currency, EnsureOrigin, Get, OnUnbalanced, ReservableCurrency, WithdrawReasons},
 	BoundedVec, Parameter,
 };
-use sp_std::prelude::*;
 use frame_system::{ensure_signed, pallet_prelude::OriginFor};
 use sp_core::H160;
 use sp_runtime::traits::Hash;
@@ -163,8 +162,12 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		CredentialTypeAdded { credential: CredentialOf<T> },
-		CredentialTypeRemoved { credential: CredentialOf<T> },
+		CredentialTypeAdded {
+			credential: CredentialOf<T>,
+		},
+		CredentialTypeRemoved {
+			credential: CredentialOf<T>,
+		},
 		DidCreated {
 			did: DidIdentifierOf<T>,
 			document: Document<T>,
@@ -197,10 +200,18 @@ pub mod pallet {
 			credentials: Vec<CredentialOf<T>>,
 			storage_hash: HashOf<T>,
 		},
-		IssuerDeleted { issuer: DidIdentifierOf<T> },
-		IssuerStatusReactived { issuer: DidIdentifierOf<T> },
-		IssuerStatusActive { issuer: DidIdentifierOf<T> },
-		IssuerStatusRevoked { issuer: DidIdentifierOf<T> },
+		IssuerDeleted {
+			issuer: DidIdentifierOf<T>,
+		},
+		IssuerStatusReactived {
+			issuer: DidIdentifierOf<T>,
+		},
+		IssuerStatusActive {
+			issuer: DidIdentifierOf<T>,
+		},
+		IssuerStatusRevoked {
+			issuer: DidIdentifierOf<T>,
+		},
 	}
 
 	#[pallet::error]
@@ -212,7 +223,7 @@ pub mod pallet {
 		IssuerNotActive,
 		IssuerNotRevoked,
 		MaxCredentials,
-	
+
 		/// Unable to create DID that already exists
 		DidAlreadyExists,
 		// Unable to find DID from DidIdentifier
@@ -496,10 +507,7 @@ pub mod pallet {
 }
 
 impl<T: Config> Pallet<T> {
-	pub fn do_remove_issuer(
-		origin: OriginFor<T>,
-		issuer: DidIdentifierOf<T>,
-	) -> DispatchResult {
+	pub fn do_remove_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 		T::GovernanceOrigin::ensure_origin(origin)?;
 		Issuers::<T>::try_mutate_exists(issuer.clone(), |maybe_info| -> DispatchResult {
 			let mut info = maybe_info.as_mut().ok_or(Error::<T>::IssuerDoesNotExist)?;

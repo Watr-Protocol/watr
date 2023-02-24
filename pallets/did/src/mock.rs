@@ -27,8 +27,7 @@ use sp_runtime::{
 	BuildStorage,
 };
 
-use watr_common::Balance;
-use watr_common::DidIdentifier;
+use watr_common::{Balance, DidIdentifier};
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -116,7 +115,8 @@ impl pallet_did::Config for Test {
 	type DidIdentifier = DidIdentifier;
 	type DidDeposit = ConstU64<5>;
 	type Currency = Balances;
-	type GovernanceOrigin = pallet_collective::EnsureProportionMoreThan<u64, CouncilCollective, 1, 2>;
+	type GovernanceOrigin =
+		pallet_collective::EnsureProportionMoreThan<u64, CouncilCollective, 1, 2>;
 	type MaxString = MaxString;
 	type MaxCredentialsTypes = MaxCredentialsTypes;
 }
