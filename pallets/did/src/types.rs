@@ -27,13 +27,7 @@ enum ServiceType {
 }
 
 #[derive(
-	CloneNoBound,
-	PartialEqNoBound,
-	Decode,
-	Encode,
-	RuntimeDebugNoBound,
-	TypeInfo,
-	MaxEncodedLen,
+	CloneNoBound, PartialEqNoBound, Decode, Encode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,
 )]
 #[scale_info(skip_type_params(T))]
 pub struct Service<T: Config> {
@@ -43,13 +37,7 @@ pub struct Service<T: Config> {
 }
 
 #[derive(
-	CloneNoBound,
-	PartialEqNoBound,
-	Decode,
-	Encode,
-	RuntimeDebugNoBound,
-	TypeInfo,
-	MaxEncodedLen,
+	CloneNoBound, PartialEqNoBound, Decode, Encode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,
 )]
 #[scale_info(skip_type_params(T))]
 pub struct ServiceInfo<T: Config> {
@@ -87,7 +75,7 @@ impl<T: Config> Service<T> {
 		Service {
 			info,
 			// start at 1 because a did is creating this service
-			consumers: 1
+			consumers: 1,
 		}
 	}
 	// Increment service consumers count. Returns error upon overflow.

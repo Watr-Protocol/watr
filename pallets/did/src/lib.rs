@@ -26,7 +26,10 @@ mod types;
 mod verification;
 
 use crate::{
-	types::{AssertionMethod, AuthenticationMethod, Document, IssuerInfo, IssuerStatus, Service, ServiceInfo},
+	types::{
+		AssertionMethod, AuthenticationMethod, Document, IssuerInfo, IssuerStatus, Service,
+		ServiceInfo,
+	},
 	verification::DidSignature,
 };
 use frame_support::{
@@ -39,8 +42,7 @@ use frame_support::{
 };
 use frame_system::{ensure_signed, pallet_prelude::OriginFor};
 use sp_core::H160;
-use sp_runtime::traits::Hash;
-use sp_runtime::ArithmeticError;
+use sp_runtime::{traits::Hash, ArithmeticError};
 use sp_std::{fmt::Debug, prelude::*};
 
 pub use pallet::*;
@@ -385,7 +387,8 @@ pub mod pallet {
 				// ensure that the caller is the controller of the DID
 				Self::ensure_controller(controller, &document)?;
 
-				let removed_services = Self::do_remove_did_services(&mut document.services, services_keys)?;
+				let removed_services =
+					Self::do_remove_did_services(&mut document.services, services_keys)?;
 
 				Self::deposit_event(Event::DidServicesRemoved { did, removed_services });
 				Ok(())
@@ -467,7 +470,7 @@ pub mod pallet {
 		pub fn remove_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin.clone())?;
-			Self::do_remove_issuer(origin, issuer)?;
+			Self::do_remove_issuer(issuer)?;
 			Ok(())
 		}
 
@@ -515,16 +518,15 @@ pub mod pallet {
 }
 
 impl<T: Config> Pallet<T> {
-	pub fn do_remove_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
-		T::GovernanceOrigin::ensure_origin(origin)?;
+	pub fn do_remove_issuer(issuer: DidIdentifierOf<T>) -> DispatchResult {
 		Issuers::<T>::try_mutate_exists(issuer.clone(), |maybe_info| -> DispatchResult {
-			let mut info = maybe_info.as_mut().ok_or(Error::<T>::IssuerDoesNotExist)?;
+			// Take from storage (sets to None). Will be deleted if successful
+			let mut info = maybe_info.take().ok_or(Error::<T>::IssuerDoesNotExist)?;
 			ensure!(
-				*info == IssuerInfo { status: IssuerStatus::Revoked },
+				info == IssuerInfo { status: IssuerStatus::Revoked },
 				Error::<T>::IssuerNotRevoked
 			);
-			// Remove issuer from storage
-			*maybe_info = None;
+
 			Self::deposit_event(Event::IssuerDeleted { issuer });
 			Ok(())
 		})
@@ -550,7 +552,10 @@ impl<T: Config> Pallet<T> {
 		Ok(services_keys)
 	}
 
-	fn do_remove_did_services(document_services: &mut ServiceKeysOf<T>, keys_to_remove: ServiceKeysOf<T>) -> Result<ServiceKeysOf<T>, DispatchError> {
+	fn do_remove_did_services(
+		document_services: &mut ServiceKeysOf<T>,
+		keys_to_remove: ServiceKeysOf<T>,
+	) -> Result<ServiceKeysOf<T>, DispatchError> {
 		// Save the removed service keys
 		let mut removed_services = BoundedVec::default();
 
@@ -562,9 +567,31 @@ impl<T: Config> Pallet<T> {
 				.ok_or(Error::<T>::ServiceNotInDid)?;
 			let deleted_key = document_services.remove(pos);
 
+			// House cleaning. Check consumers and possibly delete from storage
+			Self::do_remove_service(deleted_key.clone())?;
+
 			removed_services.try_push(deleted_key);
 		}
 		Ok(removed_services)
+	}
+
+	// Decrements consumers and removes from storage if consumers == 0
+	fn do_remove_service(service_key: KeyIdOf<T>) -> DispatchResult {
+		Services::<T>::try_mutate_exists(
+			service_key,
+			|maybe_service| -> Result<(), DispatchError> {
+				// TODO: double check error
+				let service = maybe_service.as_mut().ok_or(Error::<T>::ServiceNotInDid)?;
+
+				service.dec_consumers();
+				// Delete from storage if consumers == 0
+				if service.consumers() == 0 {
+					*maybe_service = None;
+				}
+
+				Ok(())
+			},
+		)
 	}
 
 	/// Insert a single service into storage
@@ -574,7 +601,9 @@ impl<T: Config> Pallet<T> {
 		// if the service exists, increment its consumers, otherwise insert a new service
 		if let Some(mut existing_service) = Services::<T>::get(service_key.clone()) {
 			// `inc_consumers` may overflow, so handle it just in case
-			existing_service.inc_consumers().map_err(|_| Error::<T>::TooManyServiceConsumers)?;
+			existing_service
+				.inc_consumers()
+				.map_err(|_| Error::<T>::TooManyServiceConsumers)?;
 		} else {
 			<Services<T>>::insert(service_key, Service::<T>::new(service));
 		}
@@ -627,34 +656,24 @@ impl<T: Config> Pallet<T> {
 
 	pub fn do_remove_did(origin: OriginFor<T>, did: DidIdentifierOf<T>) -> DispatchResult {
 		Did::<T>::try_mutate(did.clone(), |maybe_doc| -> Result<(), DispatchError> {
+			// Take from storage (sets to None). Will be deleted if successful
 			let document = maybe_doc.take().ok_or(Error::<T>::DidNotFound)?;
 
 			// Check if origin is either governance or controller
 			Self::ensure_governance_or_controller(origin, &document)?;
-			// TODO - do_remove_services()
 
-			// If DID belongs to Issuer
-			// Self::do_remove_issuer(origin, issuer)?;
+			// TODO - seems like excessive and expensive cloning, refactor.
+			Self::do_remove_did_services(
+				&mut document.services.clone(),
+				document.services.clone(),
+			)?;
+
+			// If DID belongs to Issuer, attempt to remove it
+			Issuers::<T>::get(did.clone())
+				.map(|_| Self::do_remove_issuer(did.clone()))
+				.transpose()?;
+
 			T::Currency::unreserve(&did.clone().into(), T::DidDeposit::get());
-			Ok(())
-		})
-	}
-
-	/// Increment stored service consumers count. Lookup by service key
-	pub fn inc_consumers(service_key: KeyIdOf<T>) -> Result<(), DispatchError> {
-		Services::<T>::try_mutate(service_key, |service| -> Result<(), DispatchError> {
-			let service = service.as_mut().ok_or(Error::<T>::ServiceNotInDid)?;
-			//TODO
-			Ok(())
-		})
-	}
-
-	/// Decrement stored service consumers count. Lookup by service key.
-	/// Will remove service if `consumers` becomes 0
-	pub fn dec_consumers_with_removal(service_key: KeyIdOf<T>) -> Result<(), DispatchError> {
-		Services::<T>::try_mutate_exists(service_key, |service| -> Result<(), DispatchError> {
-			let service = service.as_mut().ok_or(Error::<T>::ServiceNotInDid)?;
-			//TODO
 			Ok(())
 		})
 	}
