@@ -50,8 +50,9 @@ use verification::DidVerifiableIdentifier;
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use frame_support::pallet_prelude::*;
-	use frame_support::{dispatch::GetDispatchInfo, traits::UnfilteredDispatchable};
+	use frame_support::{
+		dispatch::GetDispatchInfo, pallet_prelude::*, traits::UnfilteredDispatchable,
+	};
 
 	/// The current storage version.
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(0);
@@ -264,7 +265,8 @@ pub mod pallet {
 				assertion.map(|assertion| AssertionMethod::<T> { controller: assertion });
 
 			// Add services.
-			let services_keys = Self::do_add_did_services(services, &mut <ServiceKeysOf<T>>::default())?;
+			let services_keys =
+				Self::do_add_did_services(services, &mut <ServiceKeysOf<T>>::default())?;
 
 			// Build Document
 			let document = Document {
@@ -356,8 +358,7 @@ pub mod pallet {
 				Self::ensure_controller(controller, &document)?;
 
 				// Insert new services
-				let services_keys =
-					Self::do_add_did_services(services, &mut document.services)?;
+				let services_keys = Self::do_add_did_services(services, &mut document.services)?;
 				// document.services = services_keys.clone();
 
 				Self::deposit_event(Event::DidServicesAdded { did, new_services: services_keys });
@@ -380,7 +381,10 @@ pub mod pallet {
 
 				Self::do_remove_did_services(services_keys.clone(), &mut document.services)?;
 
-				Self::deposit_event(Event::DidServicesRemoved { did, removed_services: services_keys });
+				Self::deposit_event(Event::DidServicesRemoved {
+					did,
+					removed_services: services_keys,
+				});
 				Ok(())
 			})
 		}
@@ -583,7 +587,8 @@ impl<T: Config> Pallet<T> {
 					&mut document.services.clone(),
 				)?;
 				// Add all the new services
-				document.services = Self::do_add_did_services(new_services, &mut <ServiceKeysOf<T>>::default())?;
+				document.services =
+					Self::do_add_did_services(new_services, &mut <ServiceKeysOf<T>>::default())?;
 			}
 
 			Ok(document.clone())
