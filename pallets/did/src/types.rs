@@ -1,5 +1,5 @@
 use super::*;
-use codec::{Decode, Encode, MaxEncodedLen, WrapperTypeEncode};
+use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::pallet_prelude::{CloneNoBound, PartialEqNoBound, RuntimeDebugNoBound};
 use scale_info::TypeInfo;
 use sp_runtime::{ArithmeticError, RuntimeDebug};
@@ -87,7 +87,7 @@ impl<T: Config> Service<T> {
 	// Decrement service consumers count. Can not underflow
 	pub fn dec_consumers(&mut self) {
 		if self.consumers > 0 {
-			self.consumers - 1;
+			self.consumers -= 1;
 		}
 	}
 
