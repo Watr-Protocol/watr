@@ -24,11 +24,10 @@ use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup},
-	BuildStorage,
+	AccountId32, BuildStorage,
 };
 
-use watr_common::Balance;
-use watr_common::DidIdentifier;
+use watr_common::{Balance, DidIdentifier};
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -41,9 +40,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Event<T>},
-
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-		Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
 		DID: pallet_did,
 	}
 );
@@ -88,24 +85,6 @@ impl pallet_balances::Config for Test {
 }
 
 parameter_types! {
-	pub CouncilMotionDuration: u64 = 7;
-	pub const CouncilMaxProposals: u32 = 100;
-	pub const CouncilMaxMembers: u32 = 100;
-}
-
-pub type CouncilCollective = pallet_collective::Instance1;
-impl pallet_collective::Config<CouncilCollective> for Test {
-	type RuntimeOrigin = RuntimeOrigin;
-	type Proposal = RuntimeCall;
-	type RuntimeEvent = RuntimeEvent;
-	type MotionDuration = CouncilMotionDuration;
-	type MaxProposals = CouncilMaxProposals;
-	type MaxMembers = CouncilMaxMembers;
-	type DefaultVote = pallet_collective::PrimeDefaultVote;
-	type WeightInfo = ();
-}
-
-parameter_types! {
 	pub const MaxString: u8 = 100;
 	pub const MaxCredentialsTypes: u8 = 50;
 }
@@ -116,20 +95,21 @@ impl pallet_did::Config for Test {
 	type DidIdentifier = DidIdentifier;
 	type DidDeposit = ConstU64<5>;
 	type Currency = Balances;
-	type GovernanceOrigin = pallet_collective::EnsureProportionMoreThan<u64, CouncilCollective, 1, 2>;
+	type GovernanceOrigin = frame_system::EnsureRoot<u64>;
 	type MaxString = MaxString;
 	type MaxCredentialsTypes = MaxCredentialsTypes;
 }
+
+pub(crate) const ACCOUNT_00: AccountId32 = AccountId32::new([1u8; 32]);
+pub(crate) const ACCOUNT_01: AccountId32 = AccountId32::new([2u8; 32]);
+pub(crate) const ACCOUNT_02: AccountId32 = AccountId32::new([3u8; 32]);
+pub(crate) const ACCOUNT_03: AccountId32 = AccountId32::new([4u8; 32]);
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut ext: sp_io::TestExternalities = GenesisConfig {
 		balances: pallet_balances::GenesisConfig::<Test> {
 			balances: vec![(1, 10), (2, 20), (3, 30), (4, 40), (5, 50)],
-		},
-		council: pallet_collective::GenesisConfig {
-			members: vec![1, 2, 3, 4, 5],
-			phantom: Default::default(),
 		},
 	}
 	.build_storage()
