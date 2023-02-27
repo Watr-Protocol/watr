@@ -522,26 +522,6 @@ pub mod pallet {
 			Ok(())
 		}
 	}
-
-	impl<T: Config> Pallet<T> {
-		pub fn do_remove_issuer(
-			origin: OriginFor<T>,
-			issuer: DidIdentifierOf<T>,
-		) -> DispatchResult {
-			T::GovernanceOrigin::ensure_origin(origin)?;
-			Issuers::<T>::try_mutate_exists(issuer.clone(), |maybe_info| -> DispatchResult {
-				let mut info = maybe_info.as_mut().ok_or(Error::<T>::IssuerDoesNotExist)?;
-				ensure!(
-					*info == IssuerInfo { status: IssuerStatus::Revoked },
-					Error::<T>::IssuerNotRevoked
-				);
-				// Remove issuer from storage
-				*maybe_info = None;
-				Self::deposit_event(Event::IssuerDeleted { issuer });
-				Ok(())
-			})
-		}
-	}
 }
 
 impl<T: Config> Pallet<T> {
