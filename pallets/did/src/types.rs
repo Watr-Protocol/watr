@@ -32,7 +32,7 @@ pub struct Document<T: Config> {
 	services: Option<Vec<Service<T>>>,
 }
 
-#[derive(Clone, Decode, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
+#[derive(Clone, Decode, Debug, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
 pub enum IssuerStatus {
 	Active,
 	Revoked,
@@ -44,7 +44,7 @@ impl Default for IssuerStatus {
 	}
 }
 
-#[derive(Clone, Decode, Default, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
+#[derive(Clone, Decode, Debug, Default, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
 pub struct IssuerInfo {
 	pub status: IssuerStatus,
 }

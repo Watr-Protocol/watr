@@ -24,11 +24,10 @@ use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup},
-	BuildStorage,
+	AccountId32, BuildStorage,
 };
 
-use watr_common::Balance;
-use watr_common::DidIdentifier;
+use watr_common::{Balance, DidIdentifier};
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -116,10 +115,15 @@ impl pallet_did::Config for Test {
 	type DidIdentifier = DidIdentifier;
 	type DidDeposit = ConstU64<5>;
 	type Currency = Balances;
-	type GovernanceOrigin = pallet_collective::EnsureProportionMoreThan<u64, CouncilCollective, 1, 2>;
+	type GovernanceOrigin = frame_system::EnsureRoot<u64>;
 	type MaxString = MaxString;
 	type MaxCredentialsTypes = MaxCredentialsTypes;
 }
+
+pub(crate) const ACCOUNT_00: AccountId32 = AccountId32::new([1u8; 32]);
+pub(crate) const ACCOUNT_01: AccountId32 = AccountId32::new([2u8; 32]);
+pub(crate) const ACCOUNT_02: AccountId32 = AccountId32::new([3u8; 32]);
+pub(crate) const ACCOUNT_03: AccountId32 = AccountId32::new([4u8; 32]);
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
