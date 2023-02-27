@@ -159,11 +159,11 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		CredentialTypeAdded {
-			credential: CredentialOf<T>,
+		CredentialTypesAdded {
+			credentials: Vec<CredentialOf<T>>,
 		},
-		CredentialTypeRemoved {
-			credential: CredentialOf<T>,
+		CredentialTypesRemoved {
+			credentials: Vec<CredentialOf<T>>,
 		},
 		DidCreated {
 			did: DidIdentifierOf<T>,
@@ -219,6 +219,7 @@ pub mod pallet {
 		IssuerDoesNotExist,
 		IssuerNotActive,
 		IssuerNotRevoked,
+		NotIssuer,
 		MaxCredentials,
 
 		/// Unable to create DID that already exists
@@ -392,8 +393,14 @@ pub mod pallet {
 			storage_key: HashOf<T>,
 		) -> DispatchResult {
 			let issuer = ensure_signed(origin)?;
+			let issuer_did = T::DidIdentifier::from(issuer);
+
+			ensure!(Issuers::<T>::contains_key(&issuer_did), Error::<T>::NotIssuer);
+
+			Self::ensure_valid_credentials(&credentials)?;
+
 			Self::deposit_event(Event::CredentialsIssued {
-				issuer: T::DidIdentifier::from(issuer),
+				issuer: issuer_did,
 				did,
 				credentials,
 				storage_key,
@@ -465,42 +472,49 @@ pub mod pallet {
 
 		// #[pallet::call_index(5)]
 		#[pallet::weight(1000000)]
-		pub fn add_credential_type(
+		pub fn add_credentials_type(
 			origin: OriginFor<T>,
-			credential: CredentialOf<T>,
+			credentials: Vec<CredentialOf<T>>,
 		) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
 			let mut credentials_types = CredentialsTypes::<T>::get();
-			let pos = credentials_types
-				.binary_search(&credential)
-				.err()
-				.ok_or(Error::<T>::CredentialAlreadyAdded)?;
-			credentials_types
-				.try_insert(pos, credential.clone())
-				.map_err(|_| Error::<T>::MaxCredentials)?;
+
+			for credential in credentials.clone() {
+				let pos = credentials_types
+					.binary_search(&credential)
+					.err()
+					.ok_or(Error::<T>::CredentialAlreadyAdded)?;
+				credentials_types
+					.try_insert(pos, credential.clone())
+					.map_err(|_| Error::<T>::MaxCredentials)?;
+			}
 
 			CredentialsTypes::<T>::put(credentials_types);
-			Self::deposit_event(Event::CredentialTypeAdded { credential });
+			Self::deposit_event(Event::CredentialTypesAdded { credentials });
 			Ok(())
 		}
 
 		// #[pallet::call_index(6)]
 		#[pallet::weight(1000000)]
-		pub fn remove_credential_type(
+		pub fn remove_credentials_type(
 			origin: OriginFor<T>,
-			credential: CredentialOf<T>,
+			credentials: Vec<CredentialOf<T>>,
 		) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
 			let mut credentials_types = CredentialsTypes::<T>::get();
-			let pos = credentials_types
-				.binary_search(&credential)
-				.ok()
-				.ok_or(Error::<T>::CredentialDoesNotExist)?;
-			credentials_types.remove(pos);
+
+			for credential in credentials.clone() {
+				let pos = credentials_types
+					.binary_search(&credential)
+					.ok()
+					.ok_or(Error::<T>::CredentialDoesNotExist)?;
+				credentials_types.remove(pos);
+			}
+
 			CredentialsTypes::<T>::put(credentials_types);
-			Self::deposit_event(Event::CredentialTypeRemoved { credential });
+			Self::deposit_event(Event::CredentialTypesRemoved { credentials });
 			Ok(())
 		}
 	}
@@ -684,5 +698,17 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult {
 		T::GovernanceOrigin::ensure_origin(origin.clone())
 			.map_or(Self::ensure_controller(ensure_signed(origin)?, document), |_| Ok(()))
+	}
+
+	fn ensure_valid_credentials(credentials: &Vec<CredentialOf<T>>) -> DispatchResult {
+		let credential_types = <CredentialsTypes<T>>::get();
+
+		for credential in credentials {
+			credential_types
+				.binary_search(credential)
+				.ok()
+				.ok_or(Error::<T>::CredentialDoesNotExist)?;
+		}
+		Ok(())
 	}
 }
