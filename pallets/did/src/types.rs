@@ -33,6 +33,7 @@ pub struct Document<T: Config> {
 }
 
 #[derive(Clone, Decode, Debug, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(T))]
 pub enum IssuerStatus {
 	Active,
 	Revoked,
@@ -45,6 +46,7 @@ impl Default for IssuerStatus {
 }
 
 #[derive(Clone, Decode, Debug, Default, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(T))]
 pub struct IssuerInfo {
 	pub status: IssuerStatus,
 }
