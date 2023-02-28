@@ -702,7 +702,7 @@ impl<T: Config> Pallet<T> {
 		document: &Document<T>,
 	) -> DispatchResult {
 		T::GovernanceOrigin::ensure_origin(origin.clone())
-			.map_or(Self::ensure_controller(ensure_signed(origin)?, document), |_| Ok(()))
+			.map_or_else(|_| Self::ensure_controller(ensure_signed(origin)?, document), |_| Ok(()))
 	}
 
 	fn ensure_valid_credentials(credentials: &Vec<CredentialOf<T>>) -> DispatchResult {
