@@ -91,7 +91,7 @@ impl<T: Config> Service<T> {
 		}
 	}
 
-	pub fn consumers(&mut self) -> RefCount {
+	pub fn consumers(&self) -> RefCount {
 		self.consumers
 	}
 }
