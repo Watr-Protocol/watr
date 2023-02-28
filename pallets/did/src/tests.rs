@@ -49,6 +49,10 @@ fn default_services() -> BoundedVec<ServiceInfo<Test>, <mock::Test as pallet::Co
 		ServiceInfo {
 			type_id: types::ServiceType::VerifiableCredentialFileStorage,
 			service_endpoint: bounded_vec![b's', b'1']
+		},
+		ServiceInfo {
+			type_id: types::ServiceType::VerifiableCredentialFileStorage,
+			service_endpoint: bounded_vec![b's', b'2']
 		}
 	]
 }
@@ -126,8 +130,9 @@ fn update_did_works() {
 		let authentication: H160 = H160::from([1u8; 20]);
 		let assertion: H160 = H160::from([1u8; 20]);
 		let mut services = default_services();
-		services[0].service_endpoint = bounded_vec![b's', b'2'];
-		services[1].service_endpoint = bounded_vec![b's', b'3'];
+		services[0].service_endpoint = bounded_vec![b's', b'3'];
+		services[1].service_endpoint = bounded_vec![b's', b'4'];
+		services[2].service_endpoint = bounded_vec![b's', b'5'];
 
 		let mut services_keys = hash_services(&services);
 		services_keys.sort();
@@ -172,10 +177,12 @@ fn force_update_did_works() {
 		let authentication: H160 = H160::from([1u8; 20]);
 		let assertion: H160 = H160::from([1u8; 20]);
 		let mut services = default_services();
-		services[0].service_endpoint = bounded_vec![b's', b'2'];
-		services[1].service_endpoint = bounded_vec![b's', b'3'];
+		services[0].service_endpoint = bounded_vec![b's', b'3'];
+		services[1].service_endpoint = bounded_vec![b's', b'4'];
+		services[2].service_endpoint = bounded_vec![b's', b'5'];
 
-		let services_keys = hash_services(&services);
+		let mut services_keys = hash_services(&services);
+		services_keys.sort();
 
 		let expected_document = Document {
 			controller,
@@ -247,10 +254,13 @@ fn add_did_services_works() {
 		let origin = RuntimeOrigin::signed(ALICE);
 
 		let mut new_services = default_services();
-		new_services[0].service_endpoint = bounded_vec![b's', b'2'];
-		new_services[1].service_endpoint = bounded_vec![b's', b'3'];
+		new_services[0].service_endpoint = bounded_vec![b's', b'3'];
+		new_services[1].service_endpoint = bounded_vec![b's', b'4'];
+		new_services[2].service_endpoint = bounded_vec![b's', b'5'];
 
-		let new_services_keys = hash_services(&new_services);
+		let mut new_services_keys = hash_services(&new_services);
+		new_services_keys.sort();
+
 		let mut combined_services = old_document.services.clone();
 		new_services_keys.clone().into_iter().for_each(|key| {
 			combined_services.try_push(key);
@@ -270,11 +280,54 @@ fn add_did_services_works() {
 		assert_eq!(DID::dids(ALICE), Some(expected_document.clone()));
 		// assert services exist and have a consumer count of 1
 		assert_services(new_services.clone(), 1);
+
+		// TODO: test a service with 1 consumer that is added to another
+
 		// assert that the default services were removed from storage
-		// assert_services_do_not_exist(default_services());
 		assert!(events().contains(&Event::<Test>::DidServicesAdded {
 			did: ALICE,
 			new_services: new_services_keys,
+		}));
+
+	});
+}
+
+#[test]
+fn remove_did_services_works() {
+	new_test_ext().execute_with(|| {
+		let mut old_document = create_default_did(ALICE);
+
+		let origin = RuntimeOrigin::signed(ALICE);
+
+		let mut service_remaining = default_services();
+		// remove last two services from `service_remaining`, leaving only one in `service_remaining`
+		let mut services_to_remove = bounded_vec![service_remaining.pop().unwrap(), service_remaining.pop().unwrap()];
+
+		let remaining_key = hash_services(&service_remaining);
+		let mut to_remove_keys = hash_services(&services_to_remove);
+		to_remove_keys.sort();
+
+		let expected_document = Document {
+			services: remaining_key.clone(),
+			..old_document
+		};
+
+		assert_ok!(DID::remove_did_services(
+			origin,
+			ALICE,
+			to_remove_keys.clone()
+		));
+		assert_eq!(DID::dids(ALICE), Some(expected_document.clone()));
+		// assert remaining service exists and has a consumer count of 1
+		assert_services(service_remaining, 1);
+		assert_services_do_not_exist(services_to_remove);
+
+		// TODO: test a service with 2 consumers that is removed from one DIDj
+
+		// assert that the default services were removed from storage
+		assert!(events().contains(&Event::<Test>::DidServicesRemoved {
+			did: ALICE,
+			removed_services: to_remove_keys,
 		}));
 
 	});
