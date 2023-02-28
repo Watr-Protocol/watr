@@ -15,7 +15,7 @@ Create a `requirements.yml` file and use `ansible-galaxy` to download the latest
 
 Goal: Deploy two relaychain validators and one parachain collator.
 
-It expects a relaychain and parachain chain specification. A [guide](https://docs.substrate.io/reference/how-to-guides/parachains/connect-to-a-relay-chain/) on how to create these chain specifications is available. This network will use default `Alice` and `Bob` keys.
+It expects a relaychain and parachain chain specifications. A [guide](https://docs.substrate.io/reference/how-to-guides/parachains/connect-to-a-relay-chain/) on how to create these chain specifications is available. This network will use default `Alice` and `Bob` keys.
 
 #### Development Network Inventory:
 
