@@ -21,6 +21,8 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
 mod errors;
 mod types;
 mod verification;
@@ -28,7 +30,7 @@ mod verification;
 use crate::{
 	types::{
 		AssertionMethod, AuthenticationMethod, Document, IssuerInfo, IssuerStatus, Service,
-		ServiceInfo,
+		ServiceInfo, ServiceType
 	},
 	verification::DidSignature,
 };
@@ -43,6 +45,7 @@ use frame_support::{
 use frame_system::{ensure_signed, pallet_prelude::OriginFor};
 use sp_runtime::{traits::Hash, ArithmeticError};
 use sp_std::prelude::*;
+use sp_core::H160;
 
 pub use pallet::*;
 use verification::DidVerifiableIdentifier;

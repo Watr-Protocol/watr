@@ -21,7 +21,7 @@ pub struct AssertionMethod<T: Config> {
 
 #[derive(Clone, Default, Decode, Encode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
-enum ServiceType {
+pub enum ServiceType {
 	#[default]
 	VerifiableCredentialFileStorage,
 }
