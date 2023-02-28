@@ -1,5 +1,5 @@
 use crate::*;
-use frame_benchmarking::{benchmarks, whitelisted_caller, account};
+use frame_benchmarking::{account, benchmarks, whitelisted_caller};
 use frame_system::RawOrigin;
 use sp_core::H160;
 
@@ -17,13 +17,11 @@ fn issuer<T: Config>(i: u32) -> DidIdentifierOf<T> {
 	T::DidIdentifier::from(account)
 }
 
-fn authentication<T: Config>(i: u64) -> T::AuthenticationAddress
-{
+fn authentication<T: Config>(i: u64) -> T::AuthenticationAddress {
 	H160::from_low_u64_be(i).into()
 }
 
-fn assertion<T: Config>(i: u64) -> T::AssertionAddress
-{
+fn assertion<T: Config>(i: u64) -> T::AssertionAddress {
 	H160::from_low_u64_be(i).into()
 }
 
@@ -35,10 +33,7 @@ fn create_service<T: Config>(i: u32) -> ServiceInfo<T> {
 		service_endpoint.try_push(b);
 	}
 
-	ServiceInfo {
-		type_id: ServiceType::VerifiableCredentialFileStorage,
-		service_endpoint
-	}
+	ServiceInfo { type_id: ServiceType::VerifiableCredentialFileStorage, service_endpoint }
 }
 
 benchmarks! {

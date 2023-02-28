@@ -30,7 +30,7 @@ mod verification;
 use crate::{
 	types::{
 		AssertionMethod, AuthenticationMethod, Document, IssuerInfo, IssuerStatus, Service,
-		ServiceInfo, ServiceType
+		ServiceInfo, ServiceType,
 	},
 	verification::DidSignature,
 };
@@ -43,9 +43,9 @@ use frame_support::{
 	BoundedVec, Parameter,
 };
 use frame_system::{ensure_signed, pallet_prelude::OriginFor};
+use sp_core::{H160, H256};
 use sp_runtime::{traits::Hash, ArithmeticError};
 use sp_std::prelude::*;
-use sp_core::{H160, H256};
 
 pub use pallet::*;
 use verification::DidVerifiableIdentifier;
@@ -112,10 +112,18 @@ pub mod pallet {
 			+ Into<Self::AccountId>;
 
 		/// Type for the authentication method used by a DID.
-		type AuthenticationAddress: Parameter + DidVerifiableIdentifier + MaxEncodedLen + From<H160> + From<H256>;
+		type AuthenticationAddress: Parameter
+			+ DidVerifiableIdentifier
+			+ MaxEncodedLen
+			+ From<H160>
+			+ From<H256>;
 
 		/// Type for the assertion method used by an Issuer DID.
-		type AssertionAddress: Parameter + DidVerifiableIdentifier + MaxEncodedLen + From<H160> + From<H256>;
+		type AssertionAddress: Parameter
+			+ DidVerifiableIdentifier
+			+ MaxEncodedLen
+			+ From<H160>
+			+ From<H256>;
 
 		/// The amount held on deposit for a DID creation
 		#[pallet::constant]
@@ -618,6 +626,10 @@ impl<T: Config> Pallet<T> {
 			document_services_keys
 				.try_insert(pos, service_key.clone())
 				.map_err(|_| Error::<T>::TooManyServicesInDid)?;
+			let pos = services_keys
+				.binary_search(&service_key)
+				.err()
+				.ok_or(Error::<T>::ServiceAlreadyInDid)?;
 			services_keys
 				.try_insert(pos, service_key.clone())
 				.map_err(|_| Error::<T>::TooManyServicesInDid)?;
