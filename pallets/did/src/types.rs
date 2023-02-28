@@ -1,39 +1,61 @@
 use super::*;
-use codec::{Decode, Encode, MaxEncodedLen, WrapperTypeEncode};
+use codec::{Decode, Encode, MaxEncodedLen};
+use frame_support::pallet_prelude::{CloneNoBound, PartialEqNoBound, RuntimeDebugNoBound};
 use scale_info::TypeInfo;
 use sp_runtime::{ArithmeticError, RuntimeDebug};
 
-#[derive(Decode, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
-pub struct Authentication<T: Config> {
-	controller: T::DidIdentifier,
+/// Type used to count the number of references a service has.
+pub type RefCount = u32;
+
+#[derive(Clone, PartialEq, Decode, Encode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(T))]
+pub struct AuthenticationMethod<T: Config> {
+	pub controller: T::AuthenticationAddress,
 }
 
-#[derive(Decode, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
+#[derive(Clone, PartialEq, Decode, Encode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(T))]
 pub struct AssertionMethod<T: Config> {
-	controller: T::DidIdentifier,
+	pub controller: T::AssertionAddress,
 }
 
-#[derive(Decode, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
-pub struct KeyAgreement<T: Config> {
-	controller: T::DidIdentifier,
+#[derive(Clone, Default, Decode, Encode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(T))]
+enum ServiceType {
+	#[default]
+	VerifiableCredentialFileStorage,
 }
 
-#[derive(Decode, Encode, TypeInfo, MaxEncodedLen)]
+#[derive(
+	CloneNoBound, PartialEqNoBound, Decode, Encode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,
+)]
+#[scale_info(skip_type_params(T))]
 pub struct Service<T: Config> {
-	type_id: BoundedVec<u8, T::MaxString>,          // E.g: IPFS
-	service_endpoint: BoundedVec<u8, T::MaxString>, // E.g: IPFS endopoint
+	pub info: ServiceInfo<T>,
+	// count of DIDs referencing this service
+	consumers: RefCount,
 }
 
-#[derive(Decode, Encode, TypeInfo, MaxEncodedLen)]
+#[derive(
+	CloneNoBound, PartialEqNoBound, Decode, Encode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,
+)]
+#[scale_info(skip_type_params(T))]
+pub struct ServiceInfo<T: Config> {
+	type_id: ServiceType,
+	pub service_endpoint: BoundedVec<u8, T::MaxString>,
+}
+
+#[derive(
+	CloneNoBound, PartialEqNoBound, Decode, Encode, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,
+)]
+#[scale_info(skip_type_params(T))]
 pub struct Document<T: Config> {
-	controller: AccountIdOf<T>,
-	authentication: Authentication<T>,
-	assertion_method: Option<AssertionMethod<T>>,
-	key_agreement: Option<KeyAgreement<T>>,
-	services: Option<Vec<Service<T>>>,
+	pub controller: DidIdentifierOf<T>,
+	pub authentication: AuthenticationMethod<T>,
+	pub assertion_method: Option<AssertionMethod<T>>,
+	pub services: BoundedVec<KeyIdOf<T>, T::MaxServices>,
 }
 
-// #[derive(Clone, Decode, Debug, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
 #[derive(Clone, Decode, Default, Encode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 pub enum IssuerStatus {
@@ -42,9 +64,34 @@ pub enum IssuerStatus {
 	Revoked,
 }
 
-//#[derive(Clone, Decode, Debug, Default, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
 #[derive(Clone, Decode, Default, Encode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 pub struct IssuerInfo {
 	pub status: IssuerStatus,
+}
+
+impl<T: Config> Service<T> {
+	pub fn new(info: ServiceInfo<T>) -> Self {
+		Service {
+			info,
+			// start at 1 because a did is creating this service
+			consumers: 1,
+		}
+	}
+	// Increment service consumers count. Returns error upon overflow.
+	pub fn inc_consumers(&mut self) -> Result<(), ArithmeticError> {
+		self.consumers.checked_add(1).ok_or(ArithmeticError::Overflow)?;
+		Ok(())
+	}
+
+	// Decrement service consumers count. Can not underflow
+	pub fn dec_consumers(&mut self) {
+		if self.consumers > 0 {
+			self.consumers -= 1;
+		}
+	}
+
+	pub fn consumers(&self) -> RefCount {
+		self.consumers
+	}
 }
