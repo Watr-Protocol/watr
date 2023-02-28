@@ -618,6 +618,10 @@ impl<T: Config> Pallet<T> {
 			document_services_keys
 				.try_insert(pos, service_key.clone())
 				.map_err(|_| Error::<T>::TooManyServicesInDid)?;
+			let pos = services_keys
+				.binary_search(&service_key)
+				.err()
+				.ok_or(Error::<T>::ServiceAlreadyInDid)?;
 			services_keys
 				.try_insert(pos, service_key.clone())
 				.map_err(|_| Error::<T>::TooManyServicesInDid)?;
