@@ -1,6 +1,7 @@
 use super::*;
 use codec::{Decode, Encode, MaxEncodedLen, WrapperTypeEncode};
 use scale_info::TypeInfo;
+use sp_runtime::{ArithmeticError, RuntimeDebug};
 
 #[derive(Decode, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
 pub struct Authentication<T: Config> {
@@ -32,20 +33,17 @@ pub struct Document<T: Config> {
 	services: Option<Vec<Service<T>>>,
 }
 
-#[derive(Clone, Decode, Debug, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
+// #[derive(Clone, Decode, Debug, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
+#[derive(Clone, Decode, Default, Encode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 pub enum IssuerStatus {
+	#[default]
 	Active,
 	Revoked,
 }
 
-impl Default for IssuerStatus {
-	fn default() -> Self {
-		Self::Active
-	}
-}
-
-#[derive(Clone, Decode, Debug, Default, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
+//#[derive(Clone, Decode, Debug, Default, Encode, PartialEq, TypeInfo, MaxEncodedLen)]
+#[derive(Clone, Decode, Default, Encode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
 pub struct IssuerInfo {
 	pub status: IssuerStatus,
