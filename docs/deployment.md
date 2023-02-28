@@ -19,23 +19,47 @@ It expects a relaychain and parachain chain specifications. A [guide](https://do
 
 #### Development Network Inventory:
 
+Below are examples of each node role (bootnode / collator / rpc node / fullnode ):
+
 ```yaml
 all:
   vars:
     node_binary_version: v0.9.37
     node_app_name: watr
     node_chainspec: polkadot
-    node_parachain_chainspec: https://raw.githubusercontent.com/Watr-Protocol/watr/main/chain-specs/devnet-raw.json
+    node_parachain_chainspec: https://raw.githubusercontent.com/Watr-Protocol/watr/main/chain-specs/devnet-raw.json # chain spec file if required
     node_user: polkadot
-    node_binary: "https://github.com/Watr-Protocol/watr/releases/download/v1.2.0/watr-node"
+    node_binary: "https://github.com/Watr-Protocol/watr/releases/download/v1.2.0/watr-node" # release binary to run on all nodes
 
   children:
-    collator:
+    bootnodes: # example bootnode with injected p2p private key
+      hosts:
+        bootnode-1:
+          node_parachain_role: boot
+          node_p2p_private_key: "0x0" # inject p2p private key on bootnodes
+          ansible_host: bootnode-1.mycompany.com
+
+    collators: # example collator with injected aura private key
       hosts:
         collator-1:
           node_parachain_role: collator
           node_custom_options: ["--execution wasm"]
+          key_inject_parachain_aura_private_key: "0x0" # inject this private aura key
           ansible_host: collator-1.mycompany.com
+
+    rpcs: # example collator node
+      hosts:
+        rpc-1:
+          node_parachain_role: rpc
+          node_custom_options: ["--execution wasm"]
+          ansible_host: rpc-1.mycompany.com
+
+    fullnodes: # example parachain full node
+      hosts:
+        fullnode-1:
+          node_parachain_role: full
+          node_custom_options: ["--execution wasm"]
+          ansible_host: fullnode-1.mycompany.com
 ```
 
 
@@ -48,6 +72,12 @@ all:
   become: yes
   roles:
     - parity.chain.node
+    ---
+- name: inject keys on parachain collators
+  hosts: collators
+  become: yes
+  roles:
+    - parity.chain.inject_keys
 ```
 
 
