@@ -70,6 +70,7 @@ cargo test
 - [Connect Metamask](docs/connecting-metamask/connecting-metamask.md)
 - [Collator Selection Reward Pot](docs/collator-selection-pot.md)
 - [Cross Chain Assets Transfer](docs/cross-chain-assets-transfer/cross-chain-assets-transfer.md)
+- [Deployment](docs/deployment.md)
 ## Runtime Details
 **Substrate**
 - `pallet-scheduler` allows extrinsic calls to be scheduled for a later time
