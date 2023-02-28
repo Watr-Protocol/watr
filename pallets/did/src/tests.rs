@@ -204,3 +204,78 @@ fn force_update_did_works() {
 		}));
 	});
 }
+
+#[test]
+fn remove_did_works() {
+	new_test_ext().execute_with(|| {
+		let origin = RuntimeOrigin::signed(ALICE);
+		// inserts default DID into storage. Checks for Ok()
+		let expected_document = create_default_did(ALICE);
+
+		assert_ok!(DID::remove_did(origin, ALICE));
+		assert_eq!(DID::dids(ALICE), None);
+		assert_eq!(Balances::reserved_balance(&ALICE), 0);
+		assert_services_do_not_exist(default_services());
+		assert!(events().contains(&Event::<Test>::DidRemoved {
+			did: ALICE,
+		}));
+	});
+}
+
+#[test]
+fn force_remove_did_works() {
+	new_test_ext().execute_with(|| {
+		let origin = RuntimeOrigin::root();
+		// inserts default DID into storage. Checks for Ok()
+		let expected_document = create_default_did(ALICE);
+
+		assert_ok!(DID::force_remove_did(origin, ALICE));
+		assert_eq!(DID::dids(ALICE), None);
+		assert_eq!(Balances::reserved_balance(&ALICE), 0);
+		assert_services_do_not_exist(default_services());
+		assert!(events().contains(&Event::<Test>::DidForcedRemoved {
+			did: ALICE,
+		}));
+	});
+}
+
+#[test]
+fn add_did_services_works() {
+	new_test_ext().execute_with(|| {
+		let mut old_document = create_default_did(ALICE);
+
+		let origin = RuntimeOrigin::signed(ALICE);
+
+		let mut new_services = default_services();
+		new_services[0].service_endpoint = bounded_vec![b's', b'2'];
+		new_services[1].service_endpoint = bounded_vec![b's', b'3'];
+
+		let new_services_keys = hash_services(&new_services);
+		let mut combined_services = old_document.services.clone();
+		new_services_keys.clone().into_iter().for_each(|key| {
+			combined_services.try_push(key);
+		});
+		combined_services.sort();
+
+		let expected_document = Document {
+			services: combined_services,
+			..old_document
+		};
+
+		assert_ok!(DID::add_did_services(
+			origin,
+			ALICE,
+			new_services.clone()
+		));
+		assert_eq!(DID::dids(ALICE), Some(expected_document.clone()));
+		// assert services exist and have a consumer count of 1
+		assert_services(new_services.clone(), 1);
+		// assert that the default services were removed from storage
+		// assert_services_do_not_exist(default_services());
+		assert!(events().contains(&Event::<Test>::DidServicesAdded {
+			did: ALICE,
+			new_services: new_services_keys,
+		}));
+
+	});
+}
