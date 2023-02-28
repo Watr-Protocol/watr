@@ -45,7 +45,7 @@ use frame_support::{
 use frame_system::{ensure_signed, pallet_prelude::OriginFor};
 use sp_runtime::{traits::Hash, ArithmeticError};
 use sp_std::prelude::*;
-use sp_core::H160;
+use sp_core::{H160, H256};
 
 pub use pallet::*;
 use verification::DidVerifiableIdentifier;
@@ -112,10 +112,10 @@ pub mod pallet {
 			+ Into<Self::AccountId>;
 
 		/// Type for the authentication method used by a DID.
-		type AuthenticationAddress: Parameter + DidVerifiableIdentifier + MaxEncodedLen;
+		type AuthenticationAddress: Parameter + DidVerifiableIdentifier + MaxEncodedLen + From<H160> + From<H256>;
 
 		/// Type for the assertion method used by an Issuer DID.
-		type AssertionAddress: Parameter + DidVerifiableIdentifier + MaxEncodedLen;
+		type AssertionAddress: Parameter + DidVerifiableIdentifier + MaxEncodedLen + From<H160> + From<H256>;
 
 		/// The amount held on deposit for a DID creation
 		#[pallet::constant]

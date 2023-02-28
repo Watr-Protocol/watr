@@ -41,7 +41,7 @@ pub struct Service<T: Config> {
 )]
 #[scale_info(skip_type_params(T))]
 pub struct ServiceInfo<T: Config> {
-	type_id: ServiceType,
+	pub type_id: ServiceType,
 	pub service_endpoint: BoundedVec<u8, T::MaxString>,
 }
 
