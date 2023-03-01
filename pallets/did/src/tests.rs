@@ -18,10 +18,10 @@ use super::*;
 use crate as pallet_did;
 use crate::{mock::*, Event as MotionEvent};
 use codec::Encode;
-use frame_support::{assert_ok, dispatch::GetDispatchInfo, weights::Weight};
+use frame_support::{assert_ok, assert_noop, dispatch::GetDispatchInfo, error::BadOrigin, weights::Weight};
 use frame_system::{EventRecord, Phase};
 use mock::{RuntimeCall, RuntimeEvent};
-use sp_core::{H160, H256};
+use sp_core::{ConstU8, H160, H256};
 use sp_runtime::{bounded_vec, traits::{BlakeTwo256, Hash}};
 
 fn record(event: RuntimeEvent) -> EventRecord<RuntimeEvent, H256> {
@@ -57,9 +57,9 @@ fn default_services() -> BoundedVec<ServiceInfo<Test>, <mock::Test as pallet::Co
 	]
 }
 
-fn create_default_did(origin_id: u64) -> Document<Test> {
+fn create_default_did(origin_id: u64, controller: u64) -> Document<Test> {
 	let origin = RuntimeOrigin::signed(origin_id);
-	let controller = 1;
+	let controller = controller;
 	let authentication: H160 = H160::from([0u8; 20]);
 	let assertion: H160 = H160::from([0u8; 20]);
 	let services = default_services();
@@ -108,7 +108,7 @@ fn assert_services_do_not_exist(services_info: BoundedVec<ServiceInfo<Test>, <mo
 fn create_did_works() {
 	new_test_ext().execute_with(|| {
 		// inserts default DID into storage. Checks for Ok()
-		let expected_document = create_default_did(ALICE);
+		let expected_document = create_default_did(ALICE, ALICE);
 
 		assert_eq!(Balances::reserved_balance(&ALICE), DidDeposit::get());
 		assert_eq!(DID::dids(ALICE), Some(expected_document.clone()));
@@ -123,7 +123,7 @@ fn create_did_works() {
 #[test]
 fn update_did_works() {
 	new_test_ext().execute_with(|| {
-		let mut old_document = create_default_did(ALICE);
+		let mut old_document = create_default_did(ALICE, ALICE);
 
 		let origin = RuntimeOrigin::signed(ALICE);
 		let controller = 2;
@@ -170,7 +170,7 @@ fn update_did_works() {
 fn force_update_did_works() {
 	new_test_ext().execute_with(|| {
 		// default did with origin & did for Alice
-		let mut old_document = create_default_did(ALICE);
+		let mut old_document = create_default_did(ALICE, ALICE);
 
 		let origin = RuntimeOrigin::root();
 		let controller = 2;
@@ -217,7 +217,7 @@ fn remove_did_works() {
 	new_test_ext().execute_with(|| {
 		let origin = RuntimeOrigin::signed(ALICE);
 		// inserts default DID into storage. Checks for Ok()
-		let expected_document = create_default_did(ALICE);
+		let expected_document = create_default_did(ALICE, ALICE);
 
 		assert_ok!(DID::remove_did(origin, ALICE));
 		assert_eq!(DID::dids(ALICE), None);
@@ -234,7 +234,7 @@ fn force_remove_did_works() {
 	new_test_ext().execute_with(|| {
 		let origin = RuntimeOrigin::root();
 		// inserts default DID into storage. Checks for Ok()
-		let expected_document = create_default_did(ALICE);
+		let expected_document = create_default_did(ALICE, ALICE);
 
 		assert_ok!(DID::force_remove_did(origin, ALICE));
 		assert_eq!(DID::dids(ALICE), None);
@@ -249,7 +249,7 @@ fn force_remove_did_works() {
 #[test]
 fn add_did_services_works() {
 	new_test_ext().execute_with(|| {
-		let mut old_document = create_default_did(ALICE);
+		let mut old_document = create_default_did(ALICE, ALICE);
 
 		let origin = RuntimeOrigin::signed(ALICE);
 
@@ -295,7 +295,7 @@ fn add_did_services_works() {
 #[test]
 fn remove_did_services_works() {
 	new_test_ext().execute_with(|| {
-		let mut old_document = create_default_did(ALICE);
+		let mut old_document = create_default_did(ALICE, ALICE);
 
 		let origin = RuntimeOrigin::signed(ALICE);
 
@@ -330,5 +330,176 @@ fn remove_did_services_works() {
 			removed_services: to_remove_keys,
 		}));
 
+	});
+}
+
+
+//  ** Tests Fail Successfully **
+
+#[test]
+fn create_did_fails_if_did_already_exists() {
+	new_test_ext().execute_with(|| {
+		let origin = RuntimeOrigin::signed(ALICE);
+		let controller = 1;
+		let authentication: H160 = H160::from([0u8; 20]);
+		let mut services = default_services();
+
+		// Create DID for Alice
+		let expected_document = create_default_did(ALICE, ALICE);
+
+		assert_noop!(
+			DID::create_did(origin.clone(), controller, authentication, None, BoundedVec::default()),
+			Error::<Test>::DidAlreadyExists
+		);
+
+		// verify DID is unchanged
+		assert_eq!(DID::dids(ALICE), Some(expected_document.clone()));
+	});
+}
+
+#[test]
+fn create_did_fails_if_duplicated_service() {
+	new_test_ext().execute_with(|| {
+		let origin = RuntimeOrigin::signed(ALICE);
+		let controller = 1;
+		let authentication: H160 = H160::from([0u8; 20]);
+		let mut services = default_services();
+
+		services[1].service_endpoint = bounded_vec![b's', b'0'];
+		assert_noop!(
+			DID::create_did(origin, controller, authentication, None, services),
+			Error::<Test>::ServiceAlreadyInDid
+		);
+
+		// verify DID does not exist
+		assert_eq!(DID::dids(ALICE), None);
+	});
+}
+
+#[test]
+fn update_did_fails_if_did_does_not_exist() {
+	new_test_ext().execute_with(|| {
+		let origin = RuntimeOrigin::signed(ALICE);
+
+		assert_noop!(
+			DID::update_did(origin, ALICE, None, None, None, None),
+			Error::<Test>::DidNotFound
+		);
+	});
+}
+
+#[test]
+fn update_did_fails_if_origin_is_not_controller() {
+	new_test_ext().execute_with(|| {
+		let origin = RuntimeOrigin::signed(ALICE);
+
+		// Create DID for Alice with BOB as controller
+		let expected_document = create_default_did(ALICE, BOB);
+
+		assert_noop!(
+			DID::update_did(origin, ALICE, None, None, None, None),
+			Error::<Test>::NotController
+		);
+
+		// verify DID is unchanged
+		assert_eq!(DID::dids(ALICE), Some(expected_document));
+	});
+}
+
+#[test]
+fn force_update_did_fails_if_did_does_not_exist() {
+	new_test_ext().execute_with(|| {
+		let origin = RuntimeOrigin::root();
+
+		assert_noop!(
+			DID::force_update_did(origin, ALICE, None, None, None, None),
+			Error::<Test>::DidNotFound
+		);
+	});
+}
+
+#[test]
+fn remove_did_fails_if_did_does_not_exist() {
+	new_test_ext().execute_with(|| {
+		let origin = RuntimeOrigin::signed(ALICE);
+
+		assert_noop!(
+			DID::remove_did(origin, ALICE),
+			Error::<Test>::DidNotFound
+		);
+	});
+}
+
+#[test]
+fn remove_did_fails_if_origin_is_not_controller() {
+	new_test_ext().execute_with(|| {
+		let origin = RuntimeOrigin::signed(ALICE);
+
+		// Create DID for Alice with BOB as controller
+		let expected_document = create_default_did(ALICE, BOB);
+
+		assert_noop!(
+			DID::remove_did(origin, ALICE),
+			Error::<Test>::NotController
+		);
+
+		// verify DID is not deleted
+		assert_eq!(DID::dids(ALICE), Some(expected_document));
+	});
+}
+
+// write test for remove_did fails if Service is Not In DId
+#[test]
+fn remove_did_fails_if_service_is_not_in_did() {
+	new_test_ext().execute_with(|| {
+		let origin = RuntimeOrigin::signed(ALICE);
+		let mut services = default_services();
+
+		let expected_document = create_default_did(ALICE, ALICE);
+
+		// service that does not exist
+		services[0].service_endpoint = bounded_vec![b'd', b'0'];
+
+		let to_remove_keys = hash_services(&services);
+
+		assert_noop!(
+			DID::remove_did_services(origin, ALICE, to_remove_keys),
+			Error::<Test>::ServiceNotInDid
+		);
+
+		// verify services are unchanged
+		assert_eq!(DID::dids(ALICE), Some(expected_document));
+	});
+}
+
+
+#[test]
+fn add_did_services_fails_if_too_many_services() {
+	new_test_ext().execute_with(|| {
+		let origin = RuntimeOrigin::signed(ALICE);
+		let controller = 1;
+		let authentication: H160 = H160::from([0u8; 20]);
+		let mut services = default_services();
+
+		create_default_did(ALICE, ALICE);
+
+		// modify the 3 services in services already
+		for i in 0..services.len() {
+			services[i].service_endpoint = bounded_vec![b'o', b'0' + i as u8];
+		}
+
+		// insert max amount of services (with increment indexes)
+		for i in 0..(<mock::Test as pallet::Config>::MaxServices::get() - services.len() as u8) {
+			services.try_push(ServiceInfo {
+				type_id: types::ServiceType::VerifiableCredentialFileStorage,
+				service_endpoint: bounded_vec![b'm', b'0' + i],
+			});
+		}
+
+		// try to add the services. MaxServices + default_services().len() == out of limit
+		assert_noop!(
+			DID::add_did_services(origin, ALICE, services),
+			Error::<Test>::TooManyServicesInDid
+		);
 	});
 }
