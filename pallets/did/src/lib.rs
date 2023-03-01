@@ -134,7 +134,7 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxCredentialsTypes: Get<u32>;
 
-		// Origin for priviledged actions
+		/// Origin for priviledged actions
 		type GovernanceOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 	}
 
@@ -198,7 +198,7 @@ pub mod pallet {
 			credentials: Vec<CredentialOf<T>>,
 			storage_key: HashOf<T>,
 		},
-		IssuerDeleted {
+		IssuerRemoved {
 			issuer: DidIdentifierOf<T>,
 		},
 		IssuerStatusReactived {
@@ -214,18 +214,25 @@ pub mod pallet {
 
 	#[pallet::error]
 	pub enum Error<T> {
+		/// Unable to add credential that already exists
 		CredentialAlreadyAdded,
+		/// Unable to find credential
 		CredentialDoesNotExist,
+		/// Unable to create issuer that already exists
 		IssuerAlreadyExists,
+		/// Unable to find issuer
 		IssuerDoesNotExist,
+		/// Issuer status is not Active
 		IssuerNotActive,
+		/// Issuer status is not Revoked
 		IssuerNotRevoked,
+		/// The origin is not an Issuer
 		NotIssuer,
+		/// The maximum number of Credentials has been excedeed
 		MaxCredentials,
-
 		/// Unable to create DID that already exists
 		DidAlreadyExists,
-		// Unable to find DID from DidIdentifier
+		/// Unable to find DID from DidIdentifier
 		DidNotFound,
 		/// The origin was not the controller of the DID
 		NotController,
@@ -685,7 +692,7 @@ impl<T: Config> Pallet<T> {
 				Error::<T>::IssuerNotRevoked
 			);
 
-			Self::deposit_event(Event::IssuerDeleted { issuer });
+			Self::deposit_event(Event::IssuerRemoved { issuer });
 			Ok(())
 		})
 	}
