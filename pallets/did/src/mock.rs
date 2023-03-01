@@ -106,9 +106,10 @@ impl pallet_collective::Config<CouncilCollective> for Test {
 
 parameter_types! {
 	pub const MaxString: u8 = 100;
-	pub const MaxHash: u32 = 512;
 	pub const MaxCredentialsTypes: u8 = 50;
-	pub const MaxServices: u32 = 10;
+	pub const MaxServices: u8 = 10;
+	pub const MaxHash: u32 = 512;
+	pub const DidDeposit: u64 = 5;
 }
 
 impl pallet_did::Config for Test {
