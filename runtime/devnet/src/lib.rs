@@ -1017,6 +1017,7 @@ mod benches {
 		[pallet_treasury, Treasury]
 		[pallet_membership, CouncilMembership]
 		[pallet_preimage, Preimage]
+		[pallet_did, DID]
 	);
 }
 
