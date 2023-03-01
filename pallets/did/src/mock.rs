@@ -28,6 +28,7 @@ use sp_runtime::{
 };
 
 use watr_common::{Balance, DidIdentifier};
+use watr_common::{Balance, DidIdentifier};
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;

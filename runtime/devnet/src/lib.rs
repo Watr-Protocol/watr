@@ -31,9 +31,9 @@ pub mod xcm_config;
 
 pub use watr_common::{
 	impls::{AccountIdOf, DealWithFees, ToStakingPot},
-	AccountId, AuraId, Balance, BlockNumber, Hash, Index, Signature, DidIdentifier, AVERAGE_ON_INITIALIZE_RATIO,
-	DAYS, HOURS, MAXIMUM_BLOCK_WEIGHT, MINUTES, NORMAL_DISPATCH_RATIO, SLOT_DURATION,
-	WEIGHT_PER_GAS,
+	AccountId, AuraId, Balance, BlockNumber, DidIdentifier, Hash, Index, Signature,
+	AVERAGE_ON_INITIALIZE_RATIO, DAYS, HOURS, MAXIMUM_BLOCK_WEIGHT, MINUTES, NORMAL_DISPATCH_RATIO,
+	SLOT_DURATION, WEIGHT_PER_GAS,
 };
 
 use cumulus_pallet_parachain_system::RelayNumberStrictlyIncreases;
@@ -731,20 +731,26 @@ impl pallet_motion::Config for Runtime {
 }
 
 parameter_types! {
-	pub const MaxString: u8 = 100;
-	pub const MaxCredentialsTypes: u8 = 50;
+	pub const MaxString: u32 = 100;
+	pub const MaxHash: u32 = 512;
+	pub const MaxCredentialsTypes: u32 = 50;
+	pub const MaxServices: u32 = 10;
 	pub const DidDeposit: Balance = 10 * WATRD;
 }
 
 impl pallet_did::Config for Runtime {
 	type RuntimeCall = RuntimeCall;
 	type RuntimeEvent = RuntimeEvent;
-	type DidIdentifier = DidIdentifier;
-	type DidDeposit = DidDeposit;
 	type Currency = Balances;
-	type GovernanceOrigin = MoreThanHalfCouncil;
+	type DidIdentifier = AccountId;
+	type AuthenticationAddress = H160;
+	type AssertionAddress = H160;
+	type DidDeposit = DidDeposit;
 	type MaxString = MaxString;
+	type MaxHash = MaxHash;
 	type MaxCredentialsTypes = MaxCredentialsTypes;
+	type MaxServices = MaxServices;
+	type GovernanceOrigin = MoreThanHalfCouncil;
 }
 
 parameter_types! {
@@ -1011,6 +1017,7 @@ mod benches {
 		[pallet_treasury, Treasury]
 		[pallet_membership, CouncilMembership]
 		[pallet_preimage, Preimage]
+		[pallet_did, DID]
 	);
 }
 
