@@ -170,14 +170,18 @@ fn add_credentials_type_works() {
 		);
 
 		let mut max_creds: Vec<BoundedVec<u8, MaxString>> = vec![];
-		for i in 3..50 {
+		let creds_limit = MaxCredentialsTypes::get();
+		for i in 3..creds_limit {
 			max_creds.push(bounded_vec![0, i]);
 		}
 
 		assert_ok!(DID::add_credentials_type(RuntimeOrigin::root(), max_creds.clone()));
 
 		assert_noop!(
-			DID::add_credentials_type(RuntimeOrigin::root(), vec![bounded_vec![0, 55]]),
+			DID::add_credentials_type(
+				RuntimeOrigin::root(),
+				vec![bounded_vec![0, creds_limit + 1]]
+			),
 			Error::<Test>::MaxCredentials
 		);
 
