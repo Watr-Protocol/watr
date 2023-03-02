@@ -82,137 +82,137 @@ benchmarks! {
 		assert_eq!(Did::get(T::DidIdentifier::from(caller)), Some(document));
 	}
 
-	// ---------------------------------------------
-	update_did {
-		/* code to set the initial state */
-	}: {
-		/* code to test the function benchmarked */
-	}
-	verify {
-		/* optional verification */
-		assert_eq!(true, true)
-	}
+	// // ---------------------------------------------
+	// update_did {
+	// 	/* code to set the initial state */
+	// }: {
+	// 	/* code to test the function benchmarked */
+	// }
+	// verify {
+	// 	/* optional verification */
+	// 	assert_eq!(true, true)
+	// }
 
-	// ---------------------------------------------
-	remove_did {
-		/* code to set the initial state */
-	}: {
-		/* code to test the function benchmarked */
-	}
-	verify {
-		/* optional verification */
-		assert_eq!(true, true)
-	}
+	// // ---------------------------------------------
+	// remove_did {
+	// 	/* code to set the initial state */
+	// }: {
+	// 	/* code to test the function benchmarked */
+	// }
+	// verify {
+	// 	/* optional verification */
+	// 	assert_eq!(true, true)
+	// }
 
-	// ---------------------------------------------
-	add_did_service {
-		/* code to set the initial state */
-	}: {
-		/* code to test the function benchmarked */
-	}
-	verify {
-		/* optional verification */
-		assert_eq!(true, true)
-	}
+	// // ---------------------------------------------
+	// add_did_service {
+	// 	/* code to set the initial state */
+	// }: {
+	// 	/* code to test the function benchmarked */
+	// }
+	// verify {
+	// 	/* optional verification */
+	// 	assert_eq!(true, true)
+	// }
 
-	// ---------------------------------------------
-	remove_did_service {
-		/* code to set the initial state */
-	}: {
-		/* code to test the function benchmarked */
-	}
-	verify {
-		/* optional verification */
-		assert_eq!(true, true)
-	}
+	// // ---------------------------------------------
+	// remove_did_service {
+	// 	/* code to set the initial state */
+	// }: {
+	// 	/* code to test the function benchmarked */
+	// }
+	// verify {
+	// 	/* optional verification */
+	// 	assert_eq!(true, true)
+	// }
 
-	// ---------------------------------------------
-	issue_credentials {
-		/* code to set the initial state */
-	}: {
-		/* code to test the function benchmarked */
-	}
-	verify {
-		/* optional verification */
-		assert_eq!(true, true)
-	}
+	// // ---------------------------------------------
+	// issue_credentials {
+	// 	/* code to set the initial state */
+	// }: {
+	// 	/* code to test the function benchmarked */
+	// }
+	// verify {
+	// 	/* optional verification */
+	// 	assert_eq!(true, true)
+	// }
 
-	// ---------------------------------------------
-	revoke_credentials {
-		/* code to set the initial state */
-	}: {
-		/* code to test the function benchmarked */
-	}
-	verify {
-		/* optional verification */
-		assert_eq!(true, true)
-	}
+	// // ---------------------------------------------
+	// revoke_credentials {
+	// 	/* code to set the initial state */
+	// }: {
+	// 	/* code to test the function benchmarked */
+	// }
+	// verify {
+	// 	/* optional verification */
+	// 	assert_eq!(true, true)
+	// }
 
-	// ---------------------------------------------
-	add_issuer {
-		/* code to set the initial state */
-	}: {
-		/* code to test the function benchmarked */
-	}
-	verify {
-		/* optional verification */
-		assert_eq!(true, true)
-	}
+	// // ---------------------------------------------
+	// add_issuer {
+	// 	/* code to set the initial state */
+	// }: {
+	// 	/* code to test the function benchmarked */
+	// }
+	// verify {
+	// 	/* optional verification */
+	// 	assert_eq!(true, true)
+	// }
 
-	// ---------------------------------------------
-	revoke_issuer {
-		/* code to set the initial state */
-	}: {
-		/* code to test the function benchmarked */
-	}
-	verify {
-		/* optional verification */
-		assert_eq!(true, true)
-	}
+	// // ---------------------------------------------
+	// revoke_issuer {
+	// 	/* code to set the initial state */
+	// }: {
+	// 	/* code to test the function benchmarked */
+	// }
+	// verify {
+	// 	/* optional verification */
+	// 	assert_eq!(true, true)
+	// }
 
-	// ---------------------------------------------
-	reactivate_issuer {
-		/* code to set the initial state */
-	}: {
-		/* code to test the function benchmarked */
-	}
-	verify {
-		/* optional verification */
-		assert_eq!(true, true)
-	}
+	// // ---------------------------------------------
+	// reactivate_issuer {
+	// 	/* code to set the initial state */
+	// }: {
+	// 	/* code to test the function benchmarked */
+	// }
+	// verify {
+	// 	/* optional verification */
+	// 	assert_eq!(true, true)
+	// }
 
-	// ---------------------------------------------
-	remove_issuer {
-		/* code to set the initial state */
-	}: {
-		/* code to test the function benchmarked */
-	}
-	verify {
-		/* optional verification */
-		assert_eq!(true, true)
-	}
+	// // ---------------------------------------------
+	// remove_issuer {
+	// 	/* code to set the initial state */
+	// }: {
+	// 	/* code to test the function benchmarked */
+	// }
+	// verify {
+	// 	/* optional verification */
+	// 	assert_eq!(true, true)
+	// }
 
-	// ---------------------------------------------
-	add_credentials_type {
-		/* code to set the initial state */
-	}: {
-		/* code to test the function benchmarked */
-	}
-	verify {
-		/* optional verification */
-		assert_eq!(true, true)
-	}
+	// // ---------------------------------------------
+	// add_credentials_type {
+	// 	/* code to set the initial state */
+	// }: {
+	// 	/* code to test the function benchmarked */
+	// }
+	// verify {
+	// 	/* optional verification */
+	// 	assert_eq!(true, true)
+	// }
 
-	// ---------------------------------------------
-	remove_credentials_type {
-		/* code to set the initial state */
-	}: {
-		/* code to test the function benchmarked */
-	}
-	verify {
-		/* optional verification */
-		assert_eq!(true, true)
-	}
+	// // ---------------------------------------------
+	// remove_credentials_type {
+	// 	/* code to set the initial state */
+	// }: {
+	// 	/* code to test the function benchmarked */
+	// }
+	// verify {
+	// 	/* optional verification */
+	// 	assert_eq!(true, true)
+	// }
 }
 
 // impl_benchmark_test_suite!(
