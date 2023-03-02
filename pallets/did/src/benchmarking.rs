@@ -24,13 +24,11 @@ fn issuer<T: Config>(i: u32) -> DidIdentifierOf<T> {
 	T::DidIdentifier::from(account)
 }
 
-fn authentication<T: Config>(i: u64) -> T::AuthenticationAddress
-{
+fn authentication<T: Config>(i: u64) -> T::AuthenticationAddress {
 	H160::from_low_u64_be(i).into()
 }
 
-fn assertion<T: Config>(i: u64) -> T::AssertionAddress
-{
+fn assertion<T: Config>(i: u64) -> T::AssertionAddress {
 	H160::from_low_u64_be(i).into()
 }
 
@@ -42,10 +40,7 @@ fn create_service<T: Config>(i: u32) -> ServiceInfo<T> {
 		service_endpoint.try_push(b);
 	}
 
-	ServiceInfo {
-		type_id: ServiceType::VerifiableCredentialFileStorage,
-		service_endpoint
-	}
+	ServiceInfo { type_id: ServiceType::VerifiableCredentialFileStorage, service_endpoint }
 }
 
 fn create_services<T: Config>(m: u32) -> (BoundedVec<ServiceInfo<T>, T::MaxServices>, BoundedVec<KeyIdOf<T>, T::MaxServices>) {
@@ -265,93 +260,93 @@ benchmarks! {
 		}
 	}
 
-	// ---------------------------------------------
-	issue_credentials {
-		/* code to set the initial state */
-	}: {
-		/* code to test the function benchmarked */
-	}
-	verify {
-		/* optional verification */
-		assert_eq!(true, true)
-	}
+	// // ---------------------------------------------
+	// issue_credentials {
+	// 	/* code to set the initial state */
+	// }: {
+	// 	/* code to test the function benchmarked */
+	// }
+	// verify {
+	// 	/* optional verification */
+	// 	assert_eq!(true, true)
+	// }
 
-	// ---------------------------------------------
-	revoke_credentials {
-		/* code to set the initial state */
-	}: {
-		/* code to test the function benchmarked */
-	}
-	verify {
-		/* optional verification */
-		assert_eq!(true, true)
-	}
+	// // ---------------------------------------------
+	// revoke_credentials {
+	// 	/* code to set the initial state */
+	// }: {
+	// 	/* code to test the function benchmarked */
+	// }
+	// verify {
+	// 	/* optional verification */
+	// 	assert_eq!(true, true)
+	// }
 
-	// ---------------------------------------------
-	add_issuer {
-		/* code to set the initial state */
-	}: {
-		/* code to test the function benchmarked */
-	}
-	verify {
-		/* optional verification */
-		assert_eq!(true, true)
-	}
+	// // ---------------------------------------------
+	// add_issuer {
+	// 	/* code to set the initial state */
+	// }: {
+	// 	/* code to test the function benchmarked */
+	// }
+	// verify {
+	// 	/* optional verification */
+	// 	assert_eq!(true, true)
+	// }
 
-	// ---------------------------------------------
-	revoke_issuer {
-		/* code to set the initial state */
-	}: {
-		/* code to test the function benchmarked */
-	}
-	verify {
-		/* optional verification */
-		assert_eq!(true, true)
-	}
+	// // ---------------------------------------------
+	// revoke_issuer {
+	// 	/* code to set the initial state */
+	// }: {
+	// 	/* code to test the function benchmarked */
+	// }
+	// verify {
+	// 	/* optional verification */
+	// 	assert_eq!(true, true)
+	// }
 
-	// ---------------------------------------------
-	reactivate_issuer {
-		/* code to set the initial state */
-	}: {
-		/* code to test the function benchmarked */
-	}
-	verify {
-		/* optional verification */
-		assert_eq!(true, true)
-	}
+	// // ---------------------------------------------
+	// reactivate_issuer {
+	// 	/* code to set the initial state */
+	// }: {
+	// 	/* code to test the function benchmarked */
+	// }
+	// verify {
+	// 	/* optional verification */
+	// 	assert_eq!(true, true)
+	// }
 
-	// ---------------------------------------------
-	remove_issuer {
-		/* code to set the initial state */
-	}: {
-		/* code to test the function benchmarked */
-	}
-	verify {
-		/* optional verification */
-		assert_eq!(true, true)
-	}
+	// // ---------------------------------------------
+	// remove_issuer {
+	// 	/* code to set the initial state */
+	// }: {
+	// 	/* code to test the function benchmarked */
+	// }
+	// verify {
+	// 	/* optional verification */
+	// 	assert_eq!(true, true)
+	// }
 
-	// ---------------------------------------------
-	add_credentials_type {
-		/* code to set the initial state */
-	}: {
-		/* code to test the function benchmarked */
-	}
-	verify {
-		/* optional verification */
-		assert_eq!(true, true)
-	}
+	// // ---------------------------------------------
+	// add_credentials_type {
+	// 	/* code to set the initial state */
+	// }: {
+	// 	/* code to test the function benchmarked */
+	// }
+	// verify {
+	// 	/* optional verification */
+	// 	assert_eq!(true, true)
+	// }
 
-	// ---------------------------------------------
-	remove_credentials_type {
-		/* code to set the initial state */
-	}: {
-		/* code to test the function benchmarked */
-	}
-	verify {
-		/* optional verification */
-		assert_eq!(true, true)
-	}
+	// // ---------------------------------------------
+	// remove_credentials_type {
+	// 	/* code to set the initial state */
+	// }: {
+	// 	/* code to test the function benchmarked */
+	// }
+	// verify {
+	// 	/* optional verification */
+	// 	assert_eq!(true, true)
+	// }
 }
 
 // impl_benchmark_test_suite!(

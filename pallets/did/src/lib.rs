@@ -30,7 +30,7 @@ mod verification;
 use crate::{
 	types::{
 		AssertionMethod, AuthenticationMethod, Document, IssuerInfo, IssuerStatus, Service,
-		ServiceInfo, ServiceType
+		ServiceInfo, ServiceType,
 	},
 	verification::DidSignature,
 };
@@ -43,9 +43,9 @@ use frame_support::{
 	BoundedVec, Parameter,
 };
 use frame_system::{ensure_signed, pallet_prelude::OriginFor};
+use sp_core::{H160, H256};
 use sp_runtime::{traits::Hash, ArithmeticError};
 use sp_std::prelude::*;
-use sp_core::{H160, H256};
 
 pub use pallet::*;
 use verification::DidVerifiableIdentifier;
@@ -112,10 +112,18 @@ pub mod pallet {
 			+ Into<Self::AccountId>;
 
 		/// Type for the authentication method used by a DID.
-		type AuthenticationAddress: Parameter + DidVerifiableIdentifier + MaxEncodedLen + From<H160> + From<H256>;
+		type AuthenticationAddress: Parameter
+			+ DidVerifiableIdentifier
+			+ MaxEncodedLen
+			+ From<H160>
+			+ From<H256>;
 
 		/// Type for the assertion method used by an Issuer DID.
-		type AssertionAddress: Parameter + DidVerifiableIdentifier + MaxEncodedLen + From<H160> + From<H256>;
+		type AssertionAddress: Parameter
+			+ DidVerifiableIdentifier
+			+ MaxEncodedLen
+			+ From<H160>
+			+ From<H256>;
 
 		/// The amount held on deposit for a DID creation
 		#[pallet::constant]
@@ -137,7 +145,7 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxCredentialsTypes: Get<u32>;
 
-		// Origin for priviledged actions
+		/// Origin for priviledged actions
 		type GovernanceOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 	}
 
@@ -201,7 +209,7 @@ pub mod pallet {
 			credentials: Vec<CredentialOf<T>>,
 			storage_key: HashOf<T>,
 		},
-		IssuerDeleted {
+		IssuerRemoved {
 			issuer: DidIdentifierOf<T>,
 		},
 		IssuerStatusReactived {
@@ -217,18 +225,25 @@ pub mod pallet {
 
 	#[pallet::error]
 	pub enum Error<T> {
+		/// Unable to add credential that already exists
 		CredentialAlreadyAdded,
+		/// Unable to find credential
 		CredentialDoesNotExist,
+		/// Unable to create issuer that already exists
 		IssuerAlreadyExists,
+		/// Unable to find issuer
 		IssuerDoesNotExist,
+		/// Issuer status is not Active
 		IssuerNotActive,
+		/// Issuer status is not Revoked
 		IssuerNotRevoked,
+		/// The origin is not an Issuer
 		NotIssuer,
+		/// The maximum number of Credentials has been excedeed
 		MaxCredentials,
-
 		/// Unable to create DID that already exists
 		DidAlreadyExists,
-		// Unable to find DID from DidIdentifier
+		/// Unable to find DID from DidIdentifier
 		DidNotFound,
 		/// The origin was not the controller of the DID
 		NotController,
@@ -618,6 +633,10 @@ impl<T: Config> Pallet<T> {
 			document_services_keys
 				.try_insert(pos, service_key.clone())
 				.map_err(|_| Error::<T>::TooManyServicesInDid)?;
+			let pos = services_keys
+				.binary_search(&service_key)
+				.err()
+				.ok_or(Error::<T>::ServiceAlreadyInDid)?;
 			services_keys
 				.try_insert(pos, service_key.clone())
 				.map_err(|_| Error::<T>::TooManyServicesInDid)?;
@@ -688,7 +707,7 @@ impl<T: Config> Pallet<T> {
 				Error::<T>::IssuerNotRevoked
 			);
 
-			Self::deposit_event(Event::IssuerDeleted { issuer });
+			Self::deposit_event(Event::IssuerRemoved { issuer });
 			Ok(())
 		})
 	}
@@ -705,7 +724,7 @@ impl<T: Config> Pallet<T> {
 		document: &Document<T>,
 	) -> DispatchResult {
 		T::GovernanceOrigin::ensure_origin(origin.clone())
-			.map_or(Self::ensure_controller(ensure_signed(origin)?, document), |_| Ok(()))
+			.map_or_else(|_| Self::ensure_controller(ensure_signed(origin)?, document), |_| Ok(()))
 	}
 
 	fn ensure_valid_credentials(credentials: &Vec<CredentialOf<T>>) -> DispatchResult {

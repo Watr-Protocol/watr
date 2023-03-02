@@ -20,11 +20,11 @@ use frame_support::{
 	parameter_types,
 	traits::{ConstU16, ConstU64},
 };
-use sp_core::H256;
+use sp_core::{H160, H256};
 use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup},
-	BuildStorage,
+	AccountId32, BuildStorage,
 };
 
 use watr_common::{Balance, DidIdentifier};
@@ -40,9 +40,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Event<T>},
-
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-		Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
 		DID: pallet_did,
 	}
 );
@@ -87,49 +85,40 @@ impl pallet_balances::Config for Test {
 }
 
 parameter_types! {
-	pub CouncilMotionDuration: u64 = 7;
-	pub const CouncilMaxProposals: u32 = 100;
-	pub const CouncilMaxMembers: u32 = 100;
-}
-
-pub type CouncilCollective = pallet_collective::Instance1;
-impl pallet_collective::Config<CouncilCollective> for Test {
-	type RuntimeOrigin = RuntimeOrigin;
-	type Proposal = RuntimeCall;
-	type RuntimeEvent = RuntimeEvent;
-	type MotionDuration = CouncilMotionDuration;
-	type MaxProposals = CouncilMaxProposals;
-	type MaxMembers = CouncilMaxMembers;
-	type DefaultVote = pallet_collective::PrimeDefaultVote;
-	type WeightInfo = ();
-}
-
-parameter_types! {
 	pub const MaxString: u8 = 100;
 	pub const MaxCredentialsTypes: u8 = 50;
+	pub const MaxServices: u8 = 10;
+	pub const MaxHash: u32 = 512;
+	pub const DidDeposit: u64 = 5;
 }
 
 impl pallet_did::Config for Test {
 	type RuntimeCall = RuntimeCall;
 	type RuntimeEvent = RuntimeEvent;
-	type DidIdentifier = DidIdentifier;
-	type DidDeposit = ConstU64<5>;
+	type DidIdentifier = u64;
+	type AuthenticationAddress = H160;
+	type AssertionAddress = H160;
+	type DidDeposit = DidDeposit;
 	type Currency = Balances;
-	type GovernanceOrigin =
-		pallet_collective::EnsureProportionMoreThan<u64, CouncilCollective, 1, 2>;
+	type GovernanceOrigin = frame_system::EnsureRoot<u64>;
 	type MaxString = MaxString;
+	type MaxHash = MaxHash;
 	type MaxCredentialsTypes = MaxCredentialsTypes;
+	type MaxServices = MaxServices;
 }
+
+pub(crate) const ALICE: u64 = 1;
+pub(crate) const BOB: u64 = 1;
+pub(crate) const ACCOUNT_00: u64 = 0;
+pub(crate) const ACCOUNT_01: u64 = 1;
+pub(crate) const ACCOUNT_02: u64 = 2;
+pub(crate) const ACCOUNT_03: u64 = 3;
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut ext: sp_io::TestExternalities = GenesisConfig {
 		balances: pallet_balances::GenesisConfig::<Test> {
 			balances: vec![(1, 10), (2, 20), (3, 30), (4, 40), (5, 50)],
-		},
-		council: pallet_collective::GenesisConfig {
-			members: vec![1, 2, 3, 4, 5],
-			phantom: Default::default(),
 		},
 	}
 	.build_storage()
