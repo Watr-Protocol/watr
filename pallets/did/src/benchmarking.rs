@@ -1,10 +1,7 @@
 use crate::*;
-use frame_benchmarking::{benchmarks, whitelisted_caller, whitelist_account, account};
+use frame_benchmarking::{account, benchmarks, whitelist_account, whitelisted_caller};
+use frame_support::{assert_ok, traits::OriginTrait};
 use frame_system::RawOrigin;
-use frame_support::{
-	assert_ok,
-	traits::{OriginTrait},
-};
 use sp_core::H160;
 use sp_runtime::traits::Bounded;
 
@@ -43,9 +40,11 @@ fn create_service<T: Config>(i: u32) -> ServiceInfo<T> {
 	ServiceInfo { type_id: ServiceType::VerifiableCredentialFileStorage, service_endpoint }
 }
 
-fn create_services<T: Config>(m: u32) -> (BoundedVec<ServiceInfo<T>, T::MaxServices>, BoundedVec<KeyIdOf<T>, T::MaxServices>) {
+fn create_services<T: Config>(
+	m: u32,
+) -> (BoundedVec<ServiceInfo<T>, T::MaxServices>, BoundedVec<KeyIdOf<T>, T::MaxServices>) {
 	let mut services: BoundedVec<ServiceInfo<T>, T::MaxServices> = BoundedVec::default();
-	for i in 0 .. m {
+	for i in 0..m {
 		let service = create_service::<T>(i);
 		services.try_push(service);
 	}
@@ -53,15 +52,13 @@ fn create_services<T: Config>(m: u32) -> (BoundedVec<ServiceInfo<T>, T::MaxServi
 	let mut services_keys: BoundedVec<KeyIdOf<T>, T::MaxServices> = BoundedVec::default();
 	for service in &services {
 		let key = T::Hashing::hash_of(&service);
-		let pos = services_keys
-			.binary_search(&key).err().unwrap();
-		services_keys
-			.try_insert(pos, key.clone());
+		let pos = services_keys.binary_search(&key).err().unwrap();
+		services_keys.try_insert(pos, key.clone());
 	}
 	(services, services_keys)
 }
 
-fn create_did_document<T: Config> (
+fn create_did_document<T: Config>(
 	controller_id: u32,
 	authentication_id: u64,
 	assertion_id: u64,
