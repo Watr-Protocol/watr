@@ -25,10 +25,7 @@ use frame_support::{
 use frame_system::{EventRecord, Phase};
 use mock::{RuntimeCall, RuntimeEvent};
 use sp_core::{ConstU8, H160, H256};
-use sp_runtime::{
-	bounded_vec,
-	traits::{BlakeTwo256, Hash},
-};
+use sp_runtime::traits::{BlakeTwo256, Hash};
 
 fn record(event: RuntimeEvent) -> EventRecord<RuntimeEvent, H256> {
 	EventRecord { phase: Phase::Initialization, event, topics: vec![] }
@@ -117,7 +114,7 @@ fn assert_services_do_not_exist(
 	}
 }
 
-// ** DID Document Tests Works ** 
+// ** DID Document Tests Works **
 
 #[test]
 fn create_did_works() {
