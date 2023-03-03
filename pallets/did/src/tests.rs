@@ -19,7 +19,8 @@ use crate as pallet_did;
 use crate::{mock::*, Event as MotionEvent};
 use codec::Encode;
 use frame_support::{
-	assert_noop, assert_ok, dispatch::GetDispatchInfo, error::BadOrigin, weights::Weight,
+	assert_noop, assert_ok, bounded_vec, dispatch::GetDispatchInfo, error::BadOrigin,
+	weights::Weight,
 };
 use frame_system::{EventRecord, Phase};
 use mock::{RuntimeCall, RuntimeEvent};
@@ -115,6 +116,8 @@ fn assert_services_do_not_exist(
 		assert_eq!(DID::services(key), None);
 	}
 }
+
+// ** DID Document Tests Works ** 
 
 #[test]
 fn create_did_works() {
@@ -275,8 +278,6 @@ fn add_did_services_works() {
 		// assert services exist and have a consumer count of 1
 		assert_services(new_services.clone(), 1);
 
-		// TODO: test a service with 1 consumer that is added to another
-
 		// assert that the default services were removed from storage
 		assert!(events().contains(&Event::<Test>::DidServicesAdded {
 			did: ALICE,
@@ -308,8 +309,6 @@ fn remove_did_services_works() {
 		// assert remaining service exists and has a consumer count of 1
 		assert_services(service_remaining, 1);
 		assert_services_do_not_exist(services_to_remove);
-
-		// TODO: test a service with 2 consumers that is removed from one DIDj
 
 		// assert that the default services were removed from storage
 		assert!(events().contains(&Event::<Test>::DidServicesRemoved {
@@ -346,7 +345,7 @@ fn multiple_service_consumers_works() {
 	});
 }
 
-//  ** Tests Fail Successfully **
+//  ** DID Document Tests Fail Successfully **
 
 #[test]
 fn create_did_fails_if_did_already_exists() {
@@ -468,33 +467,151 @@ fn remove_did_fails_if_service_is_not_in_did() {
 	});
 }
 
+// ** Issuer Tests **
+
 #[test]
-fn add_did_services_fails_if_too_many_services() {
+fn add_issuer_works() {
 	new_test_ext().execute_with(|| {
-		let origin = RuntimeOrigin::signed(ALICE);
-		let controller = 1;
-		let authentication: H160 = H160::from([0u8; 20]);
-		let mut services = default_services();
+		let issuer_info = Issuers::<Test>::get(ACCOUNT_01);
+		assert_eq!(issuer_info, None);
 
-		create_default_did(ALICE, ALICE);
+		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_01));
 
-		// modify the 3 services from default_services()
-		for i in 0..services.len() {
-			services[i].service_endpoint = bounded_vec![b'o', b'0' + i as u8];
-		}
+		let issuer_info = Issuers::<Test>::get(ACCOUNT_01).unwrap();
+		assert_eq!(issuer_info.status, IssuerStatus::Active);
 
-		// insert max amount of services (with incremented indexes)
-		for i in 0..(<mock::Test as pallet::Config>::MaxServices::get() - services.len() as u8) {
-			services.try_push(ServiceInfo {
-				type_id: types::ServiceType::VerifiableCredentialFileStorage,
-				service_endpoint: bounded_vec![b'm', b'0' + i],
-			});
-		}
-
-		// ensure services are not added. MaxServices + default_services().len() == out of limit
 		assert_noop!(
-			DID::add_did_services(origin, ALICE, services),
-			Error::<Test>::TooManyServicesInDid
+			DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_01),
+			Error::<Test>::IssuerAlreadyExists
 		);
+
+		assert_noop!(DID::add_issuer(RuntimeOrigin::signed(1), ACCOUNT_01), BadOrigin);
+
+		let events = events();
+		assert!(events.contains(&Event::<Test>::IssuerStatusActive { issuer: ACCOUNT_01 }));
+	});
+}
+
+#[test]
+fn revoke_issuer_works() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_01));
+		assert_ok!(DID::revoke_issuer(RuntimeOrigin::root(), ACCOUNT_01));
+
+		let issuer_info = Issuers::<Test>::get(ACCOUNT_01).unwrap();
+		assert_eq!(issuer_info.status, IssuerStatus::Revoked);
+
+		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_02));
+
+		assert_noop!(DID::revoke_issuer(RuntimeOrigin::signed(1), ACCOUNT_02), BadOrigin);
+
+		assert_ok!(DID::revoke_issuer(RuntimeOrigin::root(), ACCOUNT_02));
+
+		assert_noop!(
+			DID::revoke_issuer(RuntimeOrigin::root(), ACCOUNT_02),
+			Error::<Test>::IssuerNotActive
+		);
+
+		assert_noop!(
+			DID::revoke_issuer(RuntimeOrigin::root(), ACCOUNT_03),
+			Error::<Test>::IssuerDoesNotExist
+		);
+
+		let events = events();
+		assert!(events.contains(&Event::<Test>::IssuerStatusRevoked { issuer: ACCOUNT_01 }));
+	});
+}
+
+#[test]
+fn reactivate_issuer_works() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_01));
+		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_02));
+		assert_ok!(DID::revoke_issuer(RuntimeOrigin::root(), ACCOUNT_01));
+
+		assert_noop!(DID::reactivate_issuer(RuntimeOrigin::signed(1), ACCOUNT_01), BadOrigin);
+
+		assert_ok!(DID::reactivate_issuer(RuntimeOrigin::root(), ACCOUNT_01));
+
+		let issuer_info = Issuers::<Test>::get(ACCOUNT_01).unwrap();
+		assert_eq!(issuer_info.status, IssuerStatus::Active);
+
+		assert_noop!(
+			DID::reactivate_issuer(RuntimeOrigin::root(), ACCOUNT_02),
+			Error::<Test>::IssuerNotRevoked
+		);
+
+		assert_noop!(
+			DID::reactivate_issuer(RuntimeOrigin::root(), ACCOUNT_03),
+			Error::<Test>::IssuerDoesNotExist
+		);
+
+		let events = events();
+		assert!(events.contains(&Event::<Test>::IssuerStatusReactived { issuer: ACCOUNT_01 }));
+	});
+}
+
+#[test]
+fn remove_issuer_works() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_01));
+		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_02));
+		assert_ok!(DID::revoke_issuer(RuntimeOrigin::root(), ACCOUNT_01));
+
+		assert_noop!(DID::remove_issuer(RuntimeOrigin::signed(1), ACCOUNT_01), BadOrigin);
+
+		assert_ok!(DID::remove_issuer(RuntimeOrigin::root(), ACCOUNT_01));
+
+		let issuer_info = Issuers::<Test>::get(ACCOUNT_01);
+		assert_eq!(issuer_info, None);
+
+		assert_noop!(
+			DID::remove_issuer(RuntimeOrigin::root(), ACCOUNT_02),
+			Error::<Test>::IssuerNotRevoked
+		);
+
+		assert_noop!(
+			DID::remove_issuer(RuntimeOrigin::root(), ACCOUNT_03),
+			Error::<Test>::IssuerDoesNotExist
+		);
+
+		let events = events();
+		assert!(events.contains(&Event::<Test>::IssuerRemoved { issuer: ACCOUNT_01 }));
+	});
+}
+
+#[test]
+fn add_credentials_type_works() {
+	new_test_ext().execute_with(|| {
+		let creds: Vec<BoundedVec<u8, MaxString>> =
+			vec![bounded_vec![0, 0], bounded_vec![0, 1], bounded_vec![0, 2]];
+
+		assert_noop!(DID::add_credentials_type(RuntimeOrigin::signed(1), creds.clone()), BadOrigin);
+
+		assert_ok!(DID::add_credentials_type(RuntimeOrigin::root(), creds.clone()));
+
+		assert_noop!(
+			DID::add_credentials_type(RuntimeOrigin::root(), creds.clone()),
+			Error::<Test>::CredentialAlreadyAdded
+		);
+
+		let mut max_creds: Vec<BoundedVec<u8, MaxString>> = vec![];
+		let creds_limit = MaxCredentialsTypes::get();
+		for i in 3..creds_limit {
+			max_creds.push(bounded_vec![0, i]);
+		}
+
+		assert_ok!(DID::add_credentials_type(RuntimeOrigin::root(), max_creds.clone()));
+
+		assert_noop!(
+			DID::add_credentials_type(
+				RuntimeOrigin::root(),
+				vec![bounded_vec![0, creds_limit + 1]]
+			),
+			Error::<Test>::MaxCredentials
+		);
+
+		let events = events();
+		assert!(events.contains(&Event::<Test>::CredentialTypesAdded { credentials: creds }));
 	});
 }

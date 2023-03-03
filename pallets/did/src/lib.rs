@@ -21,6 +21,8 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
 mod errors;
 mod types;
 mod verification;
@@ -28,7 +30,7 @@ mod verification;
 use crate::{
 	types::{
 		AssertionMethod, AuthenticationMethod, Document, IssuerInfo, IssuerStatus, Service,
-		ServiceInfo,
+		ServiceInfo, ServiceType,
 	},
 	verification::DidSignature,
 };
@@ -41,6 +43,7 @@ use frame_support::{
 	BoundedVec, Parameter,
 };
 use frame_system::{ensure_signed, pallet_prelude::OriginFor};
+use sp_core::{H160, H256};
 use sp_runtime::{traits::Hash, ArithmeticError};
 use sp_std::prelude::*;
 
@@ -109,10 +112,18 @@ pub mod pallet {
 			+ Into<Self::AccountId>;
 
 		/// Type for the authentication method used by a DID.
-		type AuthenticationAddress: Parameter + DidVerifiableIdentifier + MaxEncodedLen;
+		type AuthenticationAddress: Parameter
+			+ DidVerifiableIdentifier
+			+ MaxEncodedLen
+			+ From<H160>
+			+ From<H256>;
 
 		/// Type for the assertion method used by an Issuer DID.
-		type AssertionAddress: Parameter + DidVerifiableIdentifier + MaxEncodedLen;
+		type AssertionAddress: Parameter
+			+ DidVerifiableIdentifier
+			+ MaxEncodedLen
+			+ From<H160>
+			+ From<H256>;
 
 		/// The amount held on deposit for a DID creation
 		#[pallet::constant]
@@ -134,7 +145,7 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxCredentialsTypes: Get<u32>;
 
-		// Origin for priviledged actions
+		/// Origin for priviledged actions
 		type GovernanceOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 	}
 
@@ -196,9 +207,15 @@ pub mod pallet {
 			issuer: DidIdentifierOf<T>,
 			did: DidIdentifierOf<T>,
 			credentials: Vec<CredentialOf<T>>,
-			storage_key: HashOf<T>,
+			verifiable_credential_hash: HashOf<T>,
 		},
-		IssuerDeleted {
+		CredentialsRevoked {
+			issuer: DidIdentifierOf<T>,
+			did: DidIdentifierOf<T>,
+			credentials: Vec<CredentialOf<T>>,
+			verifiable_credential_hash: HashOf<T>,
+		},
+		IssuerRemoved {
 			issuer: DidIdentifierOf<T>,
 		},
 		IssuerStatusReactived {
@@ -214,18 +231,25 @@ pub mod pallet {
 
 	#[pallet::error]
 	pub enum Error<T> {
+		/// Unable to add credential that already exists
 		CredentialAlreadyAdded,
+		/// Unable to find credential
 		CredentialDoesNotExist,
+		/// Unable to create issuer that already exists
 		IssuerAlreadyExists,
+		/// Unable to find issuer
 		IssuerDoesNotExist,
+		/// Issuer status is not Active
 		IssuerNotActive,
+		/// Issuer status is not Revoked
 		IssuerNotRevoked,
+		/// The origin is not an Issuer
 		NotIssuer,
+		/// The maximum number of Credentials has been excedeed
 		MaxCredentials,
-
 		/// Unable to create DID that already exists
 		DidAlreadyExists,
-		// Unable to find DID from DidIdentifier
+		/// Unable to find DID from DidIdentifier
 		DidNotFound,
 		/// The origin was not the controller of the DID
 		NotController,
@@ -392,22 +416,52 @@ pub mod pallet {
 		#[pallet::weight(1000000)]
 		pub fn issue_credentials(
 			origin: OriginFor<T>,
-			did: DidIdentifierOf<T>,
+			issuer_did: DidIdentifierOf<T>,
+			subject_did: DidIdentifierOf<T>,
 			credentials: Vec<CredentialOf<T>>,
-			storage_key: HashOf<T>,
+			verifiable_credential_hash: HashOf<T>,
 		) -> DispatchResult {
-			let issuer = ensure_signed(origin)?;
-			let issuer_did = T::DidIdentifier::from(issuer);
+			let controller = ensure_signed(origin)?;
 
+			// Ensure origin is the issuer's controller
+			let document = Did::<T>::get(&issuer_did).ok_or(Error::<T>::DidNotFound)?;
+			Self::ensure_controller(controller, &document)?;
+
+			// Ensure Credential types exist
 			ensure!(Issuers::<T>::contains_key(&issuer_did), Error::<T>::NotIssuer);
-
 			Self::ensure_valid_credentials(&credentials)?;
+
+			// Check that subject DID exist
+			ensure!(!Did::<T>::contains_key(subject_did.clone()), Error::<T>::DidNotFound);
 
 			Self::deposit_event(Event::CredentialsIssued {
 				issuer: issuer_did,
-				did,
+				did: subject_did,
 				credentials,
-				storage_key,
+				verifiable_credential_hash,
+			});
+			Ok(())
+		}
+
+		#[pallet::weight(1000000)]
+		pub fn revoke_credentials(
+			origin: OriginFor<T>,
+			issuer_did: DidIdentifierOf<T>,
+			subject_did: DidIdentifierOf<T>,
+			credentials: Vec<CredentialOf<T>>,
+			verifiable_credential_hash: HashOf<T>,
+		) -> DispatchResult {
+			let controller = ensure_signed(origin)?;
+
+			// Ensure origin is the issuer's controller
+			let document = Did::<T>::get(&issuer_did).ok_or(Error::<T>::DidNotFound)?;
+			Self::ensure_controller(controller, &document)?;
+
+			Self::deposit_event(Event::CredentialsIssued {
+				issuer: issuer_did,
+				did: subject_did,
+				credentials,
+				verifiable_credential_hash,
 			});
 			Ok(())
 		}
@@ -690,7 +744,7 @@ impl<T: Config> Pallet<T> {
 				Error::<T>::IssuerNotRevoked
 			);
 
-			Self::deposit_event(Event::IssuerDeleted { issuer });
+			Self::deposit_event(Event::IssuerRemoved { issuer });
 			Ok(())
 		})
 	}

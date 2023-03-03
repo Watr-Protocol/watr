@@ -109,10 +109,10 @@ impl pallet_did::Config for Test {
 
 pub(crate) const ALICE: u64 = 1;
 pub(crate) const BOB: u64 = 2;
-pub(crate) const ACCOUNT_00: AccountId32 = AccountId32::new([1u8; 32]);
-pub(crate) const ACCOUNT_01: AccountId32 = AccountId32::new([2u8; 32]);
-pub(crate) const ACCOUNT_02: AccountId32 = AccountId32::new([3u8; 32]);
-pub(crate) const ACCOUNT_03: AccountId32 = AccountId32::new([4u8; 32]);
+pub(crate) const ACCOUNT_00: u64 = 0;
+pub(crate) const ACCOUNT_01: u64 = 1;
+pub(crate) const ACCOUNT_02: u64 = 2;
+pub(crate) const ACCOUNT_03: u64 = 3;
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
