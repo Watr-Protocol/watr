@@ -1,11 +1,11 @@
 use crate::*;
 use frame_benchmarking::{account, benchmarks, whitelist_account, whitelisted_caller};
-use frame_support::{assert_ok, traits::OriginTrait};
+use frame_support::{assert_ok};
 use frame_system::RawOrigin;
 use sp_core::H160;
 use sp_runtime::traits::Bounded;
 
-use super::{Pallet as DID, *};
+use super::{Pallet as DID, types::{ServiceType}};
 
 const SEED: u32 = 0;
 
@@ -29,31 +29,34 @@ fn assertion<T: Config>(i: u64) -> T::AssertionAddress {
 	H160::from_low_u64_be(i).into()
 }
 
-fn create_service<T: Config>(i: u32) -> ServiceInfo<T> {
+fn create_service<T: Config>(i: u32, seed: u8) -> ServiceInfo<T> {
 	let mut service_endpoint = BoundedVec::default();
 	let service = i.to_be_bytes();
 
 	for b in service {
-		service_endpoint.try_push(b);
+		let _ = service_endpoint.try_push(b);
 	}
+
+	let _ = service_endpoint.try_push(seed);
 
 	ServiceInfo { type_id: ServiceType::VerifiableCredentialFileStorage, service_endpoint }
 }
 
 fn create_services<T: Config>(
-	m: u32,
+	i: u32,
+	seed: u8
 ) -> (BoundedVec<ServiceInfo<T>, T::MaxServices>, BoundedVec<KeyIdOf<T>, T::MaxServices>) {
 	let mut services: BoundedVec<ServiceInfo<T>, T::MaxServices> = BoundedVec::default();
-	for i in 0..m {
-		let service = create_service::<T>(i);
-		services.try_push(service);
+	for j in 0..i {
+		let service = create_service::<T>(j, seed);
+		let _ = services.try_push(service);
 	}
 
 	let mut services_keys: BoundedVec<KeyIdOf<T>, T::MaxServices> = BoundedVec::default();
 	for service in &services {
 		let key = T::Hashing::hash_of(&service);
 		let pos = services_keys.binary_search(&key).err().unwrap();
-		services_keys.try_insert(pos, key.clone());
+		let _ = services_keys.try_insert(pos, key.clone());
 	}
 	(services, services_keys)
 }
@@ -87,8 +90,9 @@ benchmarks! {
 		let controller_id = 1;
 		let authentication_id = 1;
 		let assertion_id = 1;
+		let services_generator_seed = 1;
 
-		let (services, services_keys) = create_services::<T>(m);
+		let (services, services_keys) = create_services::<T>(m, services_generator_seed);
 		let document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &services_keys);
 
 		let did: T::AccountId = whitelisted_caller();
@@ -107,14 +111,16 @@ benchmarks! {
 	}
 
 	update_did {
-		let n in 0 .. T::MaxServices::get(); // Existing services with consumer = 1 to be removed
 		let m in 0 .. T::MaxServices::get(); // New services to be added
+		let n in 0 .. T::MaxServices::get(); // Existing services with consumer = 1 to be removed
 
 		// Dependancy - Create a DID with its document
 		let mut controller_id = 1;
 		let mut authentication_id = 1;
 		let mut assertion_id = 1;
-		let (existing_services, existing_services_keys) = create_services::<T>(n);
+		let mut services_generator_seed = 1;
+
+		let (existing_services, existing_services_keys) = create_services::<T>(n, services_generator_seed);
 		let existing_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
 		let did: T::AccountId = whitelisted_caller();
 		let did_origin = RawOrigin::Signed(did.clone());
@@ -136,7 +142,9 @@ benchmarks! {
 		controller_id = 2;
 		authentication_id = 2;
 		assertion_id = 2;
-		let (new_services, new_services_keys) = create_services::<T>(m);
+		services_generator_seed = 2;
+
+		let (new_services, new_services_keys) = create_services::<T>(m, services_generator_seed);
 		let new_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &new_services_keys);
 	}: _(
 			controller_origin,
@@ -153,13 +161,15 @@ benchmarks! {
 
 	// ---------------------------------------------
 	remove_did {
-		let n in 0 .. T::MaxServices::get(); // Existing services with consumers = 1 to be removed
+		let m in 0 .. T::MaxServices::get(); // Existing services with consumers = 1 to be removed
 
 		// Dependancy - Create a DID with its document
 		let controller_id = 1;
 		let authentication_id = 1;
 		let assertion_id = 1;
-		let (existing_services, existing_services_keys) = create_services::<T>(n);
+		let services_generator_seed = 1;
+
+		let (existing_services, existing_services_keys) = create_services::<T>(m, services_generator_seed);
 		let existing_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
 		let did: T::AccountId = whitelisted_caller();
 		let did_origin = RawOrigin::Signed(did.clone());
@@ -185,14 +195,17 @@ benchmarks! {
 
 	// ---------------------------------------------
 	add_did_services {
-		let n = 0; // No existing services
 		let m in 0 .. T::MaxServices::get(); // New services to be added
+		let n in 0 .. T::MaxServices::get(); // Existing services
 
 		// Dependancy - Create a DID with its document
-		let mut controller_id = 1;
-		let mut authentication_id = 1;
-		let mut assertion_id = 1;
-		let (existing_services, existing_services_keys) = create_services::<T>(n);
+		let controller_id = 1;
+		let authentication_id = 1;
+		let assertion_id = 1;
+		let mut services_generator_seed = 1;
+		let i = if n + m > T::MaxServices::get() { T::MaxServices::get() - m } else { n };
+
+		let (existing_services, mut existing_services_keys) = create_services::<T>(i, services_generator_seed);
 		let existing_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
 		let did: T::AccountId = whitelisted_caller();
 		let did_origin = RawOrigin::Signed(did.clone());
@@ -211,8 +224,17 @@ benchmarks! {
 		T::Currency::make_free_balance_be(&controller, BalanceOf::<T>::max_value());
 
 		// Generate new services to be added
-		let (new_services, new_services_keys) = create_services::<T>(m);
-		let new_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &new_services_keys);
+		services_generator_seed = 2;
+		let (new_services, new_services_keys) = create_services::<T>(m, services_generator_seed);
+		// Concat existing services with new ones
+		for service_key in new_services_keys.clone() {
+			let pos = existing_services_keys
+				.binary_search(&service_key)
+				.err().unwrap();
+			let _ = existing_services_keys.try_insert(pos, service_key.clone());
+		}
+
+		let new_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
 
 	}: _(controller_origin, T::DidIdentifier::from(did.clone()), new_services)
 	verify {
@@ -222,14 +244,15 @@ benchmarks! {
 
 	// ---------------------------------------------
 	remove_did_services {
-		let n in 0 .. T::MaxServices::get(); // Existing services with consumers = 1 to be removed
 		let m in 0 .. T::MaxServices::get(); // Services to be removed
+		let n in 0 .. T::MaxServices::get(); // Existing services
 
 		// Dependancy - Create a DID with its document
 		let controller_id = 1;
 		let authentication_id = 1;
 		let assertion_id = 1;
-		let (existing_services, existing_services_keys) = create_services::<T>(n);
+		let services_generator_seed = 1;
+		let (existing_services, mut existing_services_keys) = create_services::<T>(n, services_generator_seed);
 		let existing_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
 		let did: T::AccountId = whitelisted_caller();
 		let did_origin = RawOrigin::Signed(did.clone());
@@ -248,13 +271,24 @@ benchmarks! {
 		T::Currency::make_free_balance_be(&controller, BalanceOf::<T>::max_value());
 
 		// Generate services to be removed
-		let mut i = if m <= n { m } else { 0 };
-		let (services_to_remove, services_keys_to_remove) = create_services::<T>(i);
+		let i = if m <= n { m } else { 0 };
+		let (services_to_remove, services_keys_to_remove) = create_services::<T>(i, services_generator_seed);
+		// Substract services to remove from existing services
+		for service_key in services_keys_to_remove.clone() {
+			let pos = existing_services_keys
+				.binary_search(&service_key)
+				.ok();
+			if pos.is_some() {
+				let _ = existing_services_keys.remove(pos.unwrap());
+			}
+		}
+
+		let new_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
+
 	}: _(controller_origin, T::DidIdentifier::from(did.clone()), services_keys_to_remove.clone())
 	verify {
-		if m <= n {
-			assert_last_event::<T>(Event::DidServicesRemoved { did: T::DidIdentifier::from(did), removed_services: services_keys_to_remove }.into());
-		}
+		assert_eq!(Did::get(T::DidIdentifier::from(did.clone())), Some(new_document));
+		assert_last_event::<T>(Event::DidServicesRemoved { did: T::DidIdentifier::from(did), removed_services: services_keys_to_remove }.into());
 	}
 
 	// // ---------------------------------------------
