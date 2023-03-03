@@ -612,3 +612,38 @@ fn add_credentials_type_works() {
 		assert!(events.contains(&Event::<Test>::CredentialTypesAdded { credentials: creds }));
 	});
 }
+
+#[test]
+fn remove_credentials_type_works() {
+	new_test_ext().execute_with(|| {
+		let cred_x: Vec<BoundedVec<u8, MaxString>> = vec![bounded_vec![0, 1], bounded_vec![0, 2]];
+		assert_ok!(DID::add_credentials_type(RuntimeOrigin::root(), cred_x.clone()));
+
+		assert_noop!(
+			DID::remove_credentials_type(RuntimeOrigin::signed(1), cred_x.clone()),
+			BadOrigin
+		);
+
+		assert_ok!(DID::remove_credentials_type(RuntimeOrigin::root(), cred_x.clone()));
+
+		let events = events();
+		assert!(events.contains(&Event::<Test>::CredentialTypesRemoved { credentials: cred_x }));
+
+		let cred_y: Vec<BoundedVec<u8, MaxString>> = vec![bounded_vec![0, 2], bounded_vec![0, 4]];
+		assert_noop!(
+			DID::remove_credentials_type(RuntimeOrigin::root(), cred_y),
+			Error::<Test>::CredentialDoesNotExist
+		);
+
+		let cred_x: Vec<BoundedVec<u8, MaxString>> = vec![bounded_vec![0, 1]];
+		let cred_y: Vec<BoundedVec<u8, MaxString>> = vec![bounded_vec![0, 2]];
+		let cred_z: Vec<BoundedVec<u8, MaxString>> = vec![bounded_vec![0, 4], bounded_vec![0, 3]];
+		let ordered_creds: Vec<BoundedVec<u8, MaxString>> =
+			vec![bounded_vec![0, 1], bounded_vec![0, 2], bounded_vec![0, 3], bounded_vec![0, 4]];
+
+		assert_ok!(DID::add_credentials_type(RuntimeOrigin::root(), cred_z.clone()));
+		assert_ok!(DID::add_credentials_type(RuntimeOrigin::root(), cred_y.clone()));
+		assert_ok!(DID::add_credentials_type(RuntimeOrigin::root(), cred_x.clone()));
+		assert_eq!(CredentialsTypes::<Test>::get(), ordered_creds);
+	});
+}
