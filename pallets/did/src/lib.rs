@@ -228,7 +228,13 @@ pub mod pallet {
 			issuer: DidIdentifierOf<T>,
 			did: DidIdentifierOf<T>,
 			credentials: Vec<CredentialOf<T>>,
-			storage_key: HashOf<T>,
+			verifiable_credential_hash: HashOf<T>,
+		},
+		CredentialsRevoked {
+			issuer: DidIdentifierOf<T>,
+			did: DidIdentifierOf<T>,
+			credentials: Vec<CredentialOf<T>>,
+			verifiable_credential_hash: HashOf<T>,
 		},
 		IssuerRemoved {
 			issuer: DidIdentifierOf<T>,
@@ -472,22 +478,52 @@ pub mod pallet {
 		#[pallet::weight(1000000)]
 		pub fn issue_credentials(
 			origin: OriginFor<T>,
-			did: DidIdentifierOf<T>,
+			issuer_did: DidIdentifierOf<T>,
+			subject_did: DidIdentifierOf<T>,
 			credentials: Vec<CredentialOf<T>>,
-			storage_key: HashOf<T>,
+			verifiable_credential_hash: HashOf<T>,
 		) -> DispatchResult {
-			let issuer = ensure_signed(origin)?;
-			let issuer_did = T::DidIdentifier::from(issuer);
+			let controller = ensure_signed(origin)?;
 
+			// Ensure origin is the issuer's controller
+			let document = Did::<T>::get(&issuer_did).ok_or(Error::<T>::DidNotFound)?;
+			Self::ensure_controller(controller, &document)?;
+
+			// Ensure Credential types exist
 			ensure!(Issuers::<T>::contains_key(&issuer_did), Error::<T>::NotIssuer);
-
 			Self::ensure_valid_credentials(&credentials)?;
+
+			// Check that subject DID exist
+			ensure!(!Did::<T>::contains_key(subject_did.clone()), Error::<T>::DidNotFound);
 
 			Self::deposit_event(Event::CredentialsIssued {
 				issuer: issuer_did,
-				did,
+				did: subject_did,
 				credentials,
-				storage_key,
+				verifiable_credential_hash,
+			});
+			Ok(())
+		}
+
+		#[pallet::weight(1000000)]
+		pub fn revoke_credentials(
+			origin: OriginFor<T>,
+			issuer_did: DidIdentifierOf<T>,
+			subject_did: DidIdentifierOf<T>,
+			credentials: Vec<CredentialOf<T>>,
+			verifiable_credential_hash: HashOf<T>,
+		) -> DispatchResult {
+			let controller = ensure_signed(origin)?;
+
+			// Ensure origin is the issuer's controller
+			let document = Did::<T>::get(&issuer_did).ok_or(Error::<T>::DidNotFound)?;
+			Self::ensure_controller(controller, &document)?;
+
+			Self::deposit_event(Event::CredentialsIssued {
+				issuer: issuer_did,
+				did: subject_did,
+				credentials,
+				verifiable_credential_hash,
 			});
 			Ok(())
 		}

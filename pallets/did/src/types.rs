@@ -80,7 +80,7 @@ impl<T: Config> Service<T> {
 	}
 	// Increment service consumers count. Returns error upon overflow.
 	pub fn inc_consumers(&mut self) -> Result<(), ArithmeticError> {
-		self.consumers.checked_add(1).ok_or(ArithmeticError::Overflow)?;
+		self.consumers = self.consumers.checked_add(1).ok_or(ArithmeticError::Overflow)?;
 		Ok(())
 	}
 
