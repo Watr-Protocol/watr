@@ -630,12 +630,13 @@ impl<T: Config> Pallet<T> {
 	fn do_add_service(service: ServiceInfo<T>) -> Result<KeyIdOf<T>, DispatchError> {
 		let service_key = T::Hashing::hash_of(&service);
 
-		// if the service exists, increment its consumers, otherwise insert a new service
-		if let Some(mut existing_service) = Services::<T>::get(service_key.clone()) {
+		// if the service exists increment its consumers, otherwise insert a new service
+	 if let Some(mut existing_service) = Services::<T>::get(service_key.clone()) {
 			// `inc_consumers` may overflow, so handle it just in case
 			existing_service
 				.inc_consumers()
 				.map_err(|_| Error::<T>::TooManyServiceConsumers)?;
+			<Services<T>>::set(service_key, Some(existing_service));
 		} else {
 			<Services<T>>::insert(service_key, Service::<T>::new(service));
 		}

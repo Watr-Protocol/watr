@@ -82,7 +82,6 @@ fn hash_services(services: &BoundedVec<ServiceInfo<Test>, <mock::Test as pallet:
 	for service in services {
 		services_keys.try_push(<mock::Test as frame_system::Config>::Hashing::hash_of(&service));
 	}
-	// services_keys.sort();
 	services_keys
 }
 
@@ -333,6 +332,32 @@ fn remove_did_services_works() {
 	});
 }
 
+#[test]
+fn multiple_service_consumers_works() {
+	new_test_ext().execute_with(|| {
+		let _ = create_default_did(ALICE, ALICE);
+		let _ = create_default_did(BOB, BOB);
+
+		assert_services(default_services(), 2);
+
+		let mut services_to_remove = hash_services(&default_services());
+
+		assert_ok!(DID::remove_did_services(
+			RuntimeOrigin::signed(ALICE),
+			ALICE,
+			services_to_remove.clone()
+		));
+		assert_services(default_services(), 1);
+
+		assert_ok!(DID::remove_did_services(
+			RuntimeOrigin::signed(BOB),
+			BOB,
+			services_to_remove.clone()
+		));
+
+		assert_services_do_not_exist(default_services());
+	});
+}
 
 //  ** Tests Fail Successfully **
 
@@ -351,9 +376,6 @@ fn create_did_fails_if_did_already_exists() {
 			DID::create_did(origin.clone(), controller, authentication, None, BoundedVec::default()),
 			Error::<Test>::DidAlreadyExists
 		);
-
-		// verify DID is unchanged
-		assert_eq!(DID::dids(ALICE), Some(expected_document.clone()));
 	});
 }
 
@@ -370,9 +392,6 @@ fn create_did_fails_if_duplicated_service() {
 			DID::create_did(origin, controller, authentication, None, services),
 			Error::<Test>::ServiceAlreadyInDid
 		);
-
-		// verify DID does not exist
-		assert_eq!(DID::dids(ALICE), None);
 	});
 }
 
@@ -400,9 +419,6 @@ fn update_did_fails_if_origin_is_not_controller() {
 			DID::update_did(origin, ALICE, None, None, None, None),
 			Error::<Test>::NotController
 		);
-
-		// verify DID is unchanged
-		assert_eq!(DID::dids(ALICE), Some(expected_document));
 	});
 }
 
@@ -442,13 +458,9 @@ fn remove_did_fails_if_origin_is_not_controller() {
 			DID::remove_did(origin, ALICE),
 			Error::<Test>::NotController
 		);
-
-		// verify DID is not deleted
-		assert_eq!(DID::dids(ALICE), Some(expected_document));
 	});
 }
 
-// write test for remove_did fails if Service is Not In DId
 #[test]
 fn remove_did_fails_if_service_is_not_in_did() {
 	new_test_ext().execute_with(|| {
@@ -466,9 +478,6 @@ fn remove_did_fails_if_service_is_not_in_did() {
 			DID::remove_did_services(origin, ALICE, to_remove_keys),
 			Error::<Test>::ServiceNotInDid
 		);
-
-		// verify services are unchanged
-		assert_eq!(DID::dids(ALICE), Some(expected_document));
 	});
 }
 
@@ -483,12 +492,12 @@ fn add_did_services_fails_if_too_many_services() {
 
 		create_default_did(ALICE, ALICE);
 
-		// modify the 3 services in services already
+		// modify the 3 services from default_services()
 		for i in 0..services.len() {
 			services[i].service_endpoint = bounded_vec![b'o', b'0' + i as u8];
 		}
 
-		// insert max amount of services (with increment indexes)
+		// insert max amount of services (with incremented indexes)
 		for i in 0..(<mock::Test as pallet::Config>::MaxServices::get() - services.len() as u8) {
 			services.try_push(ServiceInfo {
 				type_id: types::ServiceType::VerifiableCredentialFileStorage,
@@ -496,7 +505,7 @@ fn add_did_services_fails_if_too_many_services() {
 			});
 		}
 
-		// try to add the services. MaxServices + default_services().len() == out of limit
+		// ensure services are not added. MaxServices + default_services().len() == out of limit
 		assert_noop!(
 			DID::add_did_services(origin, ALICE, services),
 			Error::<Test>::TooManyServicesInDid
