@@ -631,7 +631,7 @@ impl<T: Config> Pallet<T> {
 		let service_key = T::Hashing::hash_of(&service);
 
 		// if the service exists increment its consumers, otherwise insert a new service
-	 if let Some(mut existing_service) = Services::<T>::get(service_key.clone()) {
+		if let Some(mut existing_service) = Services::<T>::get(service_key.clone()) {
 			// `inc_consumers` may overflow, so handle it just in case
 			existing_service
 				.inc_consumers()

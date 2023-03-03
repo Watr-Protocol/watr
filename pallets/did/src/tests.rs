@@ -18,11 +18,16 @@ use super::*;
 use crate as pallet_did;
 use crate::{mock::*, Event as MotionEvent};
 use codec::Encode;
-use frame_support::{assert_ok, assert_noop, dispatch::GetDispatchInfo, error::BadOrigin, weights::Weight};
+use frame_support::{
+	assert_noop, assert_ok, dispatch::GetDispatchInfo, error::BadOrigin, weights::Weight,
+};
 use frame_system::{EventRecord, Phase};
 use mock::{RuntimeCall, RuntimeEvent};
 use sp_core::{ConstU8, H160, H256};
-use sp_runtime::{bounded_vec, traits::{BlakeTwo256, Hash}};
+use sp_runtime::{
+	bounded_vec,
+	traits::{BlakeTwo256, Hash},
+};
 
 fn record(event: RuntimeEvent) -> EventRecord<RuntimeEvent, H256> {
 	EventRecord { phase: Phase::Initialization, event, topics: vec![] }
@@ -40,7 +45,8 @@ fn events() -> Vec<Event<Test>> {
 	result
 }
 
-fn default_services() -> BoundedVec<ServiceInfo<Test>, <mock::Test as pallet::Config>::MaxServices> {
+fn default_services() -> BoundedVec<ServiceInfo<Test>, <mock::Test as pallet::Config>::MaxServices>
+{
 	bounded_vec![
 		ServiceInfo {
 			type_id: types::ServiceType::VerifiableCredentialFileStorage,
@@ -69,15 +75,17 @@ fn create_default_did(origin_id: u64, controller: u64) -> Document<Test> {
 	let expected_document = Document {
 		controller,
 		authentication: AuthenticationMethod { controller: authentication },
-		assertion_method: Some ( AssertionMethod { controller: assertion } ),
-		services: services_keys
+		assertion_method: Some(AssertionMethod { controller: assertion }),
+		services: services_keys,
 	};
 
 	assert_ok!(DID::create_did(origin, controller, authentication, Some(assertion), services));
 	expected_document
 }
 
-fn hash_services(services: &BoundedVec<ServiceInfo<Test>, <mock::Test as pallet::Config>::MaxServices>) -> ServiceKeysOf<Test> {
+fn hash_services(
+	services: &BoundedVec<ServiceInfo<Test>, <mock::Test as pallet::Config>::MaxServices>,
+) -> ServiceKeysOf<Test> {
 	let mut services_keys: ServiceKeysOf<Test> = BoundedVec::default();
 	for service in services {
 		services_keys.try_push(<mock::Test as frame_system::Config>::Hashing::hash_of(&service));
@@ -85,7 +93,10 @@ fn hash_services(services: &BoundedVec<ServiceInfo<Test>, <mock::Test as pallet:
 	services_keys
 }
 
-fn assert_services(services_info: BoundedVec<ServiceInfo<Test>, <mock::Test as pallet::Config>::MaxServices>, expected_consumers: u32) {
+fn assert_services(
+	services_info: BoundedVec<ServiceInfo<Test>, <mock::Test as pallet::Config>::MaxServices>,
+	expected_consumers: u32,
+) {
 	let services_keys = hash_services(&services_info);
 
 	for (i, key) in services_keys.iter().enumerate() {
@@ -95,7 +106,9 @@ fn assert_services(services_info: BoundedVec<ServiceInfo<Test>, <mock::Test as p
 	}
 }
 
-fn assert_services_do_not_exist(services_info: BoundedVec<ServiceInfo<Test>, <mock::Test as pallet::Config>::MaxServices>) {
+fn assert_services_do_not_exist(
+	services_info: BoundedVec<ServiceInfo<Test>, <mock::Test as pallet::Config>::MaxServices>,
+) {
 	let services_keys = hash_services(&services_info);
 
 	for key in services_keys {
@@ -112,10 +125,8 @@ fn create_did_works() {
 		assert_eq!(Balances::reserved_balance(&ALICE), DidDeposit::get());
 		assert_eq!(DID::dids(ALICE), Some(expected_document.clone()));
 		assert_services(default_services(), 1);
-		assert!(events().contains(&Event::<Test>::DidCreated {
-			did: ALICE,
-			document: expected_document,
-		}));
+		assert!(events()
+			.contains(&Event::<Test>::DidCreated { did: ALICE, document: expected_document }));
 	});
 }
 
@@ -139,10 +150,9 @@ fn update_did_works() {
 		let expected_document = Document {
 			controller,
 			authentication: AuthenticationMethod { controller: authentication },
-			assertion_method: Some ( AssertionMethod { controller: assertion } ),
-			services: services_keys
+			assertion_method: Some(AssertionMethod { controller: assertion }),
+			services: services_keys,
 		};
-
 
 		assert_ok!(DID::update_did(
 			origin,
@@ -157,11 +167,8 @@ fn update_did_works() {
 		assert_services(services, 1);
 		// assert that the default services were removed from storage
 		assert_services_do_not_exist(default_services());
-		assert!(events().contains(&Event::<Test>::DidUpdated {
-			did: ALICE,
-			document: expected_document,
-		}));
-
+		assert!(events()
+			.contains(&Event::<Test>::DidUpdated { did: ALICE, document: expected_document }));
 	});
 }
 
@@ -186,10 +193,9 @@ fn force_update_did_works() {
 		let expected_document = Document {
 			controller,
 			authentication: AuthenticationMethod { controller: authentication },
-			assertion_method: Some ( AssertionMethod { controller: assertion } ),
-			services: services_keys
+			assertion_method: Some(AssertionMethod { controller: assertion }),
+			services: services_keys,
 		};
-
 
 		assert_ok!(DID::force_update_did(
 			origin,
@@ -222,9 +228,7 @@ fn remove_did_works() {
 		assert_eq!(DID::dids(ALICE), None);
 		assert_eq!(Balances::reserved_balance(&ALICE), 0);
 		assert_services_do_not_exist(default_services());
-		assert!(events().contains(&Event::<Test>::DidRemoved {
-			did: ALICE,
-		}));
+		assert!(events().contains(&Event::<Test>::DidRemoved { did: ALICE }));
 	});
 }
 
@@ -239,9 +243,7 @@ fn force_remove_did_works() {
 		assert_eq!(DID::dids(ALICE), None);
 		assert_eq!(Balances::reserved_balance(&ALICE), 0);
 		assert_services_do_not_exist(default_services());
-		assert!(events().contains(&Event::<Test>::DidForcedRemoved {
-			did: ALICE,
-		}));
+		assert!(events().contains(&Event::<Test>::DidForcedRemoved { did: ALICE }));
 	});
 }
 
@@ -266,16 +268,9 @@ fn add_did_services_works() {
 		});
 		combined_services.sort();
 
-		let expected_document = Document {
-			services: combined_services,
-			..old_document
-		};
+		let expected_document = Document { services: combined_services, ..old_document };
 
-		assert_ok!(DID::add_did_services(
-			origin,
-			ALICE,
-			new_services.clone()
-		));
+		assert_ok!(DID::add_did_services(origin, ALICE, new_services.clone()));
 		assert_eq!(DID::dids(ALICE), Some(expected_document.clone()));
 		// assert services exist and have a consumer count of 1
 		assert_services(new_services.clone(), 1);
@@ -287,7 +282,6 @@ fn add_did_services_works() {
 			did: ALICE,
 			new_services: new_services_keys,
 		}));
-
 	});
 }
 
@@ -300,22 +294,16 @@ fn remove_did_services_works() {
 
 		let mut service_remaining = default_services();
 		// remove last two services from `service_remaining`, leaving only one in `service_remaining`
-		let mut services_to_remove = bounded_vec![service_remaining.pop().unwrap(), service_remaining.pop().unwrap()];
+		let mut services_to_remove =
+			bounded_vec![service_remaining.pop().unwrap(), service_remaining.pop().unwrap()];
 
 		let remaining_key = hash_services(&service_remaining);
 		let mut to_remove_keys = hash_services(&services_to_remove);
 		to_remove_keys.sort();
 
-		let expected_document = Document {
-			services: remaining_key.clone(),
-			..old_document
-		};
+		let expected_document = Document { services: remaining_key.clone(), ..old_document };
 
-		assert_ok!(DID::remove_did_services(
-			origin,
-			ALICE,
-			to_remove_keys.clone()
-		));
+		assert_ok!(DID::remove_did_services(origin, ALICE, to_remove_keys.clone()));
 		assert_eq!(DID::dids(ALICE), Some(expected_document.clone()));
 		// assert remaining service exists and has a consumer count of 1
 		assert_services(service_remaining, 1);
@@ -328,7 +316,6 @@ fn remove_did_services_works() {
 			did: ALICE,
 			removed_services: to_remove_keys,
 		}));
-
 	});
 }
 
@@ -373,7 +360,13 @@ fn create_did_fails_if_did_already_exists() {
 		let expected_document = create_default_did(ALICE, ALICE);
 
 		assert_noop!(
-			DID::create_did(origin.clone(), controller, authentication, None, BoundedVec::default()),
+			DID::create_did(
+				origin.clone(),
+				controller,
+				authentication,
+				None,
+				BoundedVec::default()
+			),
 			Error::<Test>::DidAlreadyExists
 		);
 	});
@@ -439,10 +432,7 @@ fn remove_did_fails_if_did_does_not_exist() {
 	new_test_ext().execute_with(|| {
 		let origin = RuntimeOrigin::signed(ALICE);
 
-		assert_noop!(
-			DID::remove_did(origin, ALICE),
-			Error::<Test>::DidNotFound
-		);
+		assert_noop!(DID::remove_did(origin, ALICE), Error::<Test>::DidNotFound);
 	});
 }
 
@@ -454,10 +444,7 @@ fn remove_did_fails_if_origin_is_not_controller() {
 		// Create DID for Alice with BOB as controller
 		let expected_document = create_default_did(ALICE, BOB);
 
-		assert_noop!(
-			DID::remove_did(origin, ALICE),
-			Error::<Test>::NotController
-		);
+		assert_noop!(DID::remove_did(origin, ALICE), Error::<Test>::NotController);
 	});
 }
 
@@ -480,7 +467,6 @@ fn remove_did_fails_if_service_is_not_in_did() {
 		);
 	});
 }
-
 
 #[test]
 fn add_did_services_fails_if_too_many_services() {
