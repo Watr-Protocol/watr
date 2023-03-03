@@ -56,8 +56,8 @@ pub trait WeightInfo {
 	fn create_did(m: u32, ) -> Weight;
 	fn update_did(m: u32, n: u32, ) -> Weight;
 	fn remove_did(m: u32, ) -> Weight;
-	fn add_did_services(m: u32, n: u32) -> Weight;
-	fn remove_did_services(m: u32, n: u32, ) -> Weight;
+	fn add_did_services(m: u32, ) -> Weight;
+	fn remove_did_services(m: u32, ) -> Weight;
 	// fn issue_credentials() -> Weight;
 	// fn revoke_credentials() -> Weight;
 	// fn add_issuer() -> Weight;
@@ -419,7 +419,7 @@ pub mod pallet {
 			Ok(Pays::No.into())
 		}
 
-		#[pallet::weight(T::WeightInfo::add_did_services(services.len() as u32, T::MaxServices::get()))]
+		#[pallet::weight(T::WeightInfo::add_did_services(services.len() as u32))]
 		pub fn add_did_services(
 			origin: OriginFor<T>,
 			did: DidIdentifierOf<T>,
@@ -438,13 +438,12 @@ pub mod pallet {
 
 				Ok(Some(T::WeightInfo::add_did_services(
 					services_witness.inserts,
-					services_witness.existing,
 				))
 				.into())
 			})
 		}
 
-		#[pallet::weight(T::WeightInfo::remove_did_services(services_keys.len() as u32, T::MaxServices::get()))]
+		#[pallet::weight(T::WeightInfo::remove_did_services(services_keys.len() as u32))]
 		pub fn remove_did_services(
 			origin: OriginFor<T>,
 			did: DidIdentifierOf<T>,
@@ -468,8 +467,7 @@ pub mod pallet {
 				});
 
 				Ok(Some(T::WeightInfo::remove_did_services(
-					services_witness.removals,
-					services_witness.existing,
+					services_witness.removals
 				))
 				.into())
 			})
@@ -723,8 +721,6 @@ impl<T: Config> Pallet<T> {
 		document_services_keys: &mut ServiceKeysOf<T>,
 		services_witness: &mut ServicesWitness
 	) -> Result<ServiceKeysOf<T>, DispatchError> {
-		services_witness.existing = document_services_keys.len() as u32;
-
 		// if existing_services is `Some` use it to insert into, otherwise create a new BoundedVec
 		let mut services_keys = <ServiceKeysOf<T>>::default();
 
@@ -771,7 +767,6 @@ impl<T: Config> Pallet<T> {
 		document_services_keys: &mut ServiceKeysOf<T>,
 		services_witness: &mut ServicesWitness
 	) -> DispatchResult {
-		services_witness.existing = document_services_keys.len() as u32;
 		// Iterate over each service and remove it from the document
 		for service_key in keys_to_remove {
 			let pos = document_services_keys

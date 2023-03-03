@@ -99,9 +99,6 @@ impl<T: Config> Service<T> {
 /// Witness Services
 #[derive(Copy, Clone, Default, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 pub struct ServicesWitness {
-	/// The number of existing Services in the DID
-	#[codec(compact)]
-	pub existing: u32,
 	/// The number of Services insterts
 	#[codec(compact)]
 	pub inserts: u32,

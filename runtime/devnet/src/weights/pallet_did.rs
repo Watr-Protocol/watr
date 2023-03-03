@@ -19,14 +19,14 @@
 //! THIS FILE WAS AUTO-GENERATED USING THE SUBSTRATE BENCHMARK CLI VERSION 4.0.0-dev
 //! DATE: 2023-03-03, STEPS: `50`, REPEAT: 20, LOW RANGE: `[]`, HIGH RANGE: `[]`
 //! HOSTNAME: `MacBook-Pro.local`, CPU: `<UNKNOWN>`
-//! EXECUTION: Some(Native), WASM-EXECUTION: Compiled, CHAIN: Some("devnet-dev"), DB CACHE: 1024
+//! EXECUTION: Some(Wasm), WASM-EXECUTION: Compiled, CHAIN: Some("devnet-dev"), DB CACHE: 1024
 
 // Executed Command:
 // target/release/watr-node
 // benchmark
 // pallet
 // --chain=devnet-dev
-// --execution=native
+// --execution=wasm
 // --wasm-execution=compiled
 // --pallet=pallet_did
 // --extrinsic=*
@@ -50,9 +50,9 @@ impl<T: frame_system::Config> pallet_did::WeightInfo for WeightInfo<T> {
 	// Storage: DID Services (r:1 w:1)
 	/// The range of component `m` is `[0, 10]`.
 	fn create_did(m: u32, ) -> Weight {
-		Weight::from_ref_time(41_000_000 as u64)
-			// Standard Error: 18_330
-			.saturating_add(Weight::from_ref_time(4_096_675 as u64).saturating_mul(m as u64))
+		Weight::from_ref_time(64_000_000 as u64)
+			// Standard Error: 18_860
+			.saturating_add(Weight::from_ref_time(6_586_772 as u64).saturating_mul(m as u64))
 			.saturating_add(T::DbWeight::get().reads(1 as u64))
 			.saturating_add(T::DbWeight::get().reads((1 as u64).saturating_mul(m as u64)))
 			.saturating_add(T::DbWeight::get().writes(1 as u64))
@@ -63,11 +63,11 @@ impl<T: frame_system::Config> pallet_did::WeightInfo for WeightInfo<T> {
 	/// The range of component `m` is `[0, 10]`.
 	/// The range of component `n` is `[0, 10]`.
 	fn update_did(m: u32, n: u32, ) -> Weight {
-		Weight::from_ref_time(69_000_000 as u64)
-			// Standard Error: 38_996
-			.saturating_add(Weight::from_ref_time(1_606_794 as u64).saturating_mul(m as u64))
-			// Standard Error: 38_996
-			.saturating_add(Weight::from_ref_time(2_021_243 as u64).saturating_mul(n as u64))
+		Weight::from_ref_time(107_000_000 as u64)
+			// Standard Error: 59_175
+			.saturating_add(Weight::from_ref_time(2_435_625 as u64).saturating_mul(m as u64))
+			// Standard Error: 59_175
+			.saturating_add(Weight::from_ref_time(2_069_409 as u64).saturating_mul(n as u64))
 			.saturating_add(T::DbWeight::get().reads(11 as u64))
 			.saturating_add(T::DbWeight::get().writes(11 as u64))
 	}
@@ -76,9 +76,9 @@ impl<T: frame_system::Config> pallet_did::WeightInfo for WeightInfo<T> {
 	// Storage: DID Services (r:1 w:1)
 	/// The range of component `m` is `[0, 10]`.
 	fn remove_did(m: u32, ) -> Weight {
-		Weight::from_ref_time(45_000_000 as u64)
-			// Standard Error: 12_499
-			.saturating_add(Weight::from_ref_time(4_707_409 as u64).saturating_mul(m as u64))
+		Weight::from_ref_time(69_000_000 as u64)
+			// Standard Error: 18_341
+			.saturating_add(Weight::from_ref_time(6_395_706 as u64).saturating_mul(m as u64))
 			.saturating_add(T::DbWeight::get().reads(2 as u64))
 			.saturating_add(T::DbWeight::get().reads((1 as u64).saturating_mul(m as u64)))
 			.saturating_add(T::DbWeight::get().writes(1 as u64))
@@ -87,13 +87,10 @@ impl<T: frame_system::Config> pallet_did::WeightInfo for WeightInfo<T> {
 	// Storage: DID Did (r:1 w:1)
 	// Storage: DID Services (r:1 w:1)
 	/// The range of component `m` is `[0, 10]`.
-	/// The range of component `n` is `[0, 10]`.
-	fn add_did_services(m: u32, n: u32, ) -> Weight {
-		Weight::from_ref_time(32_000_000 as u64)
-			// Standard Error: 17_800
-			.saturating_add(Weight::from_ref_time(3_422_762 as u64).saturating_mul(m as u64))
-			// Standard Error: 17_800
-			.saturating_add(Weight::from_ref_time(585_911 as u64).saturating_mul(n as u64))
+	fn add_did_services(m: u32, ) -> Weight {
+		Weight::from_ref_time(42_000_000 as u64)
+			// Standard Error: 18_570
+			.saturating_add(Weight::from_ref_time(6_718_767 as u64).saturating_mul(m as u64))
 			.saturating_add(T::DbWeight::get().reads(1 as u64))
 			.saturating_add(T::DbWeight::get().reads((1 as u64).saturating_mul(m as u64)))
 			.saturating_add(T::DbWeight::get().writes(1 as u64))
@@ -102,12 +99,13 @@ impl<T: frame_system::Config> pallet_did::WeightInfo for WeightInfo<T> {
 	// Storage: DID Did (r:1 w:1)
 	// Storage: DID Services (r:1 w:1)
 	/// The range of component `m` is `[0, 10]`.
-	/// The range of component `n` is `[0, 10]`.
-	fn remove_did_services(_m: u32, n: u32, ) -> Weight {
-		Weight::from_ref_time(30_000_000 as u64)
-			// Standard Error: 63_750
-			.saturating_add(Weight::from_ref_time(2_154_657 as u64).saturating_mul(n as u64))
+	fn remove_did_services(m: u32, ) -> Weight {
+		Weight::from_ref_time(42_000_000 as u64)
+			// Standard Error: 16_663
+			.saturating_add(Weight::from_ref_time(6_631_094 as u64).saturating_mul(m as u64))
 			.saturating_add(T::DbWeight::get().reads(1 as u64))
+			.saturating_add(T::DbWeight::get().reads((1 as u64).saturating_mul(m as u64)))
 			.saturating_add(T::DbWeight::get().writes(1 as u64))
+			.saturating_add(T::DbWeight::get().writes((1 as u64).saturating_mul(m as u64)))
 	}
 }
