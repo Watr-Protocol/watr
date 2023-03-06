@@ -148,49 +148,53 @@ benchmarks! {
 	// 	assert_eq!(true, true)
 	// }
 
-	// // ---------------------------------------------
-	// add_issuer {
-	// 	/* code to set the initial state */
-	// }: {
-	// 	/* code to test the function benchmarked */
-	// }
-	// verify {
-	// 	/* optional verification */
-	// 	assert_eq!(true, true)
-	// }
+	// ---------------------------------------------
+	add_issuer {
+		let issuer = issuer::<T>(1);
+		let info = IssuerInfo { status: IssuerStatus::Active };
+	}: _(
+		RawOrigin::Root, issuer.clone()
+	)
+	verify {
+		assert_eq!(Issuers::<T>::get(issuer), Some(info));
+	}
 
-	// // ---------------------------------------------
-	// revoke_issuer {
-	// 	/* code to set the initial state */
-	// }: {
-	// 	/* code to test the function benchmarked */
-	// }
-	// verify {
-	// 	/* optional verification */
-	// 	assert_eq!(true, true)
-	// }
+	// ---------------------------------------------
+	revoke_issuer {
+		let issuer = issuer::<T>(1);
+		let info = IssuerInfo { status: IssuerStatus::Revoked };
+		DID::<T>::add_issuer(RawOrigin::Root.into(), issuer.clone());
+	}: _(
+		RawOrigin::Root, issuer.clone()
+	)
+	verify {
+		assert_eq!(Issuers::<T>::get(issuer), Some(info));
+	}
 
-	// // ---------------------------------------------
-	// reactivate_issuer {
-	// 	/* code to set the initial state */
-	// }: {
-	// 	/* code to test the function benchmarked */
-	// }
-	// verify {
-	// 	/* optional verification */
-	// 	assert_eq!(true, true)
-	// }
+	// ---------------------------------------------
+	reactivate_issuer {
+		let issuer = issuer::<T>(1);
+		let info = IssuerInfo { status: IssuerStatus::Active };
+		DID::<T>::add_issuer(RawOrigin::Root.into(), issuer.clone());
+		DID::<T>::revoke_issuer(RawOrigin::Root.into(), issuer.clone());
+	}: _(
+		RawOrigin::Root, issuer.clone()
+	)
+	verify {
+		assert_eq!(Issuers::<T>::get(issuer), Some(info));
+	}
 
-	// // ---------------------------------------------
-	// remove_issuer {
-	// 	/* code to set the initial state */
-	// }: {
-	// 	/* code to test the function benchmarked */
-	// }
-	// verify {
-	// 	/* optional verification */
-	// 	assert_eq!(true, true)
-	// }
+	// ---------------------------------------------
+	remove_issuer {
+		let issuer = issuer::<T>(1);
+		DID::<T>::add_issuer(RawOrigin::Root.into(), issuer.clone());
+		DID::<T>::revoke_issuer(RawOrigin::Root.into(), issuer.clone());
+	}: _(
+		RawOrigin::Root, issuer.clone()
+	)
+	verify {
+		assert_eq!(Issuers::<T>::get(issuer), None);
+	}
 
 	// // ---------------------------------------------
 	// add_credentials_type {
