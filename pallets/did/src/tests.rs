@@ -345,6 +345,74 @@ fn multiple_service_consumers_works() {
 //  ** DID Document Tests Fail Successfully **
 
 #[test]
+fn did_not_found_fails_for_all() {
+	new_test_ext().execute_with(|| {
+		let origin = RuntimeOrigin::signed(ALICE);
+		let gov_origin = RuntimeOrigin::root();
+
+		assert_noop!(
+			DID::update_did(origin.clone(), ALICE, None, None, None, None),
+			Error::<Test>::DidNotFound
+		);
+		assert_noop!(
+			DID::force_update_did(gov_origin.clone(), ALICE, None, None, None, None),
+			Error::<Test>::DidNotFound
+		);
+		assert_noop!(DID::remove_did(origin.clone(), ALICE), Error::<Test>::DidNotFound);
+		assert_noop!(DID::force_remove_did(gov_origin.clone(), ALICE), Error::<Test>::DidNotFound);
+		assert_noop!(
+			DID::add_did_services(origin.clone(), ALICE, BoundedVec::default()),
+			Error::<Test>::DidNotFound
+		);
+		assert_noop!(
+			DID::remove_did_services(origin.clone(), ALICE, BoundedVec::default()),
+			Error::<Test>::DidNotFound
+		);
+	});
+}
+
+#[test]
+fn not_did_controller_fails_for_all() {
+	new_test_ext().execute_with(|| {
+		let origin = RuntimeOrigin::signed(ALICE);
+		let gov_origin = RuntimeOrigin::root();
+
+		// Create DID for Alice with Bob as controller
+		let expected_document = create_default_did(ALICE, BOB);
+
+		assert_noop!(
+			DID::update_did(origin.clone(), ALICE, None, None, None, None),
+			Error::<Test>::NotController
+		);
+		assert_noop!(DID::remove_did(origin.clone(), ALICE), Error::<Test>::NotController);
+		assert_noop!(
+			DID::add_did_services(origin.clone(), ALICE, BoundedVec::default()),
+			Error::<Test>::NotController
+		);
+		assert_noop!(
+			DID::remove_did_services(origin.clone(), ALICE, BoundedVec::default()),
+			Error::<Test>::NotController
+		);
+	});
+}
+
+#[test]
+fn force_fails_if_not_governance() {
+	new_test_ext().execute_with(|| {
+		let origin = RuntimeOrigin::signed(ALICE);
+
+		let expected_document = create_default_did(ALICE, ALICE);
+
+		assert_noop!(
+			DID::force_update_did(origin.clone(), ALICE, None, None, None, None),
+			BadOrigin
+		);
+		assert_noop!(DID::force_remove_did(origin.clone(), ALICE), BadOrigin);
+	});
+}
+
+
+#[test]
 fn create_did_fails_if_did_already_exists() {
 	new_test_ext().execute_with(|| {
 		let origin = RuntimeOrigin::signed(ALICE);
@@ -399,33 +467,6 @@ fn create_did_fails_if_duplicated_service() {
 }
 
 #[test]
-fn update_did_fails_if_did_does_not_exist() {
-	new_test_ext().execute_with(|| {
-		let origin = RuntimeOrigin::signed(ALICE);
-
-		assert_noop!(
-			DID::update_did(origin, ALICE, None, None, None, None),
-			Error::<Test>::DidNotFound
-		);
-	});
-}
-
-#[test]
-fn update_did_fails_if_origin_is_not_controller() {
-	new_test_ext().execute_with(|| {
-		let origin = RuntimeOrigin::signed(ALICE);
-
-		// Create DID for Alice with BOB as controller
-		let expected_document = create_default_did(ALICE, BOB);
-
-		assert_noop!(
-			DID::update_did(origin, ALICE, None, None, None, None),
-			Error::<Test>::NotController
-		);
-	});
-}
-
-#[test]
 fn update_did_fails_if_duplicated_service() {
 	new_test_ext().execute_with(|| {
 		let origin = RuntimeOrigin::signed(ALICE);
@@ -444,30 +485,6 @@ fn update_did_fails_if_duplicated_service() {
 }
 
 #[test]
-fn force_update_did_fails_if_did_does_not_exist() {
-	new_test_ext().execute_with(|| {
-		let origin = RuntimeOrigin::root();
-
-		assert_noop!(
-			DID::force_update_did(origin, ALICE, None, None, None, None),
-			Error::<Test>::DidNotFound
-		);
-	});
-}
-
-#[test]
-fn force_update_did_fails_if_origin_is_not_governance() {
-	new_test_ext().execute_with(|| {
-		let origin = RuntimeOrigin::signed(ALICE);
-
-		assert_noop!(
-			DID::force_update_did(origin, ALICE, None, None, None, None),
-			BadOrigin
-		);
-	});
-}
-
-#[test]
 fn force_update_did_fails_if_duplicated_service() {
 	new_test_ext().execute_with(|| {
 		let origin = RuntimeOrigin::root();
@@ -481,60 +498,6 @@ fn force_update_did_fails_if_duplicated_service() {
 		assert_noop!(
 			DID::force_update_did(origin, ALICE, None, None, None, Some(services)),
 			Error::<Test>::ServiceAlreadyInDid
-		);
-	});
-}
-
-#[test]
-fn remove_did_fails_if_did_does_not_exist() {
-	new_test_ext().execute_with(|| {
-		let origin = RuntimeOrigin::signed(ALICE);
-
-		assert_noop!(DID::remove_did(origin, ALICE), Error::<Test>::DidNotFound);
-	});
-}
-
-#[test]
-fn remove_did_fails_if_origin_is_not_controller() {
-	new_test_ext().execute_with(|| {
-		let origin = RuntimeOrigin::signed(ALICE);
-
-		// Create DID for Alice with BOB as controller
-		let expected_document = create_default_did(ALICE, BOB);
-
-		assert_noop!(DID::remove_did(origin, ALICE), Error::<Test>::NotController);
-	});
-}
-
-#[test]
-fn force_remove_did_fails_if_did_does_not_exist() {
-	new_test_ext().execute_with(|| {
-		let origin = RuntimeOrigin::root();
-
-		assert_noop!(DID::force_remove_did(origin, ALICE), Error::<Test>::DidNotFound);
-	});
-}
-
-#[test]
-fn force_remove_did_fails_if_origin_is_not_governance() {
-	new_test_ext().execute_with(|| {
-		let origin = RuntimeOrigin::signed(ALICE);
-
-		let expected_document = create_default_did(ALICE, ALICE);
-
-		assert_noop!(DID::force_remove_did(origin, ALICE), BadOrigin);
-	});
-}
-
-#[test]
-fn add_did_services_fails_if_did_does_not_exist() {
-	new_test_ext().execute_with(|| {
-		let origin = RuntimeOrigin::signed(ALICE);
-		let services = default_services();
-
-		assert_noop!(
-			DID::add_did_services(origin, ALICE, services),
-			Error::<Test>::DidNotFound
 		);
 	});
 }
@@ -569,21 +532,6 @@ fn add_did_services_fails_if_too_many_services() {
 }
 
 #[test]
-fn add_did_services_fails_if_not_controller() {
-	new_test_ext().execute_with(|| {
-		let origin = RuntimeOrigin::signed(ALICE);
-		let services = default_services();
-
-		create_default_did(ALICE, BOB);
-
-		assert_noop!(
-			DID::add_did_services(origin, ALICE, services),
-			Error::<Test>::NotController
-		);
-	});
-}
-
-#[test]
 fn add_did_services_fails_if_duplicated_service() {
 	new_test_ext().execute_with(|| {
 		let origin = RuntimeOrigin::signed(ALICE);
@@ -597,32 +545,6 @@ fn add_did_services_fails_if_duplicated_service() {
 		assert_noop!(
 			DID::add_did_services(origin, ALICE, services),
 			Error::<Test>::ServiceAlreadyInDid
-		);
-	});
-}
-
-#[test]
-fn remove_did_services_fails_if_did_does_not_exist() {
-	new_test_ext().execute_with(|| {
-		let origin = RuntimeOrigin::signed(ALICE);
-
-		assert_noop!(
-			DID::remove_did_services(origin, ALICE, BoundedVec::default()),
-			Error::<Test>::DidNotFound
-		);
-	});
-}
-
-#[test]
-fn remove_did_services_fails_if_not_controller() {
-	new_test_ext().execute_with(|| {
-		let origin = RuntimeOrigin::signed(ALICE);
-
-		create_default_did(ALICE, BOB);
-
-		assert_noop!(
-			DID::remove_did_services(origin, ALICE, BoundedVec::default()),
-			Error::<Test>::NotController
 		);
 	});
 }
