@@ -411,7 +411,6 @@ fn force_fails_if_not_governance() {
 	});
 }
 
-
 #[test]
 fn create_did_fails_if_did_already_exists() {
 	new_test_ext().execute_with(|| {
