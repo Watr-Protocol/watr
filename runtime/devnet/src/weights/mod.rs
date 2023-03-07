@@ -25,6 +25,7 @@ pub mod pallet_assets;
 pub mod pallet_balances;
 pub mod pallet_collator_selection;
 pub mod pallet_collective;
+pub mod pallet_did;
 pub mod pallet_identity;
 pub mod pallet_membership;
 pub mod pallet_multisig;
