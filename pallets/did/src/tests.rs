@@ -693,7 +693,7 @@ fn add_credentials_type_works() {
 
 		assert_noop!(
 			DID::add_credentials_type(RuntimeOrigin::root(), creds.clone()),
-			Error::<Test>::CredentialAlreadyAdded
+			Error::<Test>::CredentialTypeAlreadyAdded
 		);
 
 		let mut max_creds: Vec<BoundedVec<u8, MaxString>> = vec![];
@@ -736,7 +736,7 @@ fn remove_credentials_type_works() {
 		let cred_y: Vec<BoundedVec<u8, MaxString>> = vec![bounded_vec![0, 2], bounded_vec![0, 4]];
 		assert_noop!(
 			DID::remove_credentials_type(RuntimeOrigin::root(), cred_y),
-			Error::<Test>::CredentialDoesNotExist
+			Error::<Test>::CredentialTypeDoesNotExist
 		);
 
 		let cred_x: Vec<BoundedVec<u8, MaxString>> = vec![bounded_vec![0, 1]];

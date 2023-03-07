@@ -95,3 +95,9 @@ impl<T: Config> Service<T> {
 		self.consumers
 	}
 }
+
+#[derive(Clone, Decode, Default, Encode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(T))]
+pub struct CredentialInfo<T: Config> {
+	pub verifiable_credential_hash: HashOf<T>,
+}

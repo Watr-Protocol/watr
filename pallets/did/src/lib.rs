@@ -29,8 +29,8 @@ mod verification;
 
 use crate::{
 	types::{
-		AssertionMethod, AuthenticationMethod, Document, IssuerInfo, IssuerStatus, Service,
-		ServiceInfo, ServiceType,
+		AssertionMethod, AuthenticationMethod, CredentialInfo, Document, IssuerInfo, IssuerStatus,
+		Service, ServiceInfo, ServiceType,
 	},
 	verification::DidSignature,
 };
@@ -168,6 +168,17 @@ pub mod pallet {
 	pub(super) type CredentialsTypes<T: Config> =
 		StorageValue<_, BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>, ValueQuery>;
 
+	#[pallet::storage]
+	pub type IssuedCredentials<T: Config> = StorageNMap<
+		_,
+		(
+			NMapKey<Blake2_128Concat, DidIdentifierOf<T>>, // Subject
+			NMapKey<Blake2_128Concat, CredentialOf<T>>,    // CredentialType
+			NMapKey<Blake2_128Concat, DidIdentifierOf<T>>, // Issuer
+		),
+		CredentialInfo<T>,
+	>;
+
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
@@ -213,7 +224,6 @@ pub mod pallet {
 			issuer: DidIdentifierOf<T>,
 			did: DidIdentifierOf<T>,
 			credentials: Vec<CredentialOf<T>>,
-			verifiable_credential_hash: HashOf<T>,
 		},
 		IssuerRemoved {
 			issuer: DidIdentifierOf<T>,
@@ -232,9 +242,11 @@ pub mod pallet {
 	#[pallet::error]
 	pub enum Error<T> {
 		/// Unable to add credential that already exists
-		CredentialAlreadyAdded,
+		CredentialTypeAlreadyAdded,
 		/// Unable to find credential
-		CredentialDoesNotExist,
+		CredentialTypeDoesNotExist,
+		/// Unable to find issued credential
+		IssuedCredentialDoesNotExist,
 		/// Unable to create issuer that already exists
 		IssuerAlreadyExists,
 		/// Unable to find issuer
@@ -308,6 +320,7 @@ pub mod pallet {
 			Ok(())
 		}
 
+		// #[pallet::call_index(1)]
 		#[pallet::weight(1000000)]
 		pub fn update_did(
 			origin: OriginFor<T>,
@@ -329,6 +342,7 @@ pub mod pallet {
 			Ok(())
 		}
 
+		// #[pallet::call_index(2)]
 		#[pallet::weight(1000000)]
 		pub fn force_update_did(
 			origin: OriginFor<T>,
@@ -351,6 +365,7 @@ pub mod pallet {
 			Ok(())
 		}
 
+		// #[pallet::call_index(3)]
 		#[pallet::weight(1000000)]
 		pub fn remove_did(origin: OriginFor<T>, did: DidIdentifierOf<T>) -> DispatchResult {
 			Self::do_remove_did(origin, did.clone())?;
@@ -367,6 +382,7 @@ pub mod pallet {
 			Ok(())
 		}
 
+		// #[pallet::call_index(4)]
 		#[pallet::weight(1000000)]
 		pub fn add_did_services(
 			origin: OriginFor<T>,
@@ -390,6 +406,7 @@ pub mod pallet {
 			})
 		}
 
+		// #[pallet::call_index(5)]
 		#[pallet::weight(1000000)]
 		pub fn remove_did_services(
 			origin: OriginFor<T>,
@@ -413,6 +430,7 @@ pub mod pallet {
 			})
 		}
 
+		// #[pallet::call_index(6)]
 		#[pallet::weight(1000000)]
 		pub fn issue_credentials(
 			origin: OriginFor<T>,
@@ -434,6 +452,19 @@ pub mod pallet {
 			// Check that subject DID exist
 			ensure!(!Did::<T>::contains_key(subject_did.clone()), Error::<T>::DidNotFound);
 
+			for credential in credentials.clone() {
+				IssuedCredentials::<T>::try_mutate(
+					(subject_did.clone(), &credential, issuer_did.clone()),
+					|maybe_issued_credential| -> DispatchResult {
+						let issued_credential = CredentialInfo {
+							verifiable_credential_hash: verifiable_credential_hash.clone(),
+						};
+						*maybe_issued_credential = Some(issued_credential);
+						Ok(())
+					},
+				)?;
+			}
+
 			Self::deposit_event(Event::CredentialsIssued {
 				issuer: issuer_did,
 				did: subject_did,
@@ -443,13 +474,13 @@ pub mod pallet {
 			Ok(())
 		}
 
+		// #[pallet::call_index(7)]
 		#[pallet::weight(1000000)]
 		pub fn revoke_credentials(
 			origin: OriginFor<T>,
 			issuer_did: DidIdentifierOf<T>,
 			subject_did: DidIdentifierOf<T>,
 			credentials: Vec<CredentialOf<T>>,
-			verifiable_credential_hash: HashOf<T>,
 		) -> DispatchResult {
 			let controller = ensure_signed(origin)?;
 
@@ -457,16 +488,28 @@ pub mod pallet {
 			let document = Did::<T>::get(&issuer_did).ok_or(Error::<T>::DidNotFound)?;
 			Self::ensure_controller(controller, &document)?;
 
-			Self::deposit_event(Event::CredentialsIssued {
+			for credential in credentials.clone() {
+				IssuedCredentials::<T>::try_mutate_exists(
+					(subject_did.clone(), &credential, issuer_did.clone()),
+					|maybe_issued_credential| -> DispatchResult {
+						let issued_credential = maybe_issued_credential
+							.as_mut()
+							.ok_or(Error::<T>::IssuedCredentialDoesNotExist)?;
+						*maybe_issued_credential = None;
+						Ok(())
+					},
+				)?;
+			}
+
+			Self::deposit_event(Event::CredentialsRevoked {
 				issuer: issuer_did,
 				did: subject_did,
 				credentials,
-				verifiable_credential_hash,
 			});
 			Ok(())
 		}
 
-		// #[pallet::call_index(1)]
+		// #[pallet::call_index(8)]
 		#[pallet::weight(1000000)]
 		pub fn add_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
@@ -478,7 +521,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// #[pallet::call_index(2)]
+		// #[pallet::call_index(9)]
 		#[pallet::weight(1000000)]
 		pub fn revoke_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
@@ -497,7 +540,7 @@ pub mod pallet {
 			})
 		}
 
-		// #[pallet::call_index(3)]
+		// #[pallet::call_index(10)]
 		#[pallet::weight(1000000)]
 		pub fn reactivate_issuer(
 			origin: OriginFor<T>,
@@ -519,7 +562,7 @@ pub mod pallet {
 			})
 		}
 
-		// #[pallet::call_index(4)]
+		// #[pallet::call_index(11)]
 		#[pallet::weight(1000000)]
 		pub fn remove_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
@@ -528,7 +571,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// #[pallet::call_index(5)]
+		// #[pallet::call_index(12)]
 		#[pallet::weight(1000000)]
 		pub fn add_credentials_type(
 			origin: OriginFor<T>,
@@ -542,7 +585,7 @@ pub mod pallet {
 				let pos = credentials_types
 					.binary_search(&credential)
 					.err()
-					.ok_or(Error::<T>::CredentialAlreadyAdded)?;
+					.ok_or(Error::<T>::CredentialTypeAlreadyAdded)?;
 				credentials_types
 					.try_insert(pos, credential.clone())
 					.map_err(|_| Error::<T>::MaxCredentials)?;
@@ -553,7 +596,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// #[pallet::call_index(6)]
+		// #[pallet::call_index(13)]
 		#[pallet::weight(1000000)]
 		pub fn remove_credentials_type(
 			origin: OriginFor<T>,
@@ -567,7 +610,7 @@ pub mod pallet {
 				let pos = credentials_types
 					.binary_search(&credential)
 					.ok()
-					.ok_or(Error::<T>::CredentialDoesNotExist)?;
+					.ok_or(Error::<T>::CredentialTypeDoesNotExist)?;
 				credentials_types.remove(pos);
 			}
 
@@ -771,7 +814,7 @@ impl<T: Config> Pallet<T> {
 			credential_types
 				.binary_search(credential)
 				.ok()
-				.ok_or(Error::<T>::CredentialDoesNotExist)?;
+				.ok_or(Error::<T>::CredentialTypeDoesNotExist)?;
 		}
 		Ok(())
 	}
