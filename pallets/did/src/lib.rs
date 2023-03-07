@@ -445,12 +445,12 @@ pub mod pallet {
 			let document = Did::<T>::get(&issuer_did).ok_or(Error::<T>::DidNotFound)?;
 			Self::ensure_controller(controller, &document)?;
 
-			// Ensure Credential types exist
 			ensure!(Issuers::<T>::contains_key(&issuer_did), Error::<T>::NotIssuer);
+			// Ensure Credential types exist
 			Self::ensure_valid_credentials(&credentials)?;
 
 			// Check that subject DID exist
-			ensure!(!Did::<T>::contains_key(subject_did.clone()), Error::<T>::DidNotFound);
+			ensure!(Did::<T>::contains_key(subject_did.clone()), Error::<T>::DidNotFound);
 
 			for credential in credentials.clone() {
 				IssuedCredentials::<T>::try_mutate(
@@ -493,9 +493,8 @@ pub mod pallet {
 					(subject_did.clone(), &credential, issuer_did.clone()),
 					|maybe_issued_credential| -> DispatchResult {
 						let issued_credential = maybe_issued_credential
-							.as_mut()
+							.take()
 							.ok_or(Error::<T>::IssuedCredentialDoesNotExist)?;
-						*maybe_issued_credential = None;
 						Ok(())
 					},
 				)?;
