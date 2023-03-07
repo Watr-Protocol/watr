@@ -760,6 +760,7 @@ fn issue_credentials_works() {
 
 		create_default_did(ACCOUNT_01, ACCOUNT_01);
 		create_default_did(ACCOUNT_02, ACCOUNT_02);
+		create_default_did(ACCOUNT_04, ACCOUNT_04);
 
 		let creds: Vec<BoundedVec<u8, MaxString>> =
 			vec![bounded_vec![0, 0], bounded_vec![0, 1], bounded_vec![0, 2]];
@@ -767,6 +768,9 @@ fn issue_credentials_works() {
 
 		assert_ok!(DID::add_credentials_type(root.clone(), creds.clone()));
 		assert_ok!(DID::add_issuer(root.clone(), ACCOUNT_01));
+
+		assert_ok!(DID::add_issuer(root.clone(), ACCOUNT_04));
+		assert_ok!(DID::revoke_issuer(root.clone(), ACCOUNT_04));
 
 		assert_noop!(
 			DID::issue_credentials(
@@ -807,6 +811,16 @@ fn issue_credentials_works() {
 				verifiable_credential_hash.clone()
 			),
 			Error::<Test>::DidNotFound
+		);
+		assert_noop!(
+			DID::issue_credentials(
+				RuntimeOrigin::signed(ACCOUNT_04),
+				ACCOUNT_04,
+				ACCOUNT_02,
+				creds.clone(),
+				verifiable_credential_hash.clone()
+			),
+			Error::<Test>::IssuerNotActive
 		);
 
 		assert_ok!(DID::issue_credentials(

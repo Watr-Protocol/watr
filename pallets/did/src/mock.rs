@@ -114,6 +114,7 @@ pub(crate) const ACCOUNT_00: u64 = 0;
 pub(crate) const ACCOUNT_01: u64 = 1;
 pub(crate) const ACCOUNT_02: u64 = 2;
 pub(crate) const ACCOUNT_03: u64 = 3;
+pub(crate) const ACCOUNT_04: u64 = 4;
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
