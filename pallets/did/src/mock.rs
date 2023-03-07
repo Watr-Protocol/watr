@@ -101,14 +101,14 @@ impl pallet_did::Config for Test {
 	type DidDeposit = DidDeposit;
 	type Currency = Balances;
 	type GovernanceOrigin = frame_system::EnsureRoot<u64>;
-	type MaxString = MaxString;
 	type MaxHash = MaxHash;
+	type MaxString = MaxString;
 	type MaxCredentialsTypes = MaxCredentialsTypes;
 	type MaxServices = MaxServices;
 }
 
 pub(crate) const ALICE: u64 = 1;
-pub(crate) const BOB: u64 = 1;
+pub(crate) const BOB: u64 = 2;
 pub(crate) const ACCOUNT_00: u64 = 0;
 pub(crate) const ACCOUNT_01: u64 = 1;
 pub(crate) const ACCOUNT_02: u64 = 2;
@@ -118,7 +118,7 @@ pub(crate) const ACCOUNT_03: u64 = 3;
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut ext: sp_io::TestExternalities = GenesisConfig {
 		balances: pallet_balances::GenesisConfig::<Test> {
-			balances: vec![(1, 10), (2, 20), (3, 30), (4, 40), (5, 50)],
+			balances: vec![(0, 2), (1, 10), (2, 20), (3, 30), (4, 40), (5, 50)],
 		},
 	}
 	.build_storage()
