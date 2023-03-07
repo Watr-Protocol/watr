@@ -1,11 +1,11 @@
 use crate::*;
 use frame_benchmarking::{account, benchmarks, whitelist_account, whitelisted_caller};
-use frame_support::{assert_ok};
+use frame_support::assert_ok;
 use frame_system::RawOrigin;
 use sp_core::H160;
 use sp_runtime::traits::Bounded;
 
-use super::{Pallet as DID, types::{ServiceType}};
+use super::{types::ServiceType, Pallet as DID};
 
 const SEED: u32 = 0;
 
@@ -44,7 +44,7 @@ fn create_service<T: Config>(i: u32, seed: u8) -> ServiceInfo<T> {
 
 fn create_services<T: Config>(
 	i: u32,
-	seed: u8
+	seed: u8,
 ) -> (BoundedVec<ServiceInfo<T>, T::MaxServices>, BoundedVec<KeyIdOf<T>, T::MaxServices>) {
 	let mut services: BoundedVec<ServiceInfo<T>, T::MaxServices> = BoundedVec::default();
 	for j in 0..i {

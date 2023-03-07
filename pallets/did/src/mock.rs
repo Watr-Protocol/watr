@@ -105,6 +105,7 @@ impl pallet_did::Config for Test {
 	type MaxString = MaxString;
 	type MaxCredentialsTypes = MaxCredentialsTypes;
 	type MaxServices = MaxServices;
+	type WeightInfo = weights::WeightInfo<Test>;
 }
 
 pub(crate) const ALICE: u64 = 1;
