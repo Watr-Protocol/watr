@@ -751,6 +751,7 @@ impl pallet_did::Config for Runtime {
 	type MaxCredentialsTypes = MaxCredentialsTypes;
 	type MaxServices = MaxServices;
 	type GovernanceOrigin = MoreThanHalfCouncil;
+	type WeightInfo = weights::pallet_did::WeightInfo<Runtime>;
 }
 
 parameter_types! {
