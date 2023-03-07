@@ -501,7 +501,9 @@ pub mod pallet {
 			let document = Did::<T>::get(&issuer_did).ok_or(Error::<T>::DidNotFound)?;
 			Self::ensure_controller(controller, &document)?;
 
-			ensure!(Issuers::<T>::contains_key(&issuer_did), Error::<T>::NotIssuer);
+			// Ensure issuer exists and is active
+			Self::ensure_issuer_is_active(&issuer_did)?;
+
 			// Ensure Credential types exist
 			Self::ensure_valid_credentials(&credentials)?;
 
@@ -884,6 +886,12 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult {
 		T::GovernanceOrigin::ensure_origin(origin.clone())
 			.map_or_else(|_| Self::ensure_controller(ensure_signed(origin)?, document), |_| Ok(()))
+	}
+
+	fn ensure_issuer_is_active(issuer_did: &DidIdentifierOf<T>) -> DispatchResult {
+		let issuer_info = Issuers::<T>::get(&issuer_did).ok_or(Error::<T>::NotIssuer)?;
+		ensure!(issuer_info.status == IssuerStatus::Active, Error::<T>::IssuerNotActive);
+		Ok(())
 	}
 
 	fn ensure_valid_credentials(credentials: &Vec<CredentialOf<T>>) -> DispatchResult {
