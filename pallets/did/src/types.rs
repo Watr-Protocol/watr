@@ -97,7 +97,9 @@ impl<T: Config> Service<T> {
 }
 
 /// Witness Services
-#[derive(Copy, Clone, Default, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
+#[derive(
+	Copy, Clone, Default, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo,
+)]
 pub struct ServicesWitness {
 	/// The number of Services insterts
 	#[codec(compact)]
