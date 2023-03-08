@@ -243,6 +243,11 @@ pub mod pallet {
 			did: DidIdentifierOf<T>,
 			credentials: Vec<CredentialOf<T>>,
 		},
+		CredentialsForcedRevoked {
+			issuer: DidIdentifierOf<T>,
+			did: DidIdentifierOf<T>,
+			credentials: Vec<CredentialOf<T>>,
+		},
 		IssuerRemoved {
 			issuer: DidIdentifierOf<T>,
 		},
@@ -544,19 +549,28 @@ pub mod pallet {
 			let document = Did::<T>::get(&issuer_did).ok_or(Error::<T>::DidNotFound)?;
 			Self::ensure_controller(controller, &document)?;
 
-			for credential in credentials.clone() {
-				IssuedCredentials::<T>::try_mutate_exists(
-					(subject_did.clone(), &credential, issuer_did.clone()),
-					|maybe_issued_credential| -> DispatchResult {
-						let issued_credential = maybe_issued_credential
-							.take()
-							.ok_or(Error::<T>::IssuedCredentialDoesNotExist)?;
-						Ok(())
-					},
-				)?;
-			}
+			Self::do_revoke_credentials(&issuer_did, &subject_did, &credentials);
 
 			Self::deposit_event(Event::CredentialsRevoked {
+				issuer: issuer_did,
+				did: subject_did,
+				credentials,
+			});
+			Ok(())
+		}
+
+		#[pallet::weight(1000000)]
+		pub fn force_revoke_credentials(
+			origin: OriginFor<T>,
+			issuer_did: DidIdentifierOf<T>,
+			subject_did: DidIdentifierOf<T>,
+			credentials: Vec<CredentialOf<T>>,
+		) -> DispatchResult {
+			T::GovernanceOrigin::ensure_origin(origin.clone())?;
+
+			Self::do_revoke_credentials(&issuer_did, &subject_did, &credentials);
+
+			Self::deposit_event(Event::CredentialsForcedRevoked {
 				issuer: issuer_did,
 				did: subject_did,
 				credentials,
@@ -869,6 +883,25 @@ impl<T: Config> Pallet<T> {
 			Self::deposit_event(Event::IssuerRemoved { issuer });
 			Ok(())
 		})
+	}
+
+	pub fn do_revoke_credentials(
+		issuer_did: &DidIdentifierOf<T>,
+		subject_did: &DidIdentifierOf<T>,
+		credentials: &Vec<CredentialOf<T>>,
+	) -> DispatchResult {
+		for credential in credentials {
+			IssuedCredentials::<T>::try_mutate_exists(
+				(subject_did, &credential, issuer_did),
+				|maybe_issued_credential| -> DispatchResult {
+					let issued_credential = maybe_issued_credential
+						.take()
+						.ok_or(Error::<T>::IssuedCredentialDoesNotExist)?;
+					Ok(())
+				},
+			)?;
+		}
+		Ok(())
 	}
 
 	/// Ensures that `who` is the controller of the did document
