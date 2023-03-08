@@ -751,3 +751,168 @@ fn remove_credentials_type_works() {
 		assert_eq!(CredentialsTypes::<Test>::get(), ordered_creds);
 	});
 }
+
+#[test]
+fn issue_credentials_works() {
+	new_test_ext().execute_with(|| {
+		let issuer_origin = RuntimeOrigin::signed(ACCOUNT_01);
+		let root = RuntimeOrigin::root();
+
+		create_default_did(ACCOUNT_01, ACCOUNT_01);
+		create_default_did(ACCOUNT_02, ACCOUNT_02);
+		create_default_did(ACCOUNT_04, ACCOUNT_04);
+
+		let creds: Vec<BoundedVec<u8, MaxString>> =
+			vec![bounded_vec![0, 0], bounded_vec![0, 1], bounded_vec![0, 2]];
+		let verifiable_credential_hash: HashOf<Test> = bounded_vec![1, 2, 3, 4, 5];
+
+		assert_ok!(DID::add_credentials_type(root.clone(), creds.clone()));
+		assert_ok!(DID::add_issuer(root.clone(), ACCOUNT_01));
+
+		assert_ok!(DID::add_issuer(root.clone(), ACCOUNT_04));
+		assert_ok!(DID::revoke_issuer(root.clone(), ACCOUNT_04));
+
+		assert_noop!(
+			DID::issue_credentials(
+				RuntimeOrigin::signed(ACCOUNT_02),
+				ACCOUNT_02,
+				ACCOUNT_02,
+				creds.clone(),
+				verifiable_credential_hash.clone()
+			),
+			Error::<Test>::NotIssuer
+		);
+		assert_noop!(
+			DID::issue_credentials(
+				RuntimeOrigin::signed(ACCOUNT_02),
+				ACCOUNT_01,
+				ACCOUNT_02,
+				creds.clone(),
+				verifiable_credential_hash.clone()
+			),
+			Error::<Test>::NotController
+		);
+		assert_noop!(
+			DID::issue_credentials(
+				issuer_origin.clone(),
+				ACCOUNT_03,
+				ACCOUNT_03,
+				creds.clone(),
+				verifiable_credential_hash.clone()
+			),
+			Error::<Test>::DidNotFound
+		);
+		assert_noop!(
+			DID::issue_credentials(
+				issuer_origin.clone(),
+				ACCOUNT_01,
+				ACCOUNT_03,
+				creds.clone(),
+				verifiable_credential_hash.clone()
+			),
+			Error::<Test>::DidNotFound
+		);
+		assert_noop!(
+			DID::issue_credentials(
+				RuntimeOrigin::signed(ACCOUNT_04),
+				ACCOUNT_04,
+				ACCOUNT_02,
+				creds.clone(),
+				verifiable_credential_hash.clone()
+			),
+			Error::<Test>::IssuerNotActive
+		);
+
+		assert_ok!(DID::issue_credentials(
+			issuer_origin.clone(),
+			ACCOUNT_01,
+			ACCOUNT_02,
+			creds.clone(),
+			verifiable_credential_hash.clone()
+		));
+
+		for cred in creds.iter() {
+			assert_eq!(
+				DID::issued_credentials((ACCOUNT_02, cred.clone(), ACCOUNT_01)),
+				Some(CredentialInfo {
+					verifiable_credential_hash: verifiable_credential_hash.clone()
+				})
+			);
+		}
+
+		let events = events();
+		assert!(events.contains(&Event::<Test>::CredentialsIssued {
+			issuer: ACCOUNT_01,
+			did: ACCOUNT_02,
+			credentials: creds,
+			verifiable_credential_hash
+		}));
+	});
+}
+
+#[test]
+fn revoke_credentials_works() {
+	new_test_ext().execute_with(|| {
+		let issuer_origin = RuntimeOrigin::signed(ACCOUNT_01);
+		let root = RuntimeOrigin::root();
+
+		create_default_did(ACCOUNT_01, ACCOUNT_01);
+		create_default_did(ACCOUNT_02, ACCOUNT_02);
+
+		let creds: Vec<BoundedVec<u8, MaxString>> =
+			vec![bounded_vec![0, 0], bounded_vec![0, 1], bounded_vec![0, 2]];
+		let verifiable_credential_hash: HashOf<Test> = bounded_vec![1, 2, 3, 4, 5];
+
+		assert_ok!(DID::add_credentials_type(root.clone(), creds.clone()));
+		assert_ok!(DID::add_issuer(root.clone(), ACCOUNT_01));
+
+		assert_ok!(DID::issue_credentials(
+			issuer_origin.clone(),
+			ACCOUNT_01,
+			ACCOUNT_02,
+			creds.clone(),
+			verifiable_credential_hash.clone()
+		));
+
+		assert_noop!(
+			DID::revoke_credentials(
+				RuntimeOrigin::signed(ACCOUNT_02),
+				ACCOUNT_01,
+				ACCOUNT_02,
+				creds.clone(),
+			),
+			Error::<Test>::NotController
+		);
+		assert_noop!(
+			DID::revoke_credentials(issuer_origin.clone(), ACCOUNT_03, ACCOUNT_03, creds.clone(),),
+			Error::<Test>::DidNotFound
+		);
+		assert_noop!(
+			DID::revoke_credentials(
+				issuer_origin.clone(),
+				ACCOUNT_01,
+				ACCOUNT_02,
+				vec![bounded_vec![9, 9]],
+			),
+			Error::<Test>::IssuedCredentialDoesNotExist
+		);
+
+		assert_ok!(DID::revoke_credentials(
+			issuer_origin.clone(),
+			ACCOUNT_01,
+			ACCOUNT_02,
+			creds.clone(),
+		));
+
+		for cred in creds.iter() {
+			assert_eq!(DID::issued_credentials((ACCOUNT_02, cred.clone(), ACCOUNT_01)), None);
+		}
+
+		let events = events();
+		assert!(events.contains(&Event::<Test>::CredentialsRevoked {
+			issuer: ACCOUNT_01,
+			did: ACCOUNT_02,
+			credentials: creds,
+		}));
+	});
+}

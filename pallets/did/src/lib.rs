@@ -20,6 +20,7 @@
 mod mock;
 #[cfg(test)]
 mod tests;
+pub mod weights;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
@@ -187,6 +188,7 @@ pub mod pallet {
 		StorageValue<_, BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>, ValueQuery>;
 
 	#[pallet::storage]
+	#[pallet::getter(fn issued_credentials)]
 	pub type IssuedCredentials<T: Config> = StorageNMap<
 		_,
 		(
