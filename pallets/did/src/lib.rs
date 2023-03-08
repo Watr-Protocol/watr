@@ -551,7 +551,7 @@ pub mod pallet {
 			let document = Did::<T>::get(&issuer_did).ok_or(Error::<T>::DidNotFound)?;
 			Self::ensure_controller(controller, &document)?;
 
-			Self::do_revoke_credentials(&issuer_did, &subject_did, &credentials);
+			Self::do_revoke_credentials(&issuer_did, &subject_did, &credentials)?;
 
 			Self::deposit_event(Event::CredentialsRevoked {
 				issuer: issuer_did,
@@ -570,7 +570,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			T::GovernanceOrigin::ensure_origin(origin.clone())?;
 
-			Self::do_revoke_credentials(&issuer_did, &subject_did, &credentials);
+			Self::do_revoke_credentials(&issuer_did, &subject_did, &credentials)?;
 
 			Self::deposit_event(Event::CredentialsForcedRevoked {
 				issuer: issuer_did,
