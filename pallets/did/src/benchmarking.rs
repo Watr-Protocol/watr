@@ -218,7 +218,7 @@ benchmarks! {
 			credentials_types.push(cred.clone());
 		}
 	}: _(
-		RawOrigin::Root, credentials_types.to_vec().clone()
+		RawOrigin::Root, credentials_types.clone()
 	)
 	verify {
 		assert_eq!(CredentialsTypes::<T>::get(), credentials_types);
