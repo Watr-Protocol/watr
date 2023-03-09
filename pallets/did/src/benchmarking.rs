@@ -1,5 +1,6 @@
 use crate::*;
 use frame_benchmarking::{account, benchmarks, whitelisted_caller};
+use frame_support::BoundedVec;
 use frame_system::RawOrigin;
 use sp_core::H160;
 
@@ -196,16 +197,23 @@ benchmarks! {
 		assert_eq!(Issuers::<T>::get(issuer), None);
 	}
 
-	// // ---------------------------------------------
-	// add_credentials_type {
-	// 	/* code to set the initial state */
-	// }: {
-	// 	/* code to test the function benchmarked */
-	// }
-	// verify {
-	// 	/* optional verification */
-	// 	assert_eq!(true, true)
-	// }
+	// ---------------------------------------------
+	add_credentials_type {
+		let m in 0 .. T::MaxCredentialsTypes::get();
+		let mut credentials_types = BoundedVec::default();
+		let mut cred =  BoundedVec::default();
+		for i in 1..m {
+			cred.push(0 as u8);
+			cred.push(i as u8);
+			credentials_types.push(cred.clone());
+		}
+		CredentialsTypes::<T>::put(credentials_types.clone());
+	}: _(
+		RawOrigin::Root, credentials_types.to_vec().clone()
+	)
+	verify {
+		//assert_eq!(CredentialsTypes::<T>::get(), credentials_types);
+	}
 
 	// // ---------------------------------------------
 	// remove_credentials_type {
