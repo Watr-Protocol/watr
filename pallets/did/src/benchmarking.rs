@@ -211,20 +211,12 @@ benchmarks! {
 	// ---------------------------------------------
 	add_credentials_type {
 		let m in 0 .. T::MaxCredentialsTypes::get();
-		let mut credentials_types = BoundedVec::default();
-		CredentialsTypes::<T>::put(credentials_types.clone());
+		let mut credentials_types = Vec::default();
 
 		for i in 0 .. m {
-			let mut credentials_types:
-				frame_support::BoundedVec<
-					frame_support::BoundedVec<u8, T::MaxString>,
-					T::MaxCredentialsTypes
-				> = BoundedVec::default();
 			let cred = create_credential_type::<T>(i as u8);
-			credentials_types.try_push(cred.clone());
+			credentials_types.push(cred.clone());
 		}
-
-		CredentialsTypes::<T>::put(credentials_types.clone());
 	}: _(
 		RawOrigin::Root, credentials_types.to_vec().clone()
 	)
@@ -238,11 +230,6 @@ benchmarks! {
 		let mut credentials_types = BoundedVec::default();
 
 		for i in 0 .. m {
-			let mut credentials_types:
-				frame_support::BoundedVec<
-					frame_support::BoundedVec<u8, T::MaxString>,
-					T::MaxCredentialsTypes
-				> = BoundedVec::default();
 			let cred = create_credential_type::<T>(i as u8);
 			credentials_types.try_push(cred.clone());
 		}
@@ -252,7 +239,7 @@ benchmarks! {
 		RawOrigin::Root, credentials_types.to_vec().clone()
 	)
 	verify {
-		assert_eq!(CredentialsTypes::<T>::get(), credentials_types);
+		assert_eq!(CredentialsTypes::<T>::get(), Vec::default());
 	}
 }
 
