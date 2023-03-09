@@ -37,6 +37,17 @@ fn create_service<T: Config>(i: u32) -> ServiceInfo<T> {
 	ServiceInfo { type_id: ServiceType::VerifiableCredentialFileStorage, service_endpoint }
 }
 
+fn create_credential_type<T: Config>(i: u8) -> BoundedVec<u8, T::MaxString> {
+	let mut cred = BoundedVec::default();
+	let cred_bytes = i.to_be_bytes();
+
+	for b in cred_bytes {
+		cred.try_push(b);
+	}
+
+	cred
+}
+
 benchmarks! {
 	// ---------------------------------------------
 	create_did {
@@ -201,30 +212,48 @@ benchmarks! {
 	add_credentials_type {
 		let m in 0 .. T::MaxCredentialsTypes::get();
 		let mut credentials_types = BoundedVec::default();
-		let mut cred =  BoundedVec::default();
-		for i in 1..m {
-			cred.push(0 as u8);
-			cred.push(i as u8);
-			credentials_types.push(cred.clone());
+		CredentialsTypes::<T>::put(credentials_types.clone());
+
+		for i in 0 .. m {
+			let mut credentials_types:
+				frame_support::BoundedVec<
+					frame_support::BoundedVec<u8, T::MaxString>,
+					T::MaxCredentialsTypes
+				> = BoundedVec::default();
+			let cred = create_credential_type::<T>(i as u8);
+			credentials_types.try_push(cred.clone());
 		}
+
 		CredentialsTypes::<T>::put(credentials_types.clone());
 	}: _(
 		RawOrigin::Root, credentials_types.to_vec().clone()
 	)
 	verify {
-		//assert_eq!(CredentialsTypes::<T>::get(), credentials_types);
+		assert_eq!(CredentialsTypes::<T>::get(), credentials_types);
 	}
 
-	// // ---------------------------------------------
-	// remove_credentials_type {
-	// 	/* code to set the initial state */
-	// }: {
-	// 	/* code to test the function benchmarked */
-	// }
-	// verify {
-	// 	/* optional verification */
-	// 	assert_eq!(true, true)
-	// }
+	// ---------------------------------------------
+	remove_credentials_type {
+		let m in 0 .. T::MaxCredentialsTypes::get();
+		let mut credentials_types = BoundedVec::default();
+
+		for i in 0 .. m {
+			let mut credentials_types:
+				frame_support::BoundedVec<
+					frame_support::BoundedVec<u8, T::MaxString>,
+					T::MaxCredentialsTypes
+				> = BoundedVec::default();
+			let cred = create_credential_type::<T>(i as u8);
+			credentials_types.try_push(cred.clone());
+		}
+
+		CredentialsTypes::<T>::put(credentials_types.clone());
+	}: _(
+		RawOrigin::Root, credentials_types.to_vec().clone()
+	)
+	verify {
+		assert_eq!(CredentialsTypes::<T>::get(), credentials_types);
+	}
 }
 
 // impl_benchmark_test_suite!(
