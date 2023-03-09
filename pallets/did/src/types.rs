@@ -109,7 +109,9 @@ pub struct ServicesWitness {
 	pub removals: u32,
 }
 
-#[derive(Clone, Decode, Default, Encode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[derive(
+	Clone, Decode, Default, Encode, PartialEq, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,
+)]
 #[scale_info(skip_type_params(T))]
 pub struct CredentialInfo<T: Config> {
 	pub verifiable_credential_hash: HashOf<T>,

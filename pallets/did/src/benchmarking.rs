@@ -348,11 +348,11 @@ benchmarks! {
 
 	}: _(controller_origin.clone(), T::DidIdentifier::from(issuer_did.clone()), T::DidIdentifier::from(did.clone()), credentials.clone(), verifiable_credential_hash.clone())
 	verify {
-		// for credential in credentials {
-		// 	assert_eq!(IssuedCredentials::<T>::get((T::DidIdentifier::from(did.clone()), credential, T::DidIdentifier::from(issuer_did.clone()))), Some(CredentialInfo {
-		// 		verifiable_credential_hash: verifiable_credential_hash.clone()
-		// 	}));
-		// }
+		for credential in credentials {
+			assert_eq!(IssuedCredentials::<T>::get((T::DidIdentifier::from(did.clone()), credential, T::DidIdentifier::from(issuer_did.clone()))), Some(CredentialInfo {
+				verifiable_credential_hash: verifiable_credential_hash.clone()
+			}));
+		}
 	}
 
 	// ---------------------------------------------
@@ -417,9 +417,9 @@ benchmarks! {
 		));
 	}: _(controller_origin.clone(), T::DidIdentifier::from(issuer_did.clone()), T::DidIdentifier::from(did.clone()), credentials.clone())
 	verify {
-		// for credential in credentials {
-		// 	assert_eq!(IssuedCredentials::<T>::get((T::DidIdentifier::from(did.clone()), credential, T::DidIdentifier::from(issuer_did.clone()))), None);
-		// }
+		for credential in credentials {
+			assert_eq!(IssuedCredentials::<T>::get((T::DidIdentifier::from(did.clone()), credential, T::DidIdentifier::from(issuer_did.clone()))), None);
+		}
 	}
 
 	// // ---------------------------------------------
