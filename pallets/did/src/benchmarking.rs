@@ -73,7 +73,7 @@ fn create_credential<T: Config>(i: u32, seed: u8) -> CredentialOf<T> {
 	credential_type
 }
 
-fn create_credentials<T: Config>(i: u32, seed: u8) -> (Vec<CredentialOf<T>>) {
+fn create_credentials<T: Config>(i: u32, seed: u8) -> Vec<CredentialOf<T>> {
 	let mut credentials = Vec::<CredentialOf<T>>::new();
 	for j in 0..i {
 		let credential = create_credential::<T>(j, seed);
@@ -222,7 +222,7 @@ benchmarks! {
 		let assertion_id = 1;
 		let services_generator_seed = 1;
 
-		let (existing_services, mut existing_services_keys) = create_services::<T>(0, services_generator_seed);
+		let (existing_services, existing_services_keys) = create_services::<T>(0, services_generator_seed);
 		let existing_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
 		let did: T::AccountId = whitelisted_caller();
 		let did_origin = RawOrigin::Signed(did.clone());
@@ -258,7 +258,7 @@ benchmarks! {
 		let authentication_id = 1;
 		let assertion_id = 1;
 		let services_generator_seed = 1;
-		let (existing_services, mut existing_services_keys) = create_services::<T>(m, services_generator_seed);
+		let (existing_services, existing_services_keys) = create_services::<T>(m, services_generator_seed);
 		let existing_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
 		let did: T::AccountId = whitelisted_caller();
 		let did_origin = RawOrigin::Signed(did.clone());
@@ -296,7 +296,7 @@ benchmarks! {
 		let controller_id = 1;
 		let authentication_id = 1;
 		let assertion_id = 1;
-		let (existing_services, mut existing_services_keys) = create_services::<T>(0, 1);
+		let (existing_services, existing_services_keys) = create_services::<T>(0, 1);
 		let existing_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
 		let did: T::AccountId = whitelisted_caller();
 		let did_origin = RawOrigin::Signed(did.clone());
@@ -313,7 +313,7 @@ benchmarks! {
 		let controller_id = 2;
 		let authentication_id = 2;
 		let assertion_id = 2;
-		let (existing_services, mut existing_services_keys) = create_services::<T>(0, 1);
+		let (existing_services, existing_services_keys) = create_services::<T>(0, 1);
 		let existing_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
 
 		let issuer_did = issuer::<T>(2).into();
@@ -333,11 +333,11 @@ benchmarks! {
 		));
 		assert_ok!(DID::<T>::add_issuer(root.clone(), T::DidIdentifier::from(issuer_did.clone())));
 
-		let mut credentials = create_credentials::<T>(c, 1);
+		let credentials = create_credentials::<T>(c, 1);
 
 		let mut verifiable_credential_hash: HashOf<T> = HashOf::<T>::default();
 		for i in 0..T::MaxHash::get() {
-			verifiable_credential_hash.try_push((i + c) as u8);
+			let _ = verifiable_credential_hash.try_push((i + c) as u8);
 		}
 
 		assert_ok!(DID::<T>::add_credentials_type(root.clone(), credentials.clone()));
@@ -367,7 +367,7 @@ benchmarks! {
 		let controller_id = 1;
 		let authentication_id = 1;
 		let assertion_id = 1;
-		let (existing_services, mut existing_services_keys) = create_services::<T>(0, 1);
+		let (existing_services, existing_services_keys) = create_services::<T>(0, 1);
 		let existing_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
 		let did: T::AccountId = whitelisted_caller();
 		let did_origin = RawOrigin::Signed(did.clone());
@@ -383,7 +383,7 @@ benchmarks! {
 		let controller_id = 2;
 		let authentication_id = 2;
 		let assertion_id = 2;
-		let (existing_services, mut existing_services_keys) = create_services::<T>(0, 1);
+		let (existing_services, existing_services_keys) = create_services::<T>(0, 1);
 		let existing_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
 		let issuer_did = issuer::<T>(2).into();
 		let issuer_origin = RawOrigin::Signed(issuer_did.clone());
@@ -402,11 +402,11 @@ benchmarks! {
 		));
 		assert_ok!(DID::<T>::add_issuer(root.clone(), T::DidIdentifier::from(issuer_did.clone())));
 
-		let mut credentials = create_credentials::<T>(c, 1);
+		let credentials = create_credentials::<T>(c, 1);
 
 		let mut verifiable_credential_hash: HashOf<T> = HashOf::<T>::default();
 		for i in 0..T::MaxHash::get() {
-			verifiable_credential_hash.try_push((i + c) as u8);
+			let _ = verifiable_credential_hash.try_push((i + c) as u8);
 		}
 
 		assert_ok!(DID::<T>::add_credentials_type(root.clone(), credentials.clone()));
