@@ -20,22 +20,18 @@
 mod mock;
 #[cfg(test)]
 mod tests;
+pub mod weights;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
-mod errors;
 mod types;
-mod verification;
 
-use crate::{
-	types::{
-		AssertionMethod, AuthenticationMethod, Document, IssuerInfo, IssuerStatus, Service,
-		ServiceInfo, ServiceType,
-	},
-	verification::DidSignature,
+use crate::types::{
+	AssertionMethod, AuthenticationMethod, CredentialInfo, Document, IssuerInfo, IssuerStatus,
+	Service, ServiceInfo, ServicesWitness,
 };
 use frame_support::{
-	dispatch::{DispatchResult, Dispatchable, GetDispatchInfo, PostDispatchInfo},
+	dispatch::DispatchResult,
 	ensure,
 	pallet_prelude::DispatchError,
 	storage::types::StorageMap,
@@ -48,7 +44,7 @@ use sp_runtime::{traits::Hash, ArithmeticError};
 use sp_std::prelude::*;
 
 pub use pallet::*;
-use verification::DidVerifiableIdentifier;
+pub use weights::WeightInfo;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -112,18 +108,10 @@ pub mod pallet {
 			+ Into<Self::AccountId>;
 
 		/// Type for the authentication method used by a DID.
-		type AuthenticationAddress: Parameter
-			+ DidVerifiableIdentifier
-			+ MaxEncodedLen
-			+ From<H160>
-			+ From<H256>;
+		type AuthenticationAddress: Parameter + MaxEncodedLen + From<H160> + From<H256>;
 
 		/// Type for the assertion method used by an Issuer DID.
-		type AssertionAddress: Parameter
-			+ DidVerifiableIdentifier
-			+ MaxEncodedLen
-			+ From<H160>
-			+ From<H256>;
+		type AssertionAddress: Parameter + MaxEncodedLen + From<H160> + From<H256>;
 
 		/// The amount held on deposit for a DID creation
 		#[pallet::constant]
@@ -147,6 +135,9 @@ pub mod pallet {
 
 		/// Origin for priviledged actions
 		type GovernanceOrigin: EnsureOrigin<Self::RuntimeOrigin>;
+
+		/// Weight information for extrinsics in this pallet.
+		type WeightInfo: WeightInfo;
 	}
 
 	/// DID Resolver
@@ -167,6 +158,18 @@ pub mod pallet {
 	// list of valid Credentials types
 	pub(super) type CredentialsTypes<T: Config> =
 		StorageValue<_, BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>, ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn issued_credentials)]
+	pub type IssuedCredentials<T: Config> = StorageNMap<
+		_,
+		(
+			NMapKey<Blake2_128Concat, DidIdentifierOf<T>>, // Subject
+			NMapKey<Blake2_128Concat, CredentialOf<T>>,    // CredentialType
+			NMapKey<Blake2_128Concat, DidIdentifierOf<T>>, // Issuer
+		),
+		CredentialInfo<T>,
+	>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -213,7 +216,11 @@ pub mod pallet {
 			issuer: DidIdentifierOf<T>,
 			did: DidIdentifierOf<T>,
 			credentials: Vec<CredentialOf<T>>,
-			verifiable_credential_hash: HashOf<T>,
+		},
+		CredentialsForcedRevoked {
+			issuer: DidIdentifierOf<T>,
+			did: DidIdentifierOf<T>,
+			credentials: Vec<CredentialOf<T>>,
 		},
 		IssuerRemoved {
 			issuer: DidIdentifierOf<T>,
@@ -232,9 +239,11 @@ pub mod pallet {
 	#[pallet::error]
 	pub enum Error<T> {
 		/// Unable to add credential that already exists
-		CredentialAlreadyAdded,
+		CredentialTypeAlreadyAdded,
 		/// Unable to find credential
-		CredentialDoesNotExist,
+		CredentialTypeDoesNotExist,
+		/// Unable to find issued credential
+		IssuedCredentialDoesNotExist,
 		/// Unable to create issuer that already exists
 		IssuerAlreadyExists,
 		/// Unable to find issuer
@@ -266,14 +275,14 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		// #[pallet::call_index(0)]
-		#[pallet::weight(1000000)]
+		#[pallet::weight(T::WeightInfo::create_did(services.len() as u32))]
 		pub fn create_did(
 			origin: OriginFor<T>,
 			controller: DidIdentifierOf<T>,
 			authentication: T::AuthenticationAddress,
 			assertion: Option<T::AssertionAddress>,
 			services: BoundedVec<ServiceInfo<T>, T::MaxServices>,
-		) -> DispatchResult {
+		) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
 			let did = T::DidIdentifier::from(origin.clone());
 
@@ -288,9 +297,14 @@ pub mod pallet {
 			let maybe_assertion_method =
 				assertion.map(|assertion| AssertionMethod::<T> { controller: assertion });
 
+			// For keepin track of Services inserts/removals
+			let mut services_witness = ServicesWitness::default();
 			// Add services.
-			let services_keys =
-				Self::do_add_did_services(services, &mut <ServiceKeysOf<T>>::default())?;
+			let services_keys = Self::do_add_did_services(
+				services,
+				&mut <ServiceKeysOf<T>>::default(),
+				&mut services_witness,
+			)?;
 
 			// Build Document
 			let document = Document {
@@ -305,10 +319,11 @@ pub mod pallet {
 
 			// Event
 			Self::deposit_event(Event::DidCreated { did, document });
-			Ok(())
+
+			Ok(Some(T::WeightInfo::create_did(services_witness.inserts)).into())
 		}
 
-		#[pallet::weight(1000000)]
+		#[pallet::weight(T::WeightInfo::update_did(services.clone().or_else(|| Some(BoundedVec::default())).unwrap().len() as u32, T::MaxServices::get()))]
 		pub fn update_did(
 			origin: OriginFor<T>,
 			did: DidIdentifierOf<T>,
@@ -316,20 +331,27 @@ pub mod pallet {
 			authentication: Option<T::AuthenticationAddress>,
 			assertion: Option<T::AssertionAddress>,
 			services: Option<BoundedVec<ServiceInfo<T>, T::MaxServices>>,
-		) -> DispatchResult {
+		) -> DispatchResultWithPostInfo {
+			// For keepin track of Services inserts/removals
+			let mut services_witness = ServicesWitness::default();
+
 			let document = Self::do_update_did(
 				origin,
 				did.clone(),
 				controller,
 				authentication,
 				assertion,
-				services,
+				services.clone(),
+				&mut services_witness,
 			)?;
+
 			Self::deposit_event(Event::DidUpdated { did, document });
-			Ok(())
+
+			Ok(Some(T::WeightInfo::update_did(services_witness.inserts, services_witness.removals))
+				.into())
 		}
 
-		#[pallet::weight(1000000)]
+		#[pallet::weight(T::WeightInfo::update_did(services.clone().or_else(|| Some(BoundedVec::default())).unwrap().len() as u32, T::MaxServices::get()))]
 		pub fn force_update_did(
 			origin: OriginFor<T>,
 			did: DidIdentifierOf<T>,
@@ -337,8 +359,11 @@ pub mod pallet {
 			authentication: Option<T::AuthenticationAddress>,
 			assertion: Option<T::AssertionAddress>,
 			services: Option<BoundedVec<ServiceInfo<T>, T::MaxServices>>,
-		) -> DispatchResult {
+		) -> DispatchResultWithPostInfo {
 			T::GovernanceOrigin::ensure_origin(origin.clone())?;
+			// For keepin track of Services inserts/removals
+			let mut services_witness = ServicesWitness::default();
+
 			let document = Self::do_update_did(
 				origin,
 				did.clone(),
@@ -346,73 +371,99 @@ pub mod pallet {
 				authentication,
 				assertion,
 				services,
+				&mut services_witness,
 			)?;
+
 			Self::deposit_event(Event::DidForcedUpdated { did, document });
-			Ok(())
+
+			Ok(Pays::No.into())
 		}
 
-		#[pallet::weight(1000000)]
-		pub fn remove_did(origin: OriginFor<T>, did: DidIdentifierOf<T>) -> DispatchResult {
-			Self::do_remove_did(origin, did.clone())?;
+		#[pallet::weight(T::WeightInfo::remove_did(T::MaxServices::get()))]
+		pub fn remove_did(
+			origin: OriginFor<T>,
+			did: DidIdentifierOf<T>,
+		) -> DispatchResultWithPostInfo {
+			// For keepin track of Services inserts/removals
+			let mut services_witness = ServicesWitness::default();
+			Self::do_remove_did(origin, did.clone(), &mut services_witness)?;
 			Self::deposit_event(Event::DidRemoved { did });
-			Ok(())
+
+			Ok(Some(T::WeightInfo::remove_did(services_witness.removals)).into())
 		}
 
-		#[pallet::weight(1000000)]
-		pub fn force_remove_did(origin: OriginFor<T>, did: DidIdentifierOf<T>) -> DispatchResult {
+		#[pallet::weight(T::WeightInfo::remove_did(T::MaxServices::get()))]
+		pub fn force_remove_did(
+			origin: OriginFor<T>,
+			did: DidIdentifierOf<T>,
+		) -> DispatchResultWithPostInfo {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin.clone())?;
-			Self::do_remove_did(origin, did.clone())?;
+			// For keepin track of Services inserts/removals
+			let mut services_witness = ServicesWitness::default();
+			Self::do_remove_did(origin, did.clone(), &mut services_witness)?;
 			Self::deposit_event(Event::DidForcedRemoved { did });
-			Ok(())
+
+			Ok(Pays::No.into())
 		}
 
-		#[pallet::weight(1000000)]
+		#[pallet::weight(T::WeightInfo::add_did_services(services.len() as u32))]
 		pub fn add_did_services(
 			origin: OriginFor<T>,
 			did: DidIdentifierOf<T>,
 			services: BoundedVec<ServiceInfo<T>, T::MaxServices>,
-		) -> DispatchResult {
+		) -> DispatchResultWithPostInfo {
 			let controller = ensure_signed(origin)?;
-
+			// For keepin track of Services inserts/removals
+			let mut services_witness = ServicesWitness::default();
 			// Try to mutate document
-			Did::<T>::try_mutate(did.clone(), |maybe_doc| -> Result<(), DispatchError> {
+			Did::<T>::try_mutate(did.clone(), |maybe_doc| -> DispatchResultWithPostInfo {
 				let document = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
-
 				Self::ensure_controller(controller, &document)?;
-
 				// Insert new services
-				let services_keys = Self::do_add_did_services(services, &mut document.services)?;
-				// document.services = services_keys.clone();
-
+				let services_keys = Self::do_add_did_services(
+					services,
+					&mut document.services,
+					&mut services_witness,
+				)?;
 				Self::deposit_event(Event::DidServicesAdded { did, new_services: services_keys });
-				Ok(())
+
+				Ok(Some(T::WeightInfo::add_did_services(services_witness.inserts)).into())
 			})
 		}
 
-		#[pallet::weight(1000000)]
+		#[pallet::weight(T::WeightInfo::remove_did_services(services_keys.len() as u32))]
 		pub fn remove_did_services(
 			origin: OriginFor<T>,
 			did: DidIdentifierOf<T>,
 			services_keys: ServiceKeysOf<T>,
-		) -> DispatchResult {
+		) -> DispatchResultWithPostInfo {
 			let controller = ensure_signed(origin)?;
 
-			Did::<T>::try_mutate(did.clone(), |maybe_doc| -> Result<(), DispatchError> {
+			// For keepin track of Services inserts/removals
+			let mut services_witness = ServicesWitness::default();
+
+			Did::<T>::try_mutate(did.clone(), |maybe_doc| -> DispatchResultWithPostInfo {
 				let document = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
 				// ensure that the caller is the controller of the DID
 				Self::ensure_controller(controller, &document)?;
 
-				Self::do_remove_did_services(services_keys.clone(), &mut document.services)?;
+				Self::do_remove_did_services(
+					services_keys.clone(),
+					&mut document.services,
+					&mut services_witness,
+				)?;
 
 				Self::deposit_event(Event::DidServicesRemoved {
 					did,
 					removed_services: services_keys,
 				});
-				Ok(())
+
+				Ok(Some(T::WeightInfo::remove_did_services(services_witness.removals)).into())
 			})
 		}
 
+		// #[pallet::call_index(6)]
 		#[pallet::weight(1000000)]
 		pub fn issue_credentials(
 			origin: OriginFor<T>,
@@ -427,12 +478,27 @@ pub mod pallet {
 			let document = Did::<T>::get(&issuer_did).ok_or(Error::<T>::DidNotFound)?;
 			Self::ensure_controller(controller, &document)?;
 
+			// Ensure issuer exists and is active
+			Self::ensure_issuer_is_active(&issuer_did)?;
+
 			// Ensure Credential types exist
-			ensure!(Issuers::<T>::contains_key(&issuer_did), Error::<T>::NotIssuer);
 			Self::ensure_valid_credentials(&credentials)?;
 
 			// Check that subject DID exist
-			ensure!(!Did::<T>::contains_key(subject_did.clone()), Error::<T>::DidNotFound);
+			ensure!(Did::<T>::contains_key(subject_did.clone()), Error::<T>::DidNotFound);
+
+			for credential in credentials.clone() {
+				IssuedCredentials::<T>::try_mutate(
+					(subject_did.clone(), &credential, issuer_did.clone()),
+					|maybe_issued_credential| -> DispatchResult {
+						let issued_credential = CredentialInfo {
+							verifiable_credential_hash: verifiable_credential_hash.clone(),
+						};
+						*maybe_issued_credential = Some(issued_credential);
+						Ok(())
+					},
+				)?;
+			}
 
 			Self::deposit_event(Event::CredentialsIssued {
 				issuer: issuer_did,
@@ -443,13 +509,13 @@ pub mod pallet {
 			Ok(())
 		}
 
+		// #[pallet::call_index(7)]
 		#[pallet::weight(1000000)]
 		pub fn revoke_credentials(
 			origin: OriginFor<T>,
 			issuer_did: DidIdentifierOf<T>,
 			subject_did: DidIdentifierOf<T>,
 			credentials: Vec<CredentialOf<T>>,
-			verifiable_credential_hash: HashOf<T>,
 		) -> DispatchResult {
 			let controller = ensure_signed(origin)?;
 
@@ -457,16 +523,37 @@ pub mod pallet {
 			let document = Did::<T>::get(&issuer_did).ok_or(Error::<T>::DidNotFound)?;
 			Self::ensure_controller(controller, &document)?;
 
-			Self::deposit_event(Event::CredentialsIssued {
+			Self::do_revoke_credentials(&issuer_did, &subject_did, &credentials)?;
+
+			Self::deposit_event(Event::CredentialsRevoked {
 				issuer: issuer_did,
 				did: subject_did,
 				credentials,
-				verifiable_credential_hash,
 			});
 			Ok(())
 		}
 
-		// #[pallet::call_index(1)]
+		// #[pallet::call_index(8)]
+		#[pallet::weight(1000000)]
+		pub fn force_revoke_credentials(
+			origin: OriginFor<T>,
+			issuer_did: DidIdentifierOf<T>,
+			subject_did: DidIdentifierOf<T>,
+			credentials: Vec<CredentialOf<T>>,
+		) -> DispatchResult {
+			T::GovernanceOrigin::ensure_origin(origin.clone())?;
+
+			Self::do_revoke_credentials(&issuer_did, &subject_did, &credentials)?;
+
+			Self::deposit_event(Event::CredentialsForcedRevoked {
+				issuer: issuer_did,
+				did: subject_did,
+				credentials,
+			});
+			Ok(())
+		}
+
+		// #[pallet::call_index(9)]
 		#[pallet::weight(1000000)]
 		pub fn add_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
@@ -478,7 +565,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// #[pallet::call_index(2)]
+		// #[pallet::call_index(10)]
 		#[pallet::weight(1000000)]
 		pub fn revoke_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
@@ -487,17 +574,14 @@ pub mod pallet {
 			// Change issuer status to Revoked
 			Issuers::<T>::try_mutate(issuer.clone(), |maybe_info| -> DispatchResult {
 				let info = maybe_info.as_mut().ok_or(Error::<T>::IssuerDoesNotExist)?;
-				ensure!(
-					*info == IssuerInfo { status: IssuerStatus::Active },
-					Error::<T>::IssuerNotActive
-				);
+				Self::ensure_issuer_is_active(&issuer)?;
 				*info = IssuerInfo { status: IssuerStatus::Revoked };
 				Self::deposit_event(Event::IssuerStatusRevoked { issuer });
 				Ok(())
 			})
 		}
 
-		// #[pallet::call_index(3)]
+		// #[pallet::call_index(11)]
 		#[pallet::weight(1000000)]
 		pub fn reactivate_issuer(
 			origin: OriginFor<T>,
@@ -519,7 +603,7 @@ pub mod pallet {
 			})
 		}
 
-		// #[pallet::call_index(4)]
+		// #[pallet::call_index(12)]
 		#[pallet::weight(1000000)]
 		pub fn remove_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
@@ -528,7 +612,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// #[pallet::call_index(5)]
+		// #[pallet::call_index(13)]
 		#[pallet::weight(1000000)]
 		pub fn add_credentials_type(
 			origin: OriginFor<T>,
@@ -542,7 +626,7 @@ pub mod pallet {
 				let pos = credentials_types
 					.binary_search(&credential)
 					.err()
-					.ok_or(Error::<T>::CredentialAlreadyAdded)?;
+					.ok_or(Error::<T>::CredentialTypeAlreadyAdded)?;
 				credentials_types
 					.try_insert(pos, credential.clone())
 					.map_err(|_| Error::<T>::MaxCredentials)?;
@@ -553,7 +637,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// #[pallet::call_index(6)]
+		// #[pallet::call_index(14)]
 		#[pallet::weight(1000000)]
 		pub fn remove_credentials_type(
 			origin: OriginFor<T>,
@@ -567,7 +651,7 @@ pub mod pallet {
 				let pos = credentials_types
 					.binary_search(&credential)
 					.ok()
-					.ok_or(Error::<T>::CredentialDoesNotExist)?;
+					.ok_or(Error::<T>::CredentialTypeDoesNotExist)?;
 				credentials_types.remove(pos);
 			}
 
@@ -587,6 +671,7 @@ impl<T: Config> Pallet<T> {
 		authentication: Option<T::AuthenticationAddress>,
 		assertion: Option<T::AssertionAddress>,
 		services: Option<BoundedVec<ServiceInfo<T>, T::MaxServices>>,
+		services_witness: &mut ServicesWitness,
 	) -> Result<Document<T>, DispatchError> {
 		Did::<T>::try_mutate(did.clone(), |maybe_doc| -> Result<Document<T>, DispatchError> {
 			let document = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
@@ -619,17 +704,25 @@ impl<T: Config> Pallet<T> {
 				Self::do_remove_did_services(
 					document.services.clone(),
 					&mut document.services.clone(),
+					services_witness,
 				)?;
 				// Add all the new services
-				document.services =
-					Self::do_add_did_services(new_services, &mut <ServiceKeysOf<T>>::default())?;
+				document.services = Self::do_add_did_services(
+					new_services,
+					&mut <ServiceKeysOf<T>>::default(),
+					services_witness,
+				)?;
 			}
 
 			Ok(document.clone())
 		})
 	}
 
-	pub fn do_remove_did(origin: OriginFor<T>, did: DidIdentifierOf<T>) -> DispatchResult {
+	pub fn do_remove_did(
+		origin: OriginFor<T>,
+		did: DidIdentifierOf<T>,
+		services_witness: &mut ServicesWitness,
+	) -> DispatchResult {
 		Did::<T>::try_mutate(did.clone(), |maybe_doc| -> DispatchResult {
 			// Take from storage (sets to None). Will be deleted if successful
 			let document = maybe_doc.take().ok_or(Error::<T>::DidNotFound)?;
@@ -641,6 +734,7 @@ impl<T: Config> Pallet<T> {
 			Self::do_remove_did_services(
 				document.services.clone(),
 				&mut document.services.clone(),
+				services_witness,
 			)?;
 
 			// If DID belongs to Issuer, attempt to remove it
@@ -656,12 +750,13 @@ impl<T: Config> Pallet<T> {
 	fn do_add_did_services(
 		services_to_add: BoundedVec<ServiceInfo<T>, T::MaxServices>,
 		document_services_keys: &mut ServiceKeysOf<T>,
+		services_witness: &mut ServicesWitness,
 	) -> Result<ServiceKeysOf<T>, DispatchError> {
 		// if existing_services is `Some` use it to insert into, otherwise create a new BoundedVec
 		let mut services_keys = <ServiceKeysOf<T>>::default();
 
 		for service in services_to_add {
-			let service_key = Self::do_add_service(service)?;
+			let service_key = Self::do_add_service(service, services_witness)?;
 			let pos = document_services_keys
 				.binary_search(&service_key)
 				.err()
@@ -681,17 +776,23 @@ impl<T: Config> Pallet<T> {
 	}
 
 	/// Insert a single service into storage
-	fn do_add_service(service: ServiceInfo<T>) -> Result<KeyIdOf<T>, DispatchError> {
+	fn do_add_service(
+		service: ServiceInfo<T>,
+		services_witness: &mut ServicesWitness,
+	) -> Result<KeyIdOf<T>, DispatchError> {
 		let service_key = T::Hashing::hash_of(&service);
 
-		// if the service exists, increment its consumers, otherwise insert a new service
+		// if the service exists increment its consumers, otherwise insert a new service
 		if let Some(mut existing_service) = Services::<T>::get(service_key.clone()) {
 			// `inc_consumers` may overflow, so handle it just in case
 			existing_service
 				.inc_consumers()
 				.map_err(|_| Error::<T>::TooManyServiceConsumers)?;
+			<Services<T>>::set(service_key, Some(existing_service));
 		} else {
 			<Services<T>>::insert(service_key, Service::<T>::new(service));
+			services_witness.inserts =
+				services_witness.inserts.checked_add(1).ok_or(ArithmeticError::Overflow)?;
 		}
 
 		Ok(service_key)
@@ -700,6 +801,7 @@ impl<T: Config> Pallet<T> {
 	fn do_remove_did_services(
 		keys_to_remove: ServiceKeysOf<T>,
 		document_services_keys: &mut ServiceKeysOf<T>,
+		services_witness: &mut ServicesWitness,
 	) -> DispatchResult {
 		// Iterate over each service and remove it from the document
 		for service_key in keys_to_remove {
@@ -710,13 +812,16 @@ impl<T: Config> Pallet<T> {
 			let deleted_key = document_services_keys.remove(pos);
 
 			// House cleaning. Check consumers and possibly delete from storage
-			Self::do_remove_service(deleted_key.clone())?;
+			Self::do_remove_service(deleted_key.clone(), services_witness)?;
 		}
 		Ok(())
 	}
 
 	// Decrements consumers and removes from storage if consumers == 0
-	fn do_remove_service(service_key: KeyIdOf<T>) -> DispatchResult {
+	fn do_remove_service(
+		service_key: KeyIdOf<T>,
+		services_witness: &mut ServicesWitness,
+	) -> DispatchResult {
 		Services::<T>::try_mutate_exists(
 			service_key,
 			|maybe_service| -> Result<(), DispatchError> {
@@ -727,6 +832,10 @@ impl<T: Config> Pallet<T> {
 				// Delete from storage if consumers == 0
 				if service.consumers() == 0 {
 					*maybe_service = None;
+					services_witness.removals = services_witness
+						.removals
+						.checked_add(1)
+						.ok_or(ArithmeticError::Overflow)?;
 				}
 
 				Ok(())
@@ -748,6 +857,25 @@ impl<T: Config> Pallet<T> {
 		})
 	}
 
+	pub fn do_revoke_credentials(
+		issuer_did: &DidIdentifierOf<T>,
+		subject_did: &DidIdentifierOf<T>,
+		credentials: &Vec<CredentialOf<T>>,
+	) -> DispatchResult {
+		for credential in credentials {
+			IssuedCredentials::<T>::try_mutate_exists(
+				(subject_did, &credential, issuer_did),
+				|maybe_issued_credential| -> DispatchResult {
+					maybe_issued_credential
+						.take()
+						.ok_or(Error::<T>::IssuedCredentialDoesNotExist)?;
+					Ok(())
+				},
+			)?;
+		}
+		Ok(())
+	}
+
 	/// Ensures that `who` is the controller of the did document
 	fn ensure_controller(who: T::AccountId, document: &Document<T>) -> DispatchResult {
 		ensure!(document.controller == T::DidIdentifier::from(who), Error::<T>::NotController);
@@ -763,6 +891,12 @@ impl<T: Config> Pallet<T> {
 			.map_or_else(|_| Self::ensure_controller(ensure_signed(origin)?, document), |_| Ok(()))
 	}
 
+	fn ensure_issuer_is_active(issuer_did: &DidIdentifierOf<T>) -> DispatchResult {
+		let issuer_info = Issuers::<T>::get(&issuer_did).ok_or(Error::<T>::NotIssuer)?;
+		ensure!(issuer_info.status == IssuerStatus::Active, Error::<T>::IssuerNotActive);
+		Ok(())
+	}
+
 	fn ensure_valid_credentials(credentials: &Vec<CredentialOf<T>>) -> DispatchResult {
 		let credential_types = <CredentialsTypes<T>>::get();
 
@@ -770,7 +904,7 @@ impl<T: Config> Pallet<T> {
 			credential_types
 				.binary_search(credential)
 				.ok()
-				.ok_or(Error::<T>::CredentialDoesNotExist)?;
+				.ok_or(Error::<T>::CredentialTypeDoesNotExist)?;
 		}
 		Ok(())
 	}

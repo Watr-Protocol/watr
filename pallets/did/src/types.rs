@@ -32,7 +32,7 @@ pub enum ServiceType {
 #[scale_info(skip_type_params(T))]
 pub struct Service<T: Config> {
 	pub info: ServiceInfo<T>,
-	// count of DIDs referencing this service
+	/// count of DIDs referencing this service
 	consumers: RefCount,
 }
 
@@ -94,4 +94,25 @@ impl<T: Config> Service<T> {
 	pub fn consumers(&self) -> RefCount {
 		self.consumers
 	}
+}
+
+/// Witness Services
+#[derive(
+	Copy, Clone, Default, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo,
+)]
+pub struct ServicesWitness {
+	/// The number of Services insterts
+	#[codec(compact)]
+	pub inserts: u32,
+	/// The number of Services removals
+	#[codec(compact)]
+	pub removals: u32,
+}
+
+#[derive(
+	Clone, Decode, Default, Encode, PartialEq, RuntimeDebugNoBound, TypeInfo, MaxEncodedLen,
+)]
+#[scale_info(skip_type_params(T))]
+pub struct CredentialInfo<T: Config> {
+	pub verifiable_credential_hash: HashOf<T>,
 }
