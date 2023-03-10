@@ -15,12 +15,10 @@
 // along with Watr.  If not, see <http://www.gnu.org/licenses/>.
 
 use super::*;
-use crate::{mock::*};
-use frame_support::{
-	assert_noop, assert_ok, bounded_vec, error::BadOrigin,
-};
-use sp_core::{H160};
-use sp_runtime::traits::{Hash};
+use crate::mock::*;
+use frame_support::{assert_noop, assert_ok, bounded_vec, error::BadOrigin};
+use sp_core::H160;
+use sp_runtime::traits::Hash;
 
 fn events() -> Vec<Event<Test>> {
 	let result = System::events()
@@ -77,7 +75,8 @@ fn hash_services(
 ) -> ServiceKeysOf<Test> {
 	let mut services_keys: ServiceKeysOf<Test> = BoundedVec::default();
 	for service in services {
-		let _ = services_keys.try_push(<mock::Test as frame_system::Config>::Hashing::hash_of(&service));
+		let _ = services_keys
+			.try_push(<mock::Test as frame_system::Config>::Hashing::hash_of(&service));
 	}
 	services_keys
 }
