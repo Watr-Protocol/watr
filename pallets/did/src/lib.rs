@@ -30,7 +30,7 @@ mod verification;
 
 use crate::types::{
 	AssertionMethod, AuthenticationMethod, CredentialInfo, Document, IssuerInfo, IssuerStatus,
-	Service, ServiceInfo, ServiceType, ServicesWitness,
+	Service, ServiceInfo, ServicesWitness,
 };
 use frame_support::{
 	dispatch::DispatchResult,
@@ -38,7 +38,6 @@ use frame_support::{
 	pallet_prelude::DispatchError,
 	storage::types::StorageMap,
 	traits::{Currency, EnsureOrigin, Get, ReservableCurrency},
-	weights::Weight,
 	BoundedVec, Parameter,
 };
 use frame_system::{ensure_signed, pallet_prelude::OriginFor};
@@ -48,23 +47,7 @@ use sp_std::prelude::*;
 
 pub use pallet::*;
 use verification::DidVerifiableIdentifier;
-
-/// Weight functions needed for pallet_did
-pub trait WeightInfo {
-	fn create_did(m: u32) -> Weight;
-	fn update_did(m: u32, n: u32) -> Weight;
-	fn remove_did(m: u32) -> Weight;
-	fn add_did_services(m: u32) -> Weight;
-	fn remove_did_services(m: u32) -> Weight;
-	// fn issue_credentials() -> Weight;
-	// fn revoke_credentials() -> Weight;
-	// fn add_issuer() -> Weight;
-	// fn revoke_issuer() -> Weight;
-	// fn reactivate_issuer() -> Weight;
-	// fn remove_issuer() -> Weight;
-	// fn add_credentials_type() -> Weight;
-	// fn remove_credentials_type() -> Weight;
-}
+pub use weights::WeightInfo;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -561,6 +544,7 @@ pub mod pallet {
 			Ok(())
 		}
 
+		// #[pallet::call_index(8)]
 		#[pallet::weight(1000000)]
 		pub fn force_revoke_credentials(
 			origin: OriginFor<T>,
@@ -580,7 +564,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// #[pallet::call_index(8)]
+		// #[pallet::call_index(9)]
 		#[pallet::weight(1000000)]
 		pub fn add_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
@@ -592,7 +576,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// #[pallet::call_index(9)]
+		// #[pallet::call_index(10)]
 		#[pallet::weight(1000000)]
 		pub fn revoke_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
@@ -601,17 +585,14 @@ pub mod pallet {
 			// Change issuer status to Revoked
 			Issuers::<T>::try_mutate(issuer.clone(), |maybe_info| -> DispatchResult {
 				let info = maybe_info.as_mut().ok_or(Error::<T>::IssuerDoesNotExist)?;
-				ensure!(
-					*info == IssuerInfo { status: IssuerStatus::Active },
-					Error::<T>::IssuerNotActive
-				);
+				Self::ensure_issuer_is_active(&issuer)?;
 				*info = IssuerInfo { status: IssuerStatus::Revoked };
 				Self::deposit_event(Event::IssuerStatusRevoked { issuer });
 				Ok(())
 			})
 		}
 
-		// #[pallet::call_index(10)]
+		// #[pallet::call_index(11)]
 		#[pallet::weight(1000000)]
 		pub fn reactivate_issuer(
 			origin: OriginFor<T>,
@@ -633,7 +614,7 @@ pub mod pallet {
 			})
 		}
 
-		// #[pallet::call_index(11)]
+		// #[pallet::call_index(12)]
 		#[pallet::weight(1000000)]
 		pub fn remove_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
@@ -642,7 +623,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// #[pallet::call_index(12)]
+		// #[pallet::call_index(13)]
 		#[pallet::weight(1000000)]
 		pub fn add_credentials_type(
 			origin: OriginFor<T>,
@@ -667,7 +648,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// #[pallet::call_index(13)]
+		// #[pallet::call_index(14)]
 		#[pallet::weight(1000000)]
 		pub fn remove_credentials_type(
 			origin: OriginFor<T>,
@@ -896,7 +877,7 @@ impl<T: Config> Pallet<T> {
 			IssuedCredentials::<T>::try_mutate_exists(
 				(subject_did, &credential, issuer_did),
 				|maybe_issued_credential| -> DispatchResult {
-					let issued_credential = maybe_issued_credential
+					maybe_issued_credential
 						.take()
 						.ok_or(Error::<T>::IssuedCredentialDoesNotExist)?;
 					Ok(())
