@@ -15,21 +15,12 @@
 // along with Watr.  If not, see <http://www.gnu.org/licenses/>.
 
 use super::*;
-use crate as pallet_did;
-use crate::{mock::*, Event as MotionEvent};
-use codec::Encode;
+use crate::{mock::*};
 use frame_support::{
-	assert_noop, assert_ok, bounded_vec, dispatch::GetDispatchInfo, error::BadOrigin,
-	weights::Weight,
+	assert_noop, assert_ok, bounded_vec, error::BadOrigin,
 };
-use frame_system::{EventRecord, Phase};
-use mock::{RuntimeCall, RuntimeEvent};
-use sp_core::{ConstU8, H160, H256};
-use sp_runtime::traits::{BlakeTwo256, Hash};
-
-fn record(event: RuntimeEvent) -> EventRecord<RuntimeEvent, H256> {
-	EventRecord { phase: Phase::Initialization, event, topics: vec![] }
-}
+use sp_core::{H160};
+use sp_runtime::traits::{Hash};
 
 fn events() -> Vec<Event<Test>> {
 	let result = System::events()
@@ -86,7 +77,7 @@ fn hash_services(
 ) -> ServiceKeysOf<Test> {
 	let mut services_keys: ServiceKeysOf<Test> = BoundedVec::default();
 	for service in services {
-		services_keys.try_push(<mock::Test as frame_system::Config>::Hashing::hash_of(&service));
+		let _ = services_keys.try_push(<mock::Test as frame_system::Config>::Hashing::hash_of(&service));
 	}
 	services_keys
 }
@@ -133,7 +124,7 @@ fn create_did_works() {
 #[test]
 fn update_did_works() {
 	new_test_ext().execute_with(|| {
-		let mut old_document = create_default_did(ALICE, ALICE);
+		let _ = create_default_did(ALICE, ALICE);
 
 		let origin = RuntimeOrigin::signed(ALICE);
 		let controller = 2;
@@ -176,7 +167,7 @@ fn update_did_works() {
 fn force_update_did_works() {
 	new_test_ext().execute_with(|| {
 		// default did with origin & did for Alice
-		let mut old_document = create_default_did(ALICE, ALICE);
+		let _ = create_default_did(ALICE, ALICE);
 
 		let origin = RuntimeOrigin::root();
 		let controller = 2;
@@ -222,7 +213,7 @@ fn remove_did_works() {
 	new_test_ext().execute_with(|| {
 		let origin = RuntimeOrigin::signed(ALICE);
 		// inserts default DID into storage. Checks for Ok()
-		let expected_document = create_default_did(ALICE, ALICE);
+		let _ = create_default_did(ALICE, ALICE);
 
 		assert_ok!(DID::remove_did(origin, ALICE));
 		assert_eq!(DID::dids(ALICE), None);
@@ -237,7 +228,7 @@ fn force_remove_did_works() {
 	new_test_ext().execute_with(|| {
 		let origin = RuntimeOrigin::root();
 		// inserts default DID into storage. Checks for Ok()
-		let expected_document = create_default_did(ALICE, ALICE);
+		let _ = create_default_did(ALICE, ALICE);
 
 		assert_ok!(DID::force_remove_did(origin, ALICE));
 		assert_eq!(DID::dids(ALICE), None);
@@ -250,7 +241,7 @@ fn force_remove_did_works() {
 #[test]
 fn add_did_services_works() {
 	new_test_ext().execute_with(|| {
-		let mut old_document = create_default_did(ALICE, ALICE);
+		let old_document = create_default_did(ALICE, ALICE);
 
 		let origin = RuntimeOrigin::signed(ALICE);
 
@@ -264,7 +255,7 @@ fn add_did_services_works() {
 
 		let mut combined_services = old_document.services.clone();
 		new_services_keys.clone().into_iter().for_each(|key| {
-			combined_services.try_push(key);
+			let _ = combined_services.try_push(key);
 		});
 		combined_services.sort();
 
@@ -286,13 +277,13 @@ fn add_did_services_works() {
 #[test]
 fn remove_did_services_works() {
 	new_test_ext().execute_with(|| {
-		let mut old_document = create_default_did(ALICE, ALICE);
+		let old_document = create_default_did(ALICE, ALICE);
 
 		let origin = RuntimeOrigin::signed(ALICE);
 
 		let mut service_remaining = default_services();
 		// remove last two services from `service_remaining`, leaving only one in `service_remaining`
-		let mut services_to_remove =
+		let services_to_remove =
 			bounded_vec![service_remaining.pop().unwrap(), service_remaining.pop().unwrap()];
 
 		let remaining_key = hash_services(&service_remaining);
@@ -323,7 +314,7 @@ fn multiple_service_consumers_works() {
 
 		assert_services(default_services(), 2);
 
-		let mut services_to_remove = hash_services(&default_services());
+		let services_to_remove = hash_services(&default_services());
 
 		assert_ok!(DID::remove_did_services(
 			RuntimeOrigin::signed(ALICE),
@@ -375,10 +366,9 @@ fn did_not_found_fails_for_all() {
 fn not_did_controller_fails_for_all() {
 	new_test_ext().execute_with(|| {
 		let origin = RuntimeOrigin::signed(ALICE);
-		let gov_origin = RuntimeOrigin::root();
 
 		// Create DID for Alice with Bob as controller
-		let expected_document = create_default_did(ALICE, BOB);
+		let _ = create_default_did(ALICE, BOB);
 
 		assert_noop!(
 			DID::update_did(origin.clone(), ALICE, None, None, None, None),
@@ -401,7 +391,7 @@ fn force_fails_if_not_governance() {
 	new_test_ext().execute_with(|| {
 		let origin = RuntimeOrigin::signed(ALICE);
 
-		let expected_document = create_default_did(ALICE, ALICE);
+		let _ = create_default_did(ALICE, ALICE);
 
 		assert_noop!(
 			DID::force_update_did(origin.clone(), ALICE, None, None, None, None),
@@ -417,10 +407,9 @@ fn create_did_fails_if_did_already_exists() {
 		let origin = RuntimeOrigin::signed(ALICE);
 		let controller = ALICE;
 		let authentication: H160 = H160::from([0u8; 20]);
-		let mut services = default_services();
 
 		// Create DID for Alice
-		let expected_document = create_default_did(ALICE, ALICE);
+		let _ = create_default_did(ALICE, ALICE);
 
 		assert_noop!(
 			DID::create_did(
@@ -471,7 +460,7 @@ fn update_did_fails_if_duplicated_service() {
 		let origin = RuntimeOrigin::signed(ALICE);
 		let mut services = default_services();
 
-		let expected_document = create_default_did(ALICE, ALICE);
+		let _ = create_default_did(ALICE, ALICE);
 
 		// duplicate service
 		services[1].service_endpoint = bounded_vec![b's', b'0'];
@@ -489,7 +478,7 @@ fn force_update_did_fails_if_duplicated_service() {
 		let origin = RuntimeOrigin::root();
 		let mut services = default_services();
 
-		let expected_document = create_default_did(ALICE, ALICE);
+		let _ = create_default_did(ALICE, ALICE);
 
 		// duplicate service
 		services[1].service_endpoint = bounded_vec![b's', b'0'];
@@ -516,7 +505,7 @@ fn add_did_services_fails_if_too_many_services() {
 
 		// insert max amount of services (with incremented indexes)
 		for i in 0..(<mock::Test as pallet::Config>::MaxServices::get() - services.len() as u8) {
-			services.try_push(ServiceInfo {
+			let _ = services.try_push(ServiceInfo {
 				type_id: types::ServiceType::VerifiableCredentialFileStorage,
 				service_endpoint: bounded_vec![b'm', b'0' + i],
 			});
@@ -536,7 +525,7 @@ fn add_did_services_fails_if_duplicated_service() {
 		let origin = RuntimeOrigin::signed(ALICE);
 		let mut services = default_services();
 
-		let expected_document = create_default_did(ALICE, ALICE);
+		let _ = create_default_did(ALICE, ALICE);
 
 		// duplicate service
 		services[1].service_endpoint = bounded_vec![b's', b'0'];
@@ -554,7 +543,7 @@ fn remove_did_services_fails_if_service_not_in_did() {
 		let origin = RuntimeOrigin::signed(ALICE);
 		let mut services = default_services();
 
-		let expected_document = create_default_did(ALICE, ALICE);
+		let _ = create_default_did(ALICE, ALICE);
 
 		// service that does not exist
 		services[0].service_endpoint = bounded_vec![b'd', b'0'];
