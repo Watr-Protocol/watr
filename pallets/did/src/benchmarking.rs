@@ -180,7 +180,6 @@ benchmarks! {
 		assert_last_event::<T>(Event::DidUpdated { did: T::DidIdentifier::from(did), document: new_document }.into());
 	}
 
-	// ---------------------------------------------
 	remove_did {
 		let m in 0 .. T::MaxServices::get(); // Existing services with consumers = 1 to be removed
 
@@ -214,7 +213,6 @@ benchmarks! {
 		assert_last_event::<T>(Event::DidRemoved { did: T::DidIdentifier::from(did) }.into());
 	}
 
-	// ---------------------------------------------
 	add_did_services {
 		let m in 0 .. T::MaxServices::get(); // New services to be added
 
@@ -252,7 +250,6 @@ benchmarks! {
 		assert_last_event::<T>(Event::DidServicesAdded { did: T::DidIdentifier::from(did), new_services: new_services_keys.clone() }.into());
 	}
 
-	// ---------------------------------------------
 	remove_did_services {
 		let m in 0 .. T::MaxServices::get(); // Services to be removed
 
@@ -290,7 +287,6 @@ benchmarks! {
 		assert_last_event::<T>(Event::DidServicesRemoved { did: T::DidIdentifier::from(did), removed_services: services_keys_to_remove }.into());
 	}
 
-	// ---------------------------------------------
 	issue_credentials {
 		let c in 0 .. T::MaxCredentialsTypes::get(); // New credentials to be issued
 
@@ -355,7 +351,6 @@ benchmarks! {
 		}
 	}
 
-	// ---------------------------------------------
 	revoke_credentials {
 		let c in 0 .. T::MaxCredentialsTypes::get(); // New credentials to be issued
 
@@ -488,9 +483,3 @@ benchmarks! {
 	// 	assert_eq!(true, true)
 	// }
 }
-
-// impl_benchmark_test_suite!(
-// 	MyPallet,
-// 	crate::mock::new_test_ext(),
-// 	crate::mock::Test,
-// );
