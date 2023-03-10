@@ -24,9 +24,7 @@ pub mod weights;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
-mod errors;
 mod types;
-mod verification;
 
 use crate::types::{
 	AssertionMethod, AuthenticationMethod, CredentialInfo, Document, IssuerInfo, IssuerStatus,
@@ -46,7 +44,6 @@ use sp_runtime::{traits::Hash, ArithmeticError};
 use sp_std::prelude::*;
 
 pub use pallet::*;
-use verification::DidVerifiableIdentifier;
 pub use weights::WeightInfo;
 
 #[frame_support::pallet]
@@ -111,18 +108,10 @@ pub mod pallet {
 			+ Into<Self::AccountId>;
 
 		/// Type for the authentication method used by a DID.
-		type AuthenticationAddress: Parameter
-			+ DidVerifiableIdentifier
-			+ MaxEncodedLen
-			+ From<H160>
-			+ From<H256>;
+		type AuthenticationAddress: Parameter + MaxEncodedLen + From<H160> + From<H256>;
 
 		/// Type for the assertion method used by an Issuer DID.
-		type AssertionAddress: Parameter
-			+ DidVerifiableIdentifier
-			+ MaxEncodedLen
-			+ From<H160>
-			+ From<H256>;
+		type AssertionAddress: Parameter + MaxEncodedLen + From<H160> + From<H256>;
 
 		/// The amount held on deposit for a DID creation
 		#[pallet::constant]
