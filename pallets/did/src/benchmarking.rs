@@ -344,11 +344,18 @@ benchmarks! {
 
 	}: _(controller_origin.clone(), T::DidIdentifier::from(issuer_did.clone()), T::DidIdentifier::from(did.clone()), credentials.clone(), verifiable_credential_hash.clone())
 	verify {
-		for credential in credentials {
+		for credential in &credentials {
 			assert_eq!(IssuedCredentials::<T>::get((T::DidIdentifier::from(did.clone()), credential, T::DidIdentifier::from(issuer_did.clone()))), Some(CredentialInfo {
 				verifiable_credential_hash: verifiable_credential_hash.clone()
 			}));
 		}
+
+		assert_last_event::<T>(Event::CredentialsIssued {
+			issuer: T::DidIdentifier::from(issuer_did.clone()),
+			did: T::DidIdentifier::from(did.clone()),
+			credentials: credentials.clone(),
+			verifiable_credential_hash
+		}.into());
 	}
 
 	revoke_credentials {
@@ -412,9 +419,14 @@ benchmarks! {
 		));
 	}: _(controller_origin.clone(), T::DidIdentifier::from(issuer_did.clone()), T::DidIdentifier::from(did.clone()), credentials.clone())
 	verify {
-		for credential in credentials {
+		for credential in &credentials {
 			assert_eq!(IssuedCredentials::<T>::get((T::DidIdentifier::from(did.clone()), credential, T::DidIdentifier::from(issuer_did.clone()))), None);
 		}
+		assert_last_event::<T>(Event::CredentialsRevoked {
+			issuer: T::DidIdentifier::from(issuer_did.clone()),
+			did: T::DidIdentifier::from(did.clone()),
+			credentials: credentials.clone(),
+		}.into());
 	}
 
 	// // ---------------------------------------------
