@@ -323,6 +323,7 @@ pub mod pallet {
 			Ok(Some(T::WeightInfo::create_did(services_witness.inserts)).into())
 		}
 
+		// #[pallet::call_index(1)]
 		#[pallet::weight(T::WeightInfo::update_did(services.clone().or_else(|| Some(BoundedVec::default())).unwrap().len() as u32, T::MaxServices::get()))]
 		pub fn update_did(
 			origin: OriginFor<T>,
@@ -351,6 +352,7 @@ pub mod pallet {
 				.into())
 		}
 
+		// #[pallet::call_index(2)]
 		#[pallet::weight(T::WeightInfo::update_did(services.clone().or_else(|| Some(BoundedVec::default())).unwrap().len() as u32, T::MaxServices::get()))]
 		pub fn force_update_did(
 			origin: OriginFor<T>,
@@ -379,6 +381,7 @@ pub mod pallet {
 			Ok(Pays::No.into())
 		}
 
+		// #[pallet::call_index(3)]
 		#[pallet::weight(T::WeightInfo::remove_did(T::MaxServices::get()))]
 		pub fn remove_did(
 			origin: OriginFor<T>,
@@ -392,6 +395,7 @@ pub mod pallet {
 			Ok(Some(T::WeightInfo::remove_did(services_witness.removals)).into())
 		}
 
+		// #[pallet::call_index(4)]
 		#[pallet::weight(T::WeightInfo::remove_did(T::MaxServices::get()))]
 		pub fn force_remove_did(
 			origin: OriginFor<T>,
@@ -407,6 +411,7 @@ pub mod pallet {
 			Ok(Pays::No.into())
 		}
 
+		// #[pallet::call_index(5)]
 		#[pallet::weight(T::WeightInfo::add_did_services(services.len() as u32))]
 		pub fn add_did_services(
 			origin: OriginFor<T>,
@@ -432,6 +437,7 @@ pub mod pallet {
 			})
 		}
 
+		// #[pallet::call_index(6)]
 		#[pallet::weight(T::WeightInfo::remove_did_services(services_keys.len() as u32))]
 		pub fn remove_did_services(
 			origin: OriginFor<T>,
@@ -463,7 +469,7 @@ pub mod pallet {
 			})
 		}
 
-		// #[pallet::call_index(6)]
+		// #[pallet::call_index(7)]
 		#[pallet::weight(T::WeightInfo::issue_credentials(credentials.len() as u32))]
 		pub fn issue_credentials(
 			origin: OriginFor<T>,
@@ -509,7 +515,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// #[pallet::call_index(7)]
+		// #[pallet::call_index(8)]
 		#[pallet::weight(T::WeightInfo::revoke_credentials(credentials.len() as u32))]
 		pub fn revoke_credentials(
 			origin: OriginFor<T>,
@@ -533,7 +539,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// #[pallet::call_index(8)]
+		// #[pallet::call_index(9)]
 		#[pallet::weight(T::WeightInfo::revoke_credentials(credentials.len() as u32))]
 		pub fn force_revoke_credentials(
 			origin: OriginFor<T>,
@@ -553,8 +559,8 @@ pub mod pallet {
 			Ok(Pays::No.into())
 		}
 
-		// #[pallet::call_index(9)]
-		#[pallet::weight(1000000)]
+		// #[pallet::call_index(10)]
+		#[pallet::weight(T::WeightInfo::add_issuer())]
 		pub fn add_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
@@ -565,8 +571,8 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// #[pallet::call_index(10)]
-		#[pallet::weight(1000000)]
+		// #[pallet::call_index(11)]
+		#[pallet::weight(T::WeightInfo::revoke_issuer())]
 		pub fn revoke_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
@@ -581,8 +587,8 @@ pub mod pallet {
 			})
 		}
 
-		// #[pallet::call_index(11)]
-		#[pallet::weight(1000000)]
+		// #[pallet::call_index(12)]
+		#[pallet::weight(T::WeightInfo::reactivate_issuer())]
 		pub fn reactivate_issuer(
 			origin: OriginFor<T>,
 			issuer: DidIdentifierOf<T>,
@@ -603,8 +609,8 @@ pub mod pallet {
 			})
 		}
 
-		// #[pallet::call_index(12)]
-		#[pallet::weight(1000000)]
+		// #[pallet::call_index(13)]
+		#[pallet::weight(T::WeightInfo::remove_issuer())]
 		pub fn remove_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin.clone())?;
@@ -612,8 +618,8 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// #[pallet::call_index(13)]
-		#[pallet::weight(1000000)]
+		// #[pallet::call_index(14)]
+		#[pallet::weight(T::WeightInfo::add_credentials_type(credentials.len() as u32))]
 		pub fn add_credentials_type(
 			origin: OriginFor<T>,
 			credentials: Vec<CredentialOf<T>>,
@@ -632,13 +638,13 @@ pub mod pallet {
 					.map_err(|_| Error::<T>::MaxCredentials)?;
 			}
 
-			CredentialsTypes::<T>::put(credentials_types);
+			CredentialsTypes::<T>::put(credentials_types.clone());
 			Self::deposit_event(Event::CredentialTypesAdded { credentials });
 			Ok(())
 		}
 
-		// #[pallet::call_index(14)]
-		#[pallet::weight(1000000)]
+		// #[pallet::call_index(15)]
+		#[pallet::weight(T::WeightInfo::remove_credentials_type(credentials.len() as u32))]
 		pub fn remove_credentials_type(
 			origin: OriginFor<T>,
 			credentials: Vec<CredentialOf<T>>,
@@ -655,7 +661,7 @@ pub mod pallet {
 				credentials_types.remove(pos);
 			}
 
-			CredentialsTypes::<T>::put(credentials_types);
+			CredentialsTypes::<T>::put(credentials_types.clone());
 			Self::deposit_event(Event::CredentialTypesRemoved { credentials });
 			Ok(())
 		}

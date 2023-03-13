@@ -429,69 +429,75 @@ benchmarks! {
 		}.into());
 	}
 
-	// // ---------------------------------------------
-	// add_issuer {
-	// 	/* code to set the initial state */
-	// }: {
-	// 	/* code to test the function benchmarked */
-	// }
-	// verify {
-	// 	/* optional verification */
-	// 	assert_eq!(true, true)
-	// }
+	add_issuer {
+		let issuer = issuer::<T>(1);
+		let info = IssuerInfo { status: IssuerStatus::Active };
+	}: _(
+		RawOrigin::Root, issuer.clone()
+	)
+	verify {
+		assert_eq!(Issuers::<T>::get(issuer.clone()), Some(info));
+		assert_last_event::<T>(Event::IssuerStatusActive {issuer: issuer}.into());
+	}
 
-	// // ---------------------------------------------
-	// revoke_issuer {
-	// 	/* code to set the initial state */
-	// }: {
-	// 	/* code to test the function benchmarked */
-	// }
-	// verify {
-	// 	/* optional verification */
-	// 	assert_eq!(true, true)
-	// }
+	revoke_issuer {
+		let issuer = issuer::<T>(1);
+		let info = IssuerInfo { status: IssuerStatus::Revoked };
+		assert_ok!(DID::<T>::add_issuer(RawOrigin::Root.into(), issuer.clone()));
+	}: _(
+		RawOrigin::Root, issuer.clone()
+	)
+	verify {
+		assert_eq!(Issuers::<T>::get(issuer.clone()), Some(info));
+		assert_last_event::<T>(Event::IssuerStatusRevoked {issuer: issuer}.into());
+	}
 
-	// // ---------------------------------------------
-	// reactivate_issuer {
-	// 	/* code to set the initial state */
-	// }: {
-	// 	/* code to test the function benchmarked */
-	// }
-	// verify {
-	// 	/* optional verification */
-	// 	assert_eq!(true, true)
-	// }
+	reactivate_issuer {
+		let issuer = issuer::<T>(1);
+		let info = IssuerInfo { status: IssuerStatus::Active };
+		assert_ok!(DID::<T>::add_issuer(RawOrigin::Root.into(), issuer.clone()));
+		assert_ok!(DID::<T>::revoke_issuer(RawOrigin::Root.into(), issuer.clone()));
+	}: _(
+		RawOrigin::Root, issuer.clone()
+	)
+	verify {
+		assert_eq!(Issuers::<T>::get(issuer.clone()), Some(info));
+		assert_last_event::<T>(Event::IssuerStatusReactived {issuer: issuer}.into());
+	}
 
-	// // ---------------------------------------------
-	// remove_issuer {
-	// 	/* code to set the initial state */
-	// }: {
-	// 	/* code to test the function benchmarked */
-	// }
-	// verify {
-	// 	/* optional verification */
-	// 	assert_eq!(true, true)
-	// }
+	remove_issuer {
+		let issuer = issuer::<T>(1);
+		assert_ok!(DID::<T>::add_issuer(RawOrigin::Root.into(), issuer.clone()));
+		assert_ok!(DID::<T>::revoke_issuer(RawOrigin::Root.into(), issuer.clone()));
+	}: _(
+		RawOrigin::Root, issuer.clone()
+	)
+	verify {
+		assert_eq!(Issuers::<T>::get(issuer.clone()), None);
+		assert_last_event::<T>(Event::IssuerRemoved {issuer: issuer}.into());
+	}
 
-	// // ---------------------------------------------
-	// add_credentials_type {
-	// 	/* code to set the initial state */
-	// }: {
-	// 	/* code to test the function benchmarked */
-	// }
-	// verify {
-	// 	/* optional verification */
-	// 	assert_eq!(true, true)
-	// }
+	add_credentials_type {
+		let m in 0 .. T::MaxCredentialsTypes::get();
+		let credentials_types = create_credentials::<T>(m, 1);
+	}: _(
+		RawOrigin::Root, credentials_types.clone()
+	)
+	verify {
+		assert_eq!(CredentialsTypes::<T>::get(), credentials_types);
+		assert_last_event::<T>(Event::CredentialTypesAdded {credentials: credentials_types}.into());
+	}
 
-	// // ---------------------------------------------
-	// remove_credentials_type {
-	// 	/* code to set the initial state */
-	// }: {
-	// 	/* code to test the function benchmarked */
-	// }
-	// verify {
-	// 	/* optional verification */
-	// 	assert_eq!(true, true)
-	// }
+	remove_credentials_type {
+		let m in 0 .. T::MaxCredentialsTypes::get();
+		let credentials_types = create_credentials::<T>(m, 1);
+
+		assert_ok!(DID::<T>::add_credentials_type(RawOrigin::Root.into(), credentials_types.clone()));
+	}: _(
+		RawOrigin::Root, credentials_types.to_vec().clone()
+	)
+	verify {
+		assert_eq!(CredentialsTypes::<T>::get(), Vec::default());
+		assert_last_event::<T>(Event::CredentialTypesRemoved {credentials: credentials_types.to_vec()}.into());
+	}
 }

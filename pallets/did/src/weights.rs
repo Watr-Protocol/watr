@@ -53,6 +53,12 @@ pub trait WeightInfo {
 	fn remove_did_services(m: u32, ) -> Weight;
 	fn issue_credentials(c: u32, ) -> Weight;
 	fn revoke_credentials(c: u32, ) -> Weight;
+	fn add_issuer() -> Weight;
+	fn revoke_issuer() -> Weight;
+	fn reactivate_issuer() -> Weight;
+	fn remove_issuer() -> Weight;
+	fn add_credentials_type(m: u32, ) -> Weight;
+	fn remove_credentials_type(m: u32, ) -> Weight;
 }
 
 /// Weights for pallet_did using the Substrate node and recommended hardware.
@@ -151,6 +157,48 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 			.saturating_add(T::DbWeight::get().reads((1 as u64).saturating_mul(c as u64)))
 			.saturating_add(T::DbWeight::get().writes((1 as u64).saturating_mul(c as u64)))
 	}
+	// Storage: DID Issuers (r:1 w:1)
+	fn add_issuer() -> Weight {
+		Weight::from_ref_time(15_000_000 as u64)
+			.saturating_add(T::DbWeight::get().reads(1 as u64))
+			.saturating_add(T::DbWeight::get().writes(1 as u64))
+	}
+	// Storage: DID Issuers (r:1 w:1)
+	fn revoke_issuer() -> Weight {
+		Weight::from_ref_time(17_000_000 as u64)
+			.saturating_add(T::DbWeight::get().reads(1 as u64))
+			.saturating_add(T::DbWeight::get().writes(1 as u64))
+	}
+	// Storage: DID Issuers (r:1 w:1)
+	fn reactivate_issuer() -> Weight {
+		Weight::from_ref_time(16_000_000 as u64)
+			.saturating_add(T::DbWeight::get().reads(1 as u64))
+			.saturating_add(T::DbWeight::get().writes(1 as u64))
+	}
+	// Storage: DID Issuers (r:1 w:1)
+	fn remove_issuer() -> Weight {
+		Weight::from_ref_time(16_000_000 as u64)
+			.saturating_add(T::DbWeight::get().reads(1 as u64))
+			.saturating_add(T::DbWeight::get().writes(1 as u64))
+	}
+	// Storage: DID CredentialsTypes (r:1 w:1)
+	/// The range of component `m` is `[0, 50]`.
+	fn add_credentials_type(m: u32, ) -> Weight {
+		Weight::from_ref_time(14_000_000 as u64)
+			// Standard Error: 1_026
+			.saturating_add(Weight::from_ref_time(374_417 as u64).saturating_mul(m as u64))
+			.saturating_add(T::DbWeight::get().reads(1 as u64))
+			.saturating_add(T::DbWeight::get().writes(1 as u64))
+	}
+	// Storage: DID CredentialsTypes (r:1 w:1)
+	/// The range of component `m` is `[0, 50]`.
+	fn remove_credentials_type(m: u32, ) -> Weight {
+		Weight::from_ref_time(15_000_000 as u64)
+			// Standard Error: 908
+			.saturating_add(Weight::from_ref_time(366_787 as u64).saturating_mul(m as u64))
+			.saturating_add(T::DbWeight::get().reads(1 as u64))
+			.saturating_add(T::DbWeight::get().writes(1 as u64))
+	}
 }
 
 // For backwards compatibility and tests
@@ -247,5 +295,47 @@ impl WeightInfo for () {
 			.saturating_add(RocksDbWeight::get().reads(1 as u64))
 			.saturating_add(RocksDbWeight::get().reads((1 as u64).saturating_mul(c as u64)))
 			.saturating_add(RocksDbWeight::get().writes((1 as u64).saturating_mul(c as u64)))
+	}
+	// Storage: DID Issuers (r:1 w:1)
+	fn add_issuer() -> Weight {
+		Weight::from_ref_time(15_000_000 as u64)
+			.saturating_add(RocksDbWeight::get().reads(1 as u64))
+			.saturating_add(RocksDbWeight::get().writes(1 as u64))
+	}
+	// Storage: DID Issuers (r:1 w:1)
+	fn revoke_issuer() -> Weight {
+		Weight::from_ref_time(17_000_000 as u64)
+			.saturating_add(RocksDbWeight::get().reads(1 as u64))
+			.saturating_add(RocksDbWeight::get().writes(1 as u64))
+	}
+	// Storage: DID Issuers (r:1 w:1)
+	fn reactivate_issuer() -> Weight {
+		Weight::from_ref_time(16_000_000 as u64)
+			.saturating_add(RocksDbWeight::get().reads(1 as u64))
+			.saturating_add(RocksDbWeight::get().writes(1 as u64))
+	}
+	// Storage: DID Issuers (r:1 w:1)
+	fn remove_issuer() -> Weight {
+		Weight::from_ref_time(16_000_000 as u64)
+			.saturating_add(RocksDbWeight::get().reads(1 as u64))
+			.saturating_add(RocksDbWeight::get().writes(1 as u64))
+	}
+	// Storage: DID CredentialsTypes (r:1 w:1)
+	/// The range of component `m` is `[0, 50]`.
+	fn add_credentials_type(m: u32, ) -> Weight {
+		Weight::from_ref_time(14_000_000 as u64)
+			// Standard Error: 1_026
+			.saturating_add(Weight::from_ref_time(374_417 as u64).saturating_mul(m as u64))
+			.saturating_add(RocksDbWeight::get().reads(1 as u64))
+			.saturating_add(RocksDbWeight::get().writes(1 as u64))
+	}
+	// Storage: DID CredentialsTypes (r:1 w:1)
+	/// The range of component `m` is `[0, 50]`.
+	fn remove_credentials_type(m: u32, ) -> Weight {
+		Weight::from_ref_time(15_000_000 as u64)
+			// Standard Error: 908
+			.saturating_add(Weight::from_ref_time(366_787 as u64).saturating_mul(m as u64))
+			.saturating_add(RocksDbWeight::get().reads(1 as u64))
+			.saturating_add(RocksDbWeight::get().writes(1 as u64))
 	}
 }
