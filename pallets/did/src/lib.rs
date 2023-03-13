@@ -470,7 +470,7 @@ pub mod pallet {
 		}
 
 		// #[pallet::call_index(7)]
-		#[pallet::weight(1000000)]
+		#[pallet::weight(T::WeightInfo::issue_credentials(credentials.len() as u32))]
 		pub fn issue_credentials(
 			origin: OriginFor<T>,
 			issuer_did: DidIdentifierOf<T>,
@@ -516,7 +516,7 @@ pub mod pallet {
 		}
 
 		// #[pallet::call_index(8)]
-		#[pallet::weight(1000000)]
+		#[pallet::weight(T::WeightInfo::revoke_credentials(credentials.len() as u32))]
 		pub fn revoke_credentials(
 			origin: OriginFor<T>,
 			issuer_did: DidIdentifierOf<T>,
@@ -540,13 +540,13 @@ pub mod pallet {
 		}
 
 		// #[pallet::call_index(9)]
-		#[pallet::weight(1000000)]
+		#[pallet::weight(T::WeightInfo::revoke_credentials(credentials.len() as u32))]
 		pub fn force_revoke_credentials(
 			origin: OriginFor<T>,
 			issuer_did: DidIdentifierOf<T>,
 			subject_did: DidIdentifierOf<T>,
 			credentials: Vec<CredentialOf<T>>,
-		) -> DispatchResult {
+		) -> DispatchResultWithPostInfo {
 			T::GovernanceOrigin::ensure_origin(origin.clone())?;
 
 			Self::do_revoke_credentials(&issuer_did, &subject_did, &credentials)?;
@@ -556,7 +556,7 @@ pub mod pallet {
 				did: subject_did,
 				credentials,
 			});
-			Ok(())
+			Ok(Pays::No.into())
 		}
 
 		// #[pallet::call_index(10)]

@@ -222,7 +222,7 @@ benchmarks! {
 		let assertion_id = 1;
 		let services_generator_seed = 1;
 
-		let (existing_services, mut existing_services_keys) = create_services::<T>(0, services_generator_seed);
+		let (existing_services, existing_services_keys) = create_services::<T>(0, services_generator_seed);
 		let existing_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
 		let did: T::AccountId = whitelisted_caller();
 		let did_origin = RawOrigin::Signed(did.clone());
@@ -258,7 +258,7 @@ benchmarks! {
 		let authentication_id = 1;
 		let assertion_id = 1;
 		let services_generator_seed = 1;
-		let (existing_services, mut existing_services_keys) = create_services::<T>(m, services_generator_seed);
+		let (existing_services, existing_services_keys) = create_services::<T>(m, services_generator_seed);
 		let existing_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
 		let did: T::AccountId = whitelisted_caller();
 		let did_origin = RawOrigin::Signed(did.clone());
@@ -296,7 +296,7 @@ benchmarks! {
 		let controller_id = 1;
 		let authentication_id = 1;
 		let assertion_id = 1;
-		let (existing_services, mut existing_services_keys) = create_services::<T>(0, 1);
+		let (existing_services, existing_services_keys) = create_services::<T>(0, 1);
 		let existing_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
 		let did: T::AccountId = whitelisted_caller();
 		let did_origin = RawOrigin::Signed(did.clone());
@@ -313,7 +313,7 @@ benchmarks! {
 		let controller_id = 2;
 		let authentication_id = 2;
 		let assertion_id = 2;
-		let (existing_services, mut existing_services_keys) = create_services::<T>(0, 1);
+		let (existing_services, existing_services_keys) = create_services::<T>(0, 1);
 		let existing_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
 
 		let issuer_did = issuer::<T>(2).into();
@@ -333,22 +333,29 @@ benchmarks! {
 		));
 		assert_ok!(DID::<T>::add_issuer(root.clone(), T::DidIdentifier::from(issuer_did.clone())));
 
-		let mut credentials = create_credentials::<T>(c, 1);
+		let credentials = create_credentials::<T>(c, 1);
 
 		let mut verifiable_credential_hash: HashOf<T> = HashOf::<T>::default();
 		for i in 0..T::MaxHash::get() {
-			verifiable_credential_hash.try_push((i + c) as u8);
+			let _ = verifiable_credential_hash.try_push((i + c) as u8);
 		}
 
 		assert_ok!(DID::<T>::add_credentials_type(root.clone(), credentials.clone()));
 
 	}: _(controller_origin.clone(), T::DidIdentifier::from(issuer_did.clone()), T::DidIdentifier::from(did.clone()), credentials.clone(), verifiable_credential_hash.clone())
 	verify {
-		for credential in credentials {
+		for credential in &credentials {
 			assert_eq!(IssuedCredentials::<T>::get((T::DidIdentifier::from(did.clone()), credential, T::DidIdentifier::from(issuer_did.clone()))), Some(CredentialInfo {
 				verifiable_credential_hash: verifiable_credential_hash.clone()
 			}));
 		}
+
+		assert_last_event::<T>(Event::CredentialsIssued {
+			issuer: T::DidIdentifier::from(issuer_did.clone()),
+			did: T::DidIdentifier::from(did.clone()),
+			credentials: credentials.clone(),
+			verifiable_credential_hash
+		}.into());
 	}
 
 	revoke_credentials {
@@ -360,7 +367,7 @@ benchmarks! {
 		let controller_id = 1;
 		let authentication_id = 1;
 		let assertion_id = 1;
-		let (existing_services, mut existing_services_keys) = create_services::<T>(0, 1);
+		let (existing_services, existing_services_keys) = create_services::<T>(0, 1);
 		let existing_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
 		let did: T::AccountId = whitelisted_caller();
 		let did_origin = RawOrigin::Signed(did.clone());
@@ -376,7 +383,7 @@ benchmarks! {
 		let controller_id = 2;
 		let authentication_id = 2;
 		let assertion_id = 2;
-		let (existing_services, mut existing_services_keys) = create_services::<T>(0, 1);
+		let (existing_services, existing_services_keys) = create_services::<T>(0, 1);
 		let existing_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
 		let issuer_did = issuer::<T>(2).into();
 		let issuer_origin = RawOrigin::Signed(issuer_did.clone());
@@ -395,11 +402,11 @@ benchmarks! {
 		));
 		assert_ok!(DID::<T>::add_issuer(root.clone(), T::DidIdentifier::from(issuer_did.clone())));
 
-		let mut credentials = create_credentials::<T>(c, 1);
+		let credentials = create_credentials::<T>(c, 1);
 
 		let mut verifiable_credential_hash: HashOf<T> = HashOf::<T>::default();
 		for i in 0..T::MaxHash::get() {
-			verifiable_credential_hash.try_push((i + c) as u8);
+			let _ = verifiable_credential_hash.try_push((i + c) as u8);
 		}
 
 		assert_ok!(DID::<T>::add_credentials_type(root.clone(), credentials.clone()));
@@ -412,9 +419,14 @@ benchmarks! {
 		));
 	}: _(controller_origin.clone(), T::DidIdentifier::from(issuer_did.clone()), T::DidIdentifier::from(did.clone()), credentials.clone())
 	verify {
-		for credential in credentials {
+		for credential in &credentials {
 			assert_eq!(IssuedCredentials::<T>::get((T::DidIdentifier::from(did.clone()), credential, T::DidIdentifier::from(issuer_did.clone()))), None);
 		}
+		assert_last_event::<T>(Event::CredentialsRevoked {
+			issuer: T::DidIdentifier::from(issuer_did.clone()),
+			did: T::DidIdentifier::from(did.clone()),
+			credentials: credentials.clone(),
+		}.into());
 	}
 
 	add_issuer {
