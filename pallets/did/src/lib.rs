@@ -623,7 +623,7 @@ pub mod pallet {
 		pub fn add_credentials_type(
 			origin: OriginFor<T>,
 			credentials: Vec<CredentialOf<T>>,
-		) -> DispatchResultWithPostInfo {
+		) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
 			let mut credentials_types = CredentialsTypes::<T>::get();
@@ -640,7 +640,7 @@ pub mod pallet {
 
 			CredentialsTypes::<T>::put(credentials_types.clone());
 			Self::deposit_event(Event::CredentialTypesAdded { credentials });
-			Ok(Some(T::WeightInfo::add_credentials_type(credentials_types.len().try_into().unwrap())).into())
+			Ok(())
 		}
 
 		// #[pallet::call_index(15)]
@@ -648,7 +648,7 @@ pub mod pallet {
 		pub fn remove_credentials_type(
 			origin: OriginFor<T>,
 			credentials: Vec<CredentialOf<T>>,
-		) -> DispatchResultWithPostInfo {
+		) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
 			let mut credentials_types = CredentialsTypes::<T>::get();
@@ -663,7 +663,7 @@ pub mod pallet {
 
 			CredentialsTypes::<T>::put(credentials_types.clone());
 			Self::deposit_event(Event::CredentialTypesRemoved { credentials });
-			Ok(Some(T::WeightInfo::remove_credentials_type(credentials_types.len().try_into().unwrap())).into())
+			Ok(())
 		}
 	}
 }
