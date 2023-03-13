@@ -63,7 +63,7 @@ pub mod pallet {
 	pub type DidIdentifierOf<T> = <T as Config>::DidIdentifier;
 
 	/// Type for valid Credentials.
-	pub type CredentialOf<T> = BoundedVec<u8, <T as Config>::MaxString>;
+	pub type CredentialOf<T> = BoundedVec<u8, <T as Config>::MaxCredentialTypeLength>;
 
 	/// Type for valid Credentials.
 	pub type HashOf<T> = BoundedVec<u8, <T as Config>::MaxHash>;
@@ -132,6 +132,10 @@ pub mod pallet {
 		/// The maximum Credential types.
 		#[pallet::constant]
 		type MaxCredentialsTypes: Get<u32>;
+
+		/// The maximum length of a CredentialType
+		#[pallet::constant]
+		type MaxCredentialTypeLength: Get<u32>;
 
 		/// Origin for priviledged actions
 		type GovernanceOrigin: EnsureOrigin<Self::RuntimeOrigin>;
