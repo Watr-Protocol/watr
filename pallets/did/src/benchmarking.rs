@@ -417,7 +417,6 @@ benchmarks! {
 		}
 	}
 
-	// ---------------------------------------------
 	add_issuer {
 		let issuer = issuer::<T>(1);
 		let info = IssuerInfo { status: IssuerStatus::Active };
@@ -425,47 +424,47 @@ benchmarks! {
 		RawOrigin::Root, issuer.clone()
 	)
 	verify {
-		assert_eq!(Issuers::<T>::get(issuer), Some(info));
+		assert_eq!(Issuers::<T>::get(issuer.clone()), Some(info));
+		assert_last_event::<T>(Event::IssuerStatusActive {issuer: issuer}.into());
 	}
 
-	// ---------------------------------------------
 	revoke_issuer {
 		let issuer = issuer::<T>(1);
 		let info = IssuerInfo { status: IssuerStatus::Revoked };
-		DID::<T>::add_issuer(RawOrigin::Root.into(), issuer.clone());
+		assert_ok!(DID::<T>::add_issuer(RawOrigin::Root.into(), issuer.clone()));
 	}: _(
 		RawOrigin::Root, issuer.clone()
 	)
 	verify {
-		assert_eq!(Issuers::<T>::get(issuer), Some(info));
+		assert_eq!(Issuers::<T>::get(issuer.clone()), Some(info));
+		assert_last_event::<T>(Event::IssuerStatusRevoked {issuer: issuer}.into());
 	}
 
-	// ---------------------------------------------
 	reactivate_issuer {
 		let issuer = issuer::<T>(1);
 		let info = IssuerInfo { status: IssuerStatus::Active };
-		DID::<T>::add_issuer(RawOrigin::Root.into(), issuer.clone());
-		DID::<T>::revoke_issuer(RawOrigin::Root.into(), issuer.clone());
+		assert_ok!(DID::<T>::add_issuer(RawOrigin::Root.into(), issuer.clone()));
+		assert_ok!(DID::<T>::revoke_issuer(RawOrigin::Root.into(), issuer.clone()));
 	}: _(
 		RawOrigin::Root, issuer.clone()
 	)
 	verify {
-		assert_eq!(Issuers::<T>::get(issuer), Some(info));
+		assert_eq!(Issuers::<T>::get(issuer.clone()), Some(info));
+		assert_last_event::<T>(Event::IssuerStatusReactived {issuer: issuer}.into());
 	}
 
-	// ---------------------------------------------
 	remove_issuer {
 		let issuer = issuer::<T>(1);
-		DID::<T>::add_issuer(RawOrigin::Root.into(), issuer.clone());
-		DID::<T>::revoke_issuer(RawOrigin::Root.into(), issuer.clone());
+		assert_ok!(DID::<T>::add_issuer(RawOrigin::Root.into(), issuer.clone()));
+		assert_ok!(DID::<T>::revoke_issuer(RawOrigin::Root.into(), issuer.clone()));
 	}: _(
 		RawOrigin::Root, issuer.clone()
 	)
 	verify {
-		assert_eq!(Issuers::<T>::get(issuer), None);
+		assert_eq!(Issuers::<T>::get(issuer.clone()), None);
+		assert_last_event::<T>(Event::IssuerRemoved {issuer: issuer}.into());
 	}
 
-	// ---------------------------------------------
 	add_credentials_type {
 		let m in 0 .. T::MaxCredentialsTypes::get();
 		let mut credentials_types = create_credentials::<T>(m, 1);
@@ -474,9 +473,9 @@ benchmarks! {
 	)
 	verify {
 		assert_eq!(CredentialsTypes::<T>::get(), credentials_types);
+		assert_last_event::<T>(Event::CredentialTypesAdded {credentials: credentials_types}.into());
 	}
 
-	// ---------------------------------------------
 	remove_credentials_type {
 		let m in 0 .. T::MaxCredentialsTypes::get();
 		let mut credentials_types = BoundedVec::default();
@@ -492,5 +491,6 @@ benchmarks! {
 	)
 	verify {
 		assert_eq!(CredentialsTypes::<T>::get(), Vec::default());
+		assert_last_event::<T>(Event::CredentialTypesRemoved {credentials: credentials_types.to_vec()}.into());
 	}
 }
