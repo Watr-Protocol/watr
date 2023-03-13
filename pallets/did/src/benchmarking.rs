@@ -42,17 +42,6 @@ fn create_service<T: Config>(i: u32, seed: u8) -> ServiceInfo<T> {
 	ServiceInfo { type_id: ServiceType::VerifiableCredentialFileStorage, service_endpoint }
 }
 
-fn create_credential_type<T: Config>(i: u8) -> BoundedVec<u8, T::MaxString> {
-	let mut cred = BoundedVec::default();
-	let cred_bytes = i.to_be_bytes();
-
-	for b in cred_bytes {
-		cred.try_push(b);
-	}
-
-	cred
-}
-
 fn create_services<T: Config>(
 	i: u32,
 	seed: u8,
@@ -84,7 +73,7 @@ fn create_credential<T: Config>(i: u32, seed: u8) -> CredentialOf<T> {
 	credential_type
 }
 
-fn create_credentials<T: Config>(i: u32, seed: u8) -> (Vec<CredentialOf<T>>) {
+fn create_credentials<T: Config>(i: u32, seed: u8) -> Vec<CredentialOf<T>> {
 	let mut credentials = Vec::<CredentialOf<T>>::new();
 	for j in 0..i {
 		let credential = create_credential::<T>(j, seed);
@@ -479,12 +468,7 @@ benchmarks! {
 	// ---------------------------------------------
 	add_credentials_type {
 		let m in 0 .. T::MaxCredentialsTypes::get();
-		let mut credentials_types = Vec::default();
-
-		for i in 0 .. m {
-			let cred = create_credential_type::<T>(i as u8);
-			credentials_types.push(cred.clone());
-		}
+		let mut credentials_types = create_credentials::<T>(m, 1);
 	}: _(
 		RawOrigin::Root, credentials_types.clone()
 	)
@@ -498,7 +482,7 @@ benchmarks! {
 		let mut credentials_types = BoundedVec::default();
 
 		for i in 0 .. m {
-			let cred = create_credential_type::<T>(i as u8);
+			let cred = create_credential::<T>(i, 1);
 			credentials_types.try_push(cred.clone());
 		}
 
