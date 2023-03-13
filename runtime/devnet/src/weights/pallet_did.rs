@@ -50,9 +50,9 @@ impl<T: frame_system::Config> pallet_did::WeightInfo for WeightInfo<T> {
 	// Storage: DID Services (r:1 w:1)
 	/// The range of component `m` is `[0, 10]`.
 	fn create_did(m: u32, ) -> Weight {
-		Weight::from_ref_time(27_000_000 as u64)
-			// Standard Error: 3_564
-			.saturating_add(Weight::from_ref_time(3_458_864 as u64).saturating_mul(m as u64))
+		Weight::from_ref_time(28_000_000 as u64)
+			// Standard Error: 3_151
+			.saturating_add(Weight::from_ref_time(3_556_717 as u64).saturating_mul(m as u64))
 			.saturating_add(T::DbWeight::get().reads(1 as u64))
 			.saturating_add(T::DbWeight::get().reads((1 as u64).saturating_mul(m as u64)))
 			.saturating_add(T::DbWeight::get().writes(1 as u64))
@@ -63,11 +63,11 @@ impl<T: frame_system::Config> pallet_did::WeightInfo for WeightInfo<T> {
 	/// The range of component `m` is `[0, 10]`.
 	/// The range of component `n` is `[0, 10]`.
 	fn update_did(m: u32, n: u32, ) -> Weight {
-		Weight::from_ref_time(49_000_000 as u64)
-			// Standard Error: 33_329
-			.saturating_add(Weight::from_ref_time(1_628_574 as u64).saturating_mul(m as u64))
-			// Standard Error: 33_329
-			.saturating_add(Weight::from_ref_time(1_099_572 as u64).saturating_mul(n as u64))
+		Weight::from_ref_time(51_000_000 as u64)
+			// Standard Error: 34_366
+			.saturating_add(Weight::from_ref_time(1_646_573 as u64).saturating_mul(m as u64))
+			// Standard Error: 34_366
+			.saturating_add(Weight::from_ref_time(1_132_384 as u64).saturating_mul(n as u64))
 			.saturating_add(T::DbWeight::get().reads(11 as u64))
 			.saturating_add(T::DbWeight::get().writes(11 as u64))
 	}
@@ -76,9 +76,9 @@ impl<T: frame_system::Config> pallet_did::WeightInfo for WeightInfo<T> {
 	// Storage: DID Services (r:1 w:1)
 	/// The range of component `m` is `[0, 10]`.
 	fn remove_did(m: u32, ) -> Weight {
-		Weight::from_ref_time(30_000_000 as u64)
-			// Standard Error: 2_546
-			.saturating_add(Weight::from_ref_time(3_004_293 as u64).saturating_mul(m as u64))
+		Weight::from_ref_time(31_000_000 as u64)
+			// Standard Error: 12_201
+			.saturating_add(Weight::from_ref_time(3_257_617 as u64).saturating_mul(m as u64))
 			.saturating_add(T::DbWeight::get().reads(2 as u64))
 			.saturating_add(T::DbWeight::get().reads((1 as u64).saturating_mul(m as u64)))
 			.saturating_add(T::DbWeight::get().writes(1 as u64))
@@ -88,9 +88,9 @@ impl<T: frame_system::Config> pallet_did::WeightInfo for WeightInfo<T> {
 	// Storage: DID Services (r:1 w:1)
 	/// The range of component `m` is `[0, 10]`.
 	fn add_did_services(m: u32, ) -> Weight {
-		Weight::from_ref_time(17_000_000 as u64)
-			// Standard Error: 4_064
-			.saturating_add(Weight::from_ref_time(3_534_279 as u64).saturating_mul(m as u64))
+		Weight::from_ref_time(18_000_000 as u64)
+			// Standard Error: 3_705
+			.saturating_add(Weight::from_ref_time(3_621_468 as u64).saturating_mul(m as u64))
 			.saturating_add(T::DbWeight::get().reads(1 as u64))
 			.saturating_add(T::DbWeight::get().reads((1 as u64).saturating_mul(m as u64)))
 			.saturating_add(T::DbWeight::get().writes(1 as u64))
@@ -101,8 +101,8 @@ impl<T: frame_system::Config> pallet_did::WeightInfo for WeightInfo<T> {
 	/// The range of component `m` is `[0, 10]`.
 	fn remove_did_services(m: u32, ) -> Weight {
 		Weight::from_ref_time(17_000_000 as u64)
-			// Standard Error: 4_703
-			.saturating_add(Weight::from_ref_time(3_275_069 as u64).saturating_mul(m as u64))
+			// Standard Error: 7_068
+			.saturating_add(Weight::from_ref_time(3_488_296 as u64).saturating_mul(m as u64))
 			.saturating_add(T::DbWeight::get().reads(1 as u64))
 			.saturating_add(T::DbWeight::get().reads((1 as u64).saturating_mul(m as u64)))
 			.saturating_add(T::DbWeight::get().writes(1 as u64))
@@ -114,9 +114,9 @@ impl<T: frame_system::Config> pallet_did::WeightInfo for WeightInfo<T> {
 	// Storage: DID IssuedCredentials (r:1 w:1)
 	/// The range of component `c` is `[0, 50]`.
 	fn issue_credentials(c: u32, ) -> Weight {
-		Weight::from_ref_time(23_000_000 as u64)
-			// Standard Error: 1_809
-			.saturating_add(Weight::from_ref_time(4_311_013 as u64).saturating_mul(c as u64))
+		Weight::from_ref_time(24_000_000 as u64)
+			// Standard Error: 1_857
+			.saturating_add(Weight::from_ref_time(4_409_586 as u64).saturating_mul(c as u64))
 			.saturating_add(T::DbWeight::get().reads(4 as u64))
 			.saturating_add(T::DbWeight::get().reads((1 as u64).saturating_mul(c as u64)))
 			.saturating_add(T::DbWeight::get().writes((1 as u64).saturating_mul(c as u64)))
@@ -125,16 +125,16 @@ impl<T: frame_system::Config> pallet_did::WeightInfo for WeightInfo<T> {
 	// Storage: DID IssuedCredentials (r:1 w:1)
 	/// The range of component `c` is `[0, 50]`.
 	fn revoke_credentials(c: u32, ) -> Weight {
-		Weight::from_ref_time(17_000_000 as u64)
-			// Standard Error: 2_043
-			.saturating_add(Weight::from_ref_time(5_383_111 as u64).saturating_mul(c as u64))
+		Weight::from_ref_time(18_000_000 as u64)
+			// Standard Error: 101_136
+			.saturating_add(Weight::from_ref_time(6_178_405 as u64).saturating_mul(c as u64))
 			.saturating_add(T::DbWeight::get().reads(1 as u64))
 			.saturating_add(T::DbWeight::get().reads((1 as u64).saturating_mul(c as u64)))
 			.saturating_add(T::DbWeight::get().writes((1 as u64).saturating_mul(c as u64)))
 	}
 	// Storage: DID Issuers (r:1 w:1)
 	fn add_issuer() -> Weight {
-		Weight::from_ref_time(15_000_000 as u64)
+		Weight::from_ref_time(16_000_000 as u64)
 			.saturating_add(T::DbWeight::get().reads(1 as u64))
 			.saturating_add(T::DbWeight::get().writes(1 as u64))
 	}
@@ -152,7 +152,7 @@ impl<T: frame_system::Config> pallet_did::WeightInfo for WeightInfo<T> {
 	}
 	// Storage: DID Issuers (r:1 w:1)
 	fn remove_issuer() -> Weight {
-		Weight::from_ref_time(16_000_000 as u64)
+		Weight::from_ref_time(17_000_000 as u64)
 			.saturating_add(T::DbWeight::get().reads(1 as u64))
 			.saturating_add(T::DbWeight::get().writes(1 as u64))
 	}
@@ -160,8 +160,8 @@ impl<T: frame_system::Config> pallet_did::WeightInfo for WeightInfo<T> {
 	/// The range of component `m` is `[0, 50]`.
 	fn add_credentials_type(m: u32, ) -> Weight {
 		Weight::from_ref_time(14_000_000 as u64)
-			// Standard Error: 1_134
-			.saturating_add(Weight::from_ref_time(455_414 as u64).saturating_mul(m as u64))
+			// Standard Error: 1_430
+			.saturating_add(Weight::from_ref_time(474_565 as u64).saturating_mul(m as u64))
 			.saturating_add(T::DbWeight::get().reads(1 as u64))
 			.saturating_add(T::DbWeight::get().writes(1 as u64))
 	}
@@ -169,8 +169,8 @@ impl<T: frame_system::Config> pallet_did::WeightInfo for WeightInfo<T> {
 	/// The range of component `m` is `[0, 50]`.
 	fn remove_credentials_type(m: u32, ) -> Weight {
 		Weight::from_ref_time(15_000_000 as u64)
-			// Standard Error: 875
-			.saturating_add(Weight::from_ref_time(403_353 as u64).saturating_mul(m as u64))
+			// Standard Error: 1_276
+			.saturating_add(Weight::from_ref_time(428_173 as u64).saturating_mul(m as u64))
 			.saturating_add(T::DbWeight::get().reads(1 as u64))
 			.saturating_add(T::DbWeight::get().writes(1 as u64))
 	}

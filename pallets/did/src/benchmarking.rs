@@ -479,7 +479,7 @@ benchmarks! {
 
 	add_credentials_type {
 		let m in 0 .. T::MaxCredentialsTypes::get();
-		let mut credentials_types = create_credentials::<T>(m, 1);
+		let credentials_types = create_credentials::<T>(m, 1);
 	}: _(
 		RawOrigin::Root, credentials_types.clone()
 	)
@@ -490,14 +490,9 @@ benchmarks! {
 
 	remove_credentials_type {
 		let m in 0 .. T::MaxCredentialsTypes::get();
-		let mut credentials_types = BoundedVec::default();
+		let credentials_types = create_credentials::<T>(m, 1);
 
-		for i in 0 .. m {
-			let cred = create_credential::<T>(i, 1);
-			credentials_types.try_push(cred.clone());
-		}
-
-		CredentialsTypes::<T>::put(credentials_types.clone());
+		assert_ok!(DID::<T>::add_credentials_type(RawOrigin::Root.into(), credentials_types.clone()));
 	}: _(
 		RawOrigin::Root, credentials_types.to_vec().clone()
 	)
