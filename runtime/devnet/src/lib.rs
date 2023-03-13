@@ -734,6 +734,7 @@ parameter_types! {
 	pub const MaxString: u32 = 100;
 	pub const MaxHash: u32 = 512;
 	pub const MaxCredentialsTypes: u32 = 50;
+	pub const MaxCredentialTypeLength: u32 = 32; // To not be bigger than a Hash
 	pub const MaxServices: u32 = 10;
 	pub const DidDeposit: Balance = 10 * WATRD;
 }
@@ -749,6 +750,7 @@ impl pallet_did::Config for Runtime {
 	type MaxString = MaxString;
 	type MaxHash = MaxHash;
 	type MaxCredentialsTypes = MaxCredentialsTypes;
+	type MaxCredentialTypeLength = MaxCredentialTypeLength;
 	type MaxServices = MaxServices;
 	type GovernanceOrigin = MoreThanHalfCouncil;
 	type WeightInfo = weights::pallet_did::WeightInfo<Runtime>;
