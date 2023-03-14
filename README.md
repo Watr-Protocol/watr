@@ -68,6 +68,7 @@ cargo test
 - [Integrations Tests](docs/integration-tests.md)
 - [Governance](docs/governance/watr-governance-guide.md)
 - [Connect Metamask](docs/connecting-metamask/connecting-metamask.md)
+- [Sending funds Substrate<>Evm](docs/substrate-evm-funds-transfer.md)
 - [Collator Selection Reward Pot](docs/collator-selection-pot.md)
 - [Cross Chain Assets Transfer](docs/cross-chain-assets-transfer/cross-chain-assets-transfer.md)
 - [Deployment](docs/deployment.md)
