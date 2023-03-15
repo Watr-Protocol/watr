@@ -1604,6 +1604,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "cumulus-pallet-solo-to-para"
+version = "0.1.0"
+source = "git+https://github.com/paritytech/cumulus?branch=polkadot-v0.9.30#7b1fc0ed107fe42bb7e6a5dfefb586f4c3ae4328"
+dependencies = [
+ "cumulus-pallet-parachain-system",
+ "cumulus-primitives-core",
+ "frame-support",
+ "frame-system",
+ "pallet-sudo",
+ "parity-scale-codec",
+ "polkadot-primitives",
+ "scale-info",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "cumulus-pallet-xcm"
 version = "0.1.0"
 source = "git+https://github.com/paritytech/cumulus?branch=polkadot-v0.9.30#7b1fc0ed107fe42bb7e6a5dfefb586f4c3ae4328"
@@ -12598,7 +12615,7 @@ dependencies = [
 
 [[package]]
 name = "watr-common"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -12619,7 +12636,7 @@ dependencies = [
 
 [[package]]
 name = "watr-devnet-runtime"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",
@@ -12783,12 +12800,13 @@ dependencies = [
 
 [[package]]
 name = "watr-runtime"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",
  "cumulus-pallet-parachain-system",
  "cumulus-pallet-session-benchmarking",
+ "cumulus-pallet-solo-to-para",
  "cumulus-pallet-xcm",
  "cumulus-pallet-xcmp-queue",
  "cumulus-primitives-core",
