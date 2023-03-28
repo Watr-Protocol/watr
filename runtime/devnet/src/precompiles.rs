@@ -22,6 +22,7 @@ use pallet_evm::{
 	ExitRevert, Precompile, PrecompileFailure, PrecompileHandle, PrecompileResult, PrecompileSet,
 };
 use pallet_evm_precompile_assets_erc20::{AddressToAssetId, Erc20AssetsPrecompileSet};
+use pallet_evm_precompile_tusd::{AddressToAssetId as TusdAddressToAssetId, TusdPrecompile};
 use pallet_evm_precompile_blake2::Blake2F;
 use pallet_evm_precompile_bn128::{Bn128Add, Bn128Mul, Bn128Pairing};
 use pallet_evm_precompile_modexp::Modexp;
@@ -30,9 +31,20 @@ use pallet_evm_precompile_simple::{ECRecover, Identity, Ripemd160, Sha256};
 use sp_core::H160;
 use sp_std::{fmt::Debug, marker::PhantomData};
 
+use crate::sp_api_hidden_includes_construct_runtime::hidden_include::traits::fungibles::roles::Inspect;
+
 /// The asset precompile address prefix. Addresses that match against this prefix will be routed
 /// to Erc20AssetsPrecompileSet
 pub const ASSET_PRECOMPILE_ADDRESS_PREFIX: &[u8] = &[255u8; 4];
+
+//TODO: set to 0xFFFFFFFF000000000000000000000000000007DA
+pub const TUSD_PRECOMPILE_ADDRESS: u64 = 2010;
+// pub const TUSD_PRECOMPILE_ADDRESS_WITH_PREFIX: u128 = u128::from_be_bytes([
+//     0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 
+//     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+//     0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0xDA
+// ]);
+
 
 /// The PrecompileSet installed in the Astar runtime.
 #[derive(Debug, Default, Clone, Copy)]
@@ -46,18 +58,21 @@ impl<R> FrontierPrecompiles<R> {
 	/// Return all addresses that contain precompiles. This can be used to populate dummy code
 	/// under the precompile.
 	pub fn used_addresses() -> impl Iterator<Item = H160> {
-		sp_std::vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 1024, 1025, 1026, 1027, 20481, 20482, 20483, 20484]
+		sp_std::vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 1024, 1025, 1026, 1027, 2010, 20481, 20482, 20483, 20484]
 			.into_iter()
 			.map(hash)
 	}
 }
 
+pub type AssetIdOf<Runtime, Instance = ()> = <Runtime as pallet_assets::Config<Instance>>::AssetId;
 /// The following distribution has been decided for the precompiles
 /// 0-1023: Ethereum Mainnet Precompiles
 /// 1024-2047 Precompiles that are not in Ethereum Mainnet
 impl<R> pallet_evm::PrecompileSet for FrontierPrecompiles<R>
 where
 	Erc20AssetsPrecompileSet<R>: PrecompileSet,
+	TusdPrecompile<R>: PrecompileSet,
+	<R as pallet_assets::Config>::AssetId: From<u64>,
 	R: pallet_evm::Config
 		+ pallet_assets::Config
 		+ pallet_xcm::Config
@@ -85,9 +100,18 @@ where
 			// Non-Frontier specific nor Ethereum precompiles :
 			// nor Ethereum precompiles :
 			a if a == hash(1024) => Some(Sha3FIPS256::execute(handle)),
+			a if a == hash(TUSD_PRECOMPILE_ADDRESS) =>
+				TusdPrecompile::<R>::new().execute(handle), 
 			// If the address matches asset prefix, the we route through the asset precompile set
-			a if &a.to_fixed_bytes()[0..4] == ASSET_PRECOMPILE_ADDRESS_PREFIX =>
-				Erc20AssetsPrecompileSet::<R>::new().execute(handle),
+			a if &a.to_fixed_bytes()[0..4] == ASSET_PRECOMPILE_ADDRESS_PREFIX => {
+				// TODO: Check if TUSD precompile, if so, check pallet-assets issuer. 
+				let asset_id: AssetIdOf<R> = R::address_to_asset_id(a).unwrap();
+				if asset_id == TUSD_PRECOMPILE_ADDRESS.try_into().unwrap() {
+					let owner = pallet_assets::Pallet::<R>::issuer(asset_id);
+				}
+				Erc20AssetsPrecompileSet::<R>::new().execute(handle)
+			},
+				
 			// Default
 			_ => None,
 		}

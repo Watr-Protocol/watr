@@ -98,6 +98,7 @@ pallet-evm-precompile-sha3fips = {  git = 'https://github.com/paritytech/frontie
 pallet-evm-precompile-simple = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30", default-features = false }
 pallet-evm-precompile-blake2 = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30", default-features = false }
 pallet-evm-precompile-bn128 = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30", default-features = false }
+pallet-evm-precompile-tusd = { path = "../../precompiles/tusd", default-features = false }
 
 pallet-multisig = {git = "https://github.com/paritytech/substrate", package = "pallet-multisig", default-features = false, branch = "polkadot-v0.9.30" }
 pallet-identity = {git = "https://github.com/paritytech/substrate", package = "pallet-identity", default-features = false, branch = "polkadot-v0.9.30" }
