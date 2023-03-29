@@ -672,7 +672,7 @@ fn remove_issuer_works() {
 #[test]
 fn add_credentials_type_works() {
 	new_test_ext().execute_with(|| {
-		let creds: Vec<BoundedVec<u8, MaxString>> =
+		let creds: Vec<BoundedVec<u8, MaxCredentialTypeLength>> =
 			vec![bounded_vec![0, 0], bounded_vec![0, 1], bounded_vec![0, 2]];
 
 		assert_noop!(DID::add_credentials_type(RuntimeOrigin::signed(1), creds.clone()), BadOrigin);
@@ -684,7 +684,7 @@ fn add_credentials_type_works() {
 			Error::<Test>::CredentialTypeAlreadyAdded
 		);
 
-		let mut max_creds: Vec<BoundedVec<u8, MaxString>> = vec![];
+		let mut max_creds: Vec<BoundedVec<u8, MaxCredentialTypeLength>> = vec![];
 		let creds_limit = MaxCredentialsTypes::get();
 		for i in 3..creds_limit {
 			max_creds.push(bounded_vec![0, i]);
@@ -708,7 +708,7 @@ fn add_credentials_type_works() {
 #[test]
 fn remove_credentials_type_works() {
 	new_test_ext().execute_with(|| {
-		let cred_x: Vec<BoundedVec<u8, MaxString>> = vec![bounded_vec![0, 1], bounded_vec![0, 2]];
+		let cred_x: Vec<BoundedVec<u8, MaxCredentialTypeLength>> = vec![bounded_vec![0, 1], bounded_vec![0, 2]];
 		assert_ok!(DID::add_credentials_type(RuntimeOrigin::root(), cred_x.clone()));
 
 		assert_noop!(
@@ -721,16 +721,16 @@ fn remove_credentials_type_works() {
 		let events = events();
 		assert!(events.contains(&Event::<Test>::CredentialTypesRemoved { credentials: cred_x }));
 
-		let cred_y: Vec<BoundedVec<u8, MaxString>> = vec![bounded_vec![0, 2], bounded_vec![0, 4]];
+		let cred_y: Vec<BoundedVec<u8, MaxCredentialTypeLength>> = vec![bounded_vec![0, 2], bounded_vec![0, 4]];
 		assert_noop!(
 			DID::remove_credentials_type(RuntimeOrigin::root(), cred_y),
 			Error::<Test>::CredentialTypeDoesNotExist
 		);
 
-		let cred_x: Vec<BoundedVec<u8, MaxString>> = vec![bounded_vec![0, 1]];
-		let cred_y: Vec<BoundedVec<u8, MaxString>> = vec![bounded_vec![0, 2]];
-		let cred_z: Vec<BoundedVec<u8, MaxString>> = vec![bounded_vec![0, 4], bounded_vec![0, 3]];
-		let ordered_creds: Vec<BoundedVec<u8, MaxString>> =
+		let cred_x: Vec<BoundedVec<u8, MaxCredentialTypeLength>> = vec![bounded_vec![0, 1]];
+		let cred_y: Vec<BoundedVec<u8, MaxCredentialTypeLength>> = vec![bounded_vec![0, 2]];
+		let cred_z: Vec<BoundedVec<u8, MaxCredentialTypeLength>> = vec![bounded_vec![0, 4], bounded_vec![0, 3]];
+		let ordered_creds: Vec<BoundedVec<u8, MaxCredentialTypeLength>> =
 			vec![bounded_vec![0, 1], bounded_vec![0, 2], bounded_vec![0, 3], bounded_vec![0, 4]];
 
 		assert_ok!(DID::add_credentials_type(RuntimeOrigin::root(), cred_z.clone()));
@@ -750,7 +750,7 @@ fn issue_credentials_works() {
 		create_default_did(ACCOUNT_02, ACCOUNT_02);
 		create_default_did(ACCOUNT_04, ACCOUNT_04);
 
-		let creds: Vec<BoundedVec<u8, MaxString>> =
+		let creds: Vec<BoundedVec<u8, MaxCredentialTypeLength>> =
 			vec![bounded_vec![0, 0], bounded_vec![0, 1], bounded_vec![0, 2]];
 		let verifiable_credential_hash: HashOf<Test> = bounded_vec![1, 2, 3, 4, 5];
 
@@ -847,7 +847,7 @@ fn revoke_credentials_works() {
 		create_default_did(ACCOUNT_01, ACCOUNT_01);
 		create_default_did(ACCOUNT_02, ACCOUNT_02);
 
-		let creds: Vec<BoundedVec<u8, MaxString>> =
+		let creds: Vec<BoundedVec<u8, MaxCredentialTypeLength>> =
 			vec![bounded_vec![0, 0], bounded_vec![0, 1], bounded_vec![0, 2]];
 		let verifiable_credential_hash: HashOf<Test> = bounded_vec![1, 2, 3, 4, 5];
 
@@ -914,7 +914,7 @@ fn force_revoke_credentials_works() {
 		create_default_did(ACCOUNT_01, ACCOUNT_01);
 		create_default_did(ACCOUNT_02, ACCOUNT_02);
 
-		let creds: Vec<BoundedVec<u8, MaxString>> =
+		let creds: Vec<BoundedVec<u8, MaxCredentialTypeLength>> =
 			vec![bounded_vec![0, 0], bounded_vec![0, 1], bounded_vec![0, 2]];
 		let verifiable_credential_hash: HashOf<Test> = bounded_vec![1, 2, 3, 4, 5];
 

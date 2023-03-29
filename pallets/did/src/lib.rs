@@ -91,7 +91,6 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
-		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		type RuntimeCall: Parameter
@@ -278,7 +277,7 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		// #[pallet::call_index(0)]
+		#[pallet::call_index(0)]
 		#[pallet::weight(T::WeightInfo::create_did(services.len() as u32))]
 		pub fn create_did(
 			origin: OriginFor<T>,
@@ -301,7 +300,7 @@ pub mod pallet {
 			let maybe_assertion_method =
 				assertion.map(|assertion| AssertionMethod::<T> { controller: assertion });
 
-			// For keepin track of Services inserts/removals
+			// For keeping track of Services inserts/removals
 			let mut services_witness = ServicesWitness::default();
 			// Add services.
 			let services_keys = Self::do_add_did_services(
@@ -327,7 +326,7 @@ pub mod pallet {
 			Ok(Some(T::WeightInfo::create_did(services_witness.inserts)).into())
 		}
 
-		// #[pallet::call_index(1)]
+		#[pallet::call_index(1)]
 		#[pallet::weight(T::WeightInfo::update_did(services.clone().or_else(|| Some(BoundedVec::default())).unwrap().len() as u32, T::MaxServices::get()))]
 		pub fn update_did(
 			origin: OriginFor<T>,
@@ -337,7 +336,7 @@ pub mod pallet {
 			assertion: Option<T::AssertionAddress>,
 			services: Option<BoundedVec<ServiceInfo<T>, T::MaxServices>>,
 		) -> DispatchResultWithPostInfo {
-			// For keepin track of Services inserts/removals
+			// For keeping track of Services inserts/removals
 			let mut services_witness = ServicesWitness::default();
 
 			let document = Self::do_update_did(
@@ -356,7 +355,7 @@ pub mod pallet {
 				.into())
 		}
 
-		// #[pallet::call_index(2)]
+		#[pallet::call_index(2)]
 		#[pallet::weight(T::WeightInfo::update_did(services.clone().or_else(|| Some(BoundedVec::default())).unwrap().len() as u32, T::MaxServices::get()))]
 		pub fn force_update_did(
 			origin: OriginFor<T>,
@@ -367,7 +366,7 @@ pub mod pallet {
 			services: Option<BoundedVec<ServiceInfo<T>, T::MaxServices>>,
 		) -> DispatchResultWithPostInfo {
 			T::GovernanceOrigin::ensure_origin(origin.clone())?;
-			// For keepin track of Services inserts/removals
+			// For keeping track of Services inserts/removals
 			let mut services_witness = ServicesWitness::default();
 
 			let document = Self::do_update_did(
@@ -385,13 +384,13 @@ pub mod pallet {
 			Ok(Pays::No.into())
 		}
 
-		// #[pallet::call_index(3)]
+		#[pallet::call_index(3)]
 		#[pallet::weight(T::WeightInfo::remove_did(T::MaxServices::get()))]
 		pub fn remove_did(
 			origin: OriginFor<T>,
 			did: DidIdentifierOf<T>,
 		) -> DispatchResultWithPostInfo {
-			// For keepin track of Services inserts/removals
+			// For keeping track of Services inserts/removals
 			let mut services_witness = ServicesWitness::default();
 			Self::do_remove_did(origin, did.clone(), &mut services_witness)?;
 			Self::deposit_event(Event::DidRemoved { did });
@@ -399,7 +398,7 @@ pub mod pallet {
 			Ok(Some(T::WeightInfo::remove_did(services_witness.removals)).into())
 		}
 
-		// #[pallet::call_index(4)]
+		#[pallet::call_index(4)]
 		#[pallet::weight(T::WeightInfo::remove_did(T::MaxServices::get()))]
 		pub fn force_remove_did(
 			origin: OriginFor<T>,
@@ -407,7 +406,7 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin.clone())?;
-			// For keepin track of Services inserts/removals
+			// For keeping track of Services inserts/removals
 			let mut services_witness = ServicesWitness::default();
 			Self::do_remove_did(origin, did.clone(), &mut services_witness)?;
 			Self::deposit_event(Event::DidForcedRemoved { did });
@@ -415,7 +414,7 @@ pub mod pallet {
 			Ok(Pays::No.into())
 		}
 
-		// #[pallet::call_index(5)]
+		#[pallet::call_index(5)]
 		#[pallet::weight(T::WeightInfo::add_did_services(services.len() as u32))]
 		pub fn add_did_services(
 			origin: OriginFor<T>,
@@ -423,7 +422,7 @@ pub mod pallet {
 			services: BoundedVec<ServiceInfo<T>, T::MaxServices>,
 		) -> DispatchResultWithPostInfo {
 			let controller = ensure_signed(origin)?;
-			// For keepin track of Services inserts/removals
+			// For keeping track of Services inserts/removals
 			let mut services_witness = ServicesWitness::default();
 			// Try to mutate document
 			Did::<T>::try_mutate(did.clone(), |maybe_doc| -> DispatchResultWithPostInfo {
@@ -441,7 +440,7 @@ pub mod pallet {
 			})
 		}
 
-		// #[pallet::call_index(6)]
+		#[pallet::call_index(6)]
 		#[pallet::weight(T::WeightInfo::remove_did_services(services_keys.len() as u32))]
 		pub fn remove_did_services(
 			origin: OriginFor<T>,
@@ -450,7 +449,7 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			let controller = ensure_signed(origin)?;
 
-			// For keepin track of Services inserts/removals
+			// For keeping track of Services inserts/removals
 			let mut services_witness = ServicesWitness::default();
 
 			Did::<T>::try_mutate(did.clone(), |maybe_doc| -> DispatchResultWithPostInfo {
@@ -459,7 +458,7 @@ pub mod pallet {
 				Self::ensure_controller(controller, &document)?;
 
 				Self::do_remove_did_services(
-					services_keys.clone(),
+					&services_keys,
 					&mut document.services,
 					&mut services_witness,
 				)?;
@@ -473,7 +472,7 @@ pub mod pallet {
 			})
 		}
 
-		// #[pallet::call_index(7)]
+		#[pallet::call_index(7)]
 		#[pallet::weight(T::WeightInfo::issue_credentials(credentials.len() as u32))]
 		pub fn issue_credentials(
 			origin: OriginFor<T>,
@@ -519,7 +518,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// #[pallet::call_index(8)]
+		#[pallet::call_index(8)]
 		#[pallet::weight(T::WeightInfo::revoke_credentials(credentials.len() as u32))]
 		pub fn revoke_credentials(
 			origin: OriginFor<T>,
@@ -543,7 +542,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// #[pallet::call_index(9)]
+		#[pallet::call_index(9)]
 		#[pallet::weight(T::WeightInfo::revoke_credentials(credentials.len() as u32))]
 		pub fn force_revoke_credentials(
 			origin: OriginFor<T>,
@@ -563,7 +562,7 @@ pub mod pallet {
 			Ok(Pays::No.into())
 		}
 
-		// #[pallet::call_index(10)]
+		#[pallet::call_index(10)]
 		#[pallet::weight(T::WeightInfo::add_issuer())]
 		pub fn add_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
@@ -575,7 +574,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// #[pallet::call_index(11)]
+		#[pallet::call_index(11)]
 		#[pallet::weight(T::WeightInfo::revoke_issuer())]
 		pub fn revoke_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
@@ -591,7 +590,7 @@ pub mod pallet {
 			})
 		}
 
-		// #[pallet::call_index(12)]
+		#[pallet::call_index(12)]
 		#[pallet::weight(T::WeightInfo::reactivate_issuer())]
 		pub fn reactivate_issuer(
 			origin: OriginFor<T>,
@@ -613,7 +612,7 @@ pub mod pallet {
 			})
 		}
 
-		// #[pallet::call_index(13)]
+		#[pallet::call_index(13)]
 		#[pallet::weight(T::WeightInfo::remove_issuer())]
 		pub fn remove_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
@@ -622,7 +621,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// #[pallet::call_index(14)]
+		#[pallet::call_index(14)]
 		#[pallet::weight(T::WeightInfo::add_credentials_type(credentials.len() as u32))]
 		pub fn add_credentials_type(
 			origin: OriginFor<T>,
@@ -647,7 +646,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// #[pallet::call_index(15)]
+		#[pallet::call_index(15)]
 		#[pallet::weight(T::WeightInfo::remove_credentials_type(credentials.len() as u32))]
 		pub fn remove_credentials_type(
 			origin: OriginFor<T>,
@@ -712,7 +711,7 @@ impl<T: Config> Pallet<T> {
 			if let Some(new_services) = services {
 				// Clean all original services
 				Self::do_remove_did_services(
-					document.services.clone(),
+					&document.services,
 					&mut document.services.clone(),
 					services_witness,
 				)?;
@@ -740,9 +739,8 @@ impl<T: Config> Pallet<T> {
 			// Check if origin is either governance or controller
 			Self::ensure_governance_or_controller(origin, &document)?;
 
-			// TODO - seems like excessive and expensive cloning, refactor.
 			Self::do_remove_did_services(
-				document.services.clone(),
+				&document.services,
 				&mut document.services.clone(),
 				services_witness,
 			)?;
@@ -809,7 +807,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn do_remove_did_services(
-		keys_to_remove: ServiceKeysOf<T>,
+		keys_to_remove: &ServiceKeysOf<T>,
 		document_services_keys: &mut ServiceKeysOf<T>,
 		services_witness: &mut ServicesWitness,
 	) -> DispatchResult {
@@ -835,7 +833,6 @@ impl<T: Config> Pallet<T> {
 		Services::<T>::try_mutate_exists(
 			service_key,
 			|maybe_service| -> Result<(), DispatchError> {
-				// TODO: double check error
 				let service = maybe_service.as_mut().ok_or(Error::<T>::ServiceNotInDid)?;
 
 				service.dec_consumers();

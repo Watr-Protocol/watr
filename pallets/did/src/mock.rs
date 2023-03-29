@@ -85,6 +85,7 @@ impl pallet_balances::Config for Test {
 parameter_types! {
 	pub const MaxString: u8 = 100;
 	pub const MaxCredentialsTypes: u8 = 50;
+	pub const MaxCredentialTypeLength: u32 = 32;
 	pub const MaxServices: u8 = 10;
 	pub const MaxHash: u32 = 512;
 	pub const DidDeposit: u64 = 5;
@@ -102,6 +103,7 @@ impl pallet_did::Config for Test {
 	type MaxHash = MaxHash;
 	type MaxString = MaxString;
 	type MaxCredentialsTypes = MaxCredentialsTypes;
+	type MaxCredentialTypeLength = MaxCredentialTypeLength;
 	type MaxServices = MaxServices;
 	type WeightInfo = ();
 }
