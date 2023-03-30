@@ -149,7 +149,7 @@ benchmarks! {
 
 	update_did {
 		// update_did purposely does not add or remove services. These are accounted for with
-		// add_did_services and remove_did_services 
+		// add_did_services and remove_did_services
 
 		// Dependancy - Create a DID with its document
 		let mut controller_id = 1;
