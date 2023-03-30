@@ -47,7 +47,7 @@ use sp_std::marker::PhantomData;
 /// Weight functions needed for pallet_did.
 pub trait WeightInfo {
 	fn create_did(m: u32, ) -> Weight;
-	fn update_did(m: u32, n: u32, ) -> Weight;
+	fn update_did() -> Weight;
 	fn remove_did(m: u32, ) -> Weight;
 	fn add_did_services(m: u32, ) -> Weight;
 	fn remove_did_services(m: u32, ) -> Weight;
@@ -78,18 +78,10 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 			.saturating_add(T::DbWeight::get().writes((1 as u64).saturating_mul(m as u64)))
 	}
 	// Storage: DID Did (r:1 w:1)
-	// Storage: DID Services (r:10 w:10)
-	/// The range of component `m` is `[0, 10]`.
-	/// The range of component `n` is `[0, 10]`.
-	fn update_did(m: u32, n: u32, ) -> Weight {
-		// Minimum execution time:  nanoseconds.
-		Weight::from_ref_time(105_000_000 as u64)
-			// Standard Error: 62_168
-			.saturating_add(Weight::from_ref_time(2_631_682 as u64).saturating_mul(m as u64))
-			// Standard Error: 62_168
-			.saturating_add(Weight::from_ref_time(2_222_950 as u64).saturating_mul(n as u64))
-			.saturating_add(T::DbWeight::get().reads(11 as u64))
-			.saturating_add(T::DbWeight::get().writes(11 as u64))
+	fn update_did() -> Weight {
+		Weight::from_ref_time(16_000_000 as u64)
+			.saturating_add(T::DbWeight::get().reads(1 as u64))
+			.saturating_add(T::DbWeight::get().writes(1 as u64))
 	}
 	// Storage: DID Did (r:1 w:1)
 	// Storage: DID Issuers (r:1 w:0)
@@ -217,18 +209,10 @@ impl WeightInfo for () {
 			.saturating_add(RocksDbWeight::get().writes((1 as u64).saturating_mul(m as u64)))
 	}
 	// Storage: DID Did (r:1 w:1)
-	// Storage: DID Services (r:10 w:10)
-	/// The range of component `m` is `[0, 10]`.
-	/// The range of component `n` is `[0, 10]`.
-	fn update_did(m: u32, n: u32, ) -> Weight {
-		// Minimum execution time:  nanoseconds.
-		Weight::from_ref_time(105_000_000 as u64)
-			// Standard Error: 62_168
-			.saturating_add(Weight::from_ref_time(2_631_682 as u64).saturating_mul(m as u64))
-			// Standard Error: 62_168
-			.saturating_add(Weight::from_ref_time(2_222_950 as u64).saturating_mul(n as u64))
-			.saturating_add(RocksDbWeight::get().reads(11 as u64))
-			.saturating_add(RocksDbWeight::get().writes(11 as u64))
+	fn update_did() -> Weight {
+		Weight::from_ref_time(16_000_000 as u64)
+			.saturating_add(T::DbWeight::get().reads(1 as u64))
+			.saturating_add(T::DbWeight::get().writes(1 as u64))
 	}
 	// Storage: DID Did (r:1 w:1)
 	// Storage: DID Issuers (r:1 w:0)

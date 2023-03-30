@@ -148,8 +148,8 @@ benchmarks! {
 	}
 
 	update_did {
-		let m in 0 .. T::MaxServices::get(); // New services to be added
-		let n in 0 .. T::MaxServices::get(); // Existing services with consumer = 1 to be removed
+		// update_did purposely does not add or remove services. These are accounted for with
+		// add_did_services and remove_did_services
 
 		// Dependancy - Create a DID with its document
 		let mut controller_id = 1;
@@ -157,7 +157,7 @@ benchmarks! {
 		let mut assertion_id = 1;
 		let mut services_generator_seed = 1;
 
-		let (existing_services, existing_services_keys) = create_services::<T>(n, services_generator_seed);
+		let (existing_services, existing_services_keys) = create_services::<T>(0, services_generator_seed);
 		let existing_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
 		let did: T::AccountId = whitelisted_caller();
 		let did_origin = RawOrigin::Signed(did.clone());
@@ -181,7 +181,7 @@ benchmarks! {
 		assertion_id = 2;
 		services_generator_seed = 2;
 
-		let (new_services, new_services_keys) = create_services::<T>(m, services_generator_seed);
+		let (new_services, new_services_keys) = create_services::<T>(0, services_generator_seed);
 		let new_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &new_services_keys);
 	}: _(
 			controller_origin,

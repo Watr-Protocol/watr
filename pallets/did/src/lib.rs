@@ -327,7 +327,14 @@ pub mod pallet {
 		}
 
 		#[pallet::call_index(1)]
-		#[pallet::weight(T::WeightInfo::update_did(services.clone().or_else(|| Some(BoundedVec::default())).unwrap().len() as u32, T::MaxServices::get()))]
+		#[pallet::weight(
+			T::WeightInfo::update_did().saturating_add(
+				T::WeightInfo::add_did_services(services.clone().or_else(|| Some(BoundedVec::default())).unwrap().len() as u32)
+					.saturating_add(
+						T::WeightInfo::remove_did_services(T::MaxServices::get())
+					)
+			)
+		)]
 		pub fn update_did(
 			origin: OriginFor<T>,
 			did: DidIdentifierOf<T>,
@@ -351,12 +358,22 @@ pub mod pallet {
 
 			Self::deposit_event(Event::DidUpdated { did, document });
 
-			Ok(Some(T::WeightInfo::update_did(services_witness.inserts, services_witness.removals))
-				.into())
+			Ok(Some(
+				T::WeightInfo::add_did_services(services_witness.inserts)
+					.saturating_add(T::WeightInfo::remove_did_services(services_witness.removals)),
+			)
+			.into())
 		}
 
 		#[pallet::call_index(2)]
-		#[pallet::weight(T::WeightInfo::update_did(services.clone().or_else(|| Some(BoundedVec::default())).unwrap().len() as u32, T::MaxServices::get()))]
+		#[pallet::weight(
+			T::WeightInfo::update_did().saturating_add(
+				T::WeightInfo::add_did_services(services.clone().or_else(|| Some(BoundedVec::default())).unwrap().len() as u32)
+					.saturating_add(
+						T::WeightInfo::remove_did_services(T::MaxServices::get())
+					)
+			)
+		)]
 		pub fn force_update_did(
 			origin: OriginFor<T>,
 			did: DidIdentifierOf<T>,
