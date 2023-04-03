@@ -55,14 +55,13 @@ impl<R> FrontierPrecompiles<R> {
 	/// under the precompile.
 	pub fn used_addresses() -> impl Iterator<Item = H160> {
 		sp_std::vec![
-			1, 2, 3, 4, 5, 6, 7, 8, 9, 1024, 1025, 1026, 1027, 2010, 20481, 20482, 20483, 20484
+			1, 2, 3, 4, 5, 6, 7, 8, 9, 1024, 1025, 1026, 1027, 20481, 20482, 20483, 20484
 		]
 		.into_iter()
 		.map(hash)
 	}
 }
 
-pub type AssetIdOf<Runtime, Instance = ()> = <Runtime as pallet_assets::Config<Instance>>::AssetId;
 /// The following distribution has been decided for the precompiles
 /// 0-1023: Ethereum Mainnet Precompiles
 /// 1024-2047 Precompiles that are not in Ethereum Mainnet

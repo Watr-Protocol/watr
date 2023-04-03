@@ -558,27 +558,6 @@ impl AddressToAssetId<AssetId> for Runtime {
 	}
 }
 
-use pallet_evm_precompile_tusd::AddressToAssetId as TusdAddressToAssetId;
-impl TusdAddressToAssetId<AssetId> for Runtime {
-	fn address_to_asset_id(address: H160) -> Option<AssetId> {
-		let mut data = [0u8; 16];
-		let address_bytes: [u8; 20] = address.into();
-		if ASSET_PRECOMPILE_ADDRESS_PREFIX.eq(&address_bytes[0..4]) {
-			data.copy_from_slice(&address_bytes[4..20]);
-			Some(u128::from_be_bytes(data))
-		} else {
-			None
-		}
-	}
-
-	fn asset_id_to_address(asset_id: AssetId) -> H160 {
-		let mut data = [0u8; 20];
-		data[0..4].copy_from_slice(ASSET_PRECOMPILE_ADDRESS_PREFIX);
-		data[4..20].copy_from_slice(&asset_id.to_be_bytes());
-		H160::from(data)
-	}
-}
-
 parameter_types! {
 	pub const AssetDeposit: Balance = 100 * WATRD; // 100 WATRD deposit to create fungible asset class
 	pub const AssetAccountDeposit: Balance = deposit(1, 16);
