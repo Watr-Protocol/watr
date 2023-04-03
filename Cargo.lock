@@ -12759,6 +12759,7 @@ dependencies = [
  "polkadot-parachain",
  "polkadot-primitives",
  "polkadot-runtime-common",
+ "precompile-utils",
  "scale-info",
  "serde",
  "smallvec",
