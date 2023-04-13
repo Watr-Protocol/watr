@@ -20,7 +20,7 @@ use frame_support::{
 	parameter_types,
 	traits::{ConstU16, ConstU64},
 };
-use sp_core::H256;
+use sp_core::{H160, H256};
 use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup},
@@ -38,9 +38,8 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Event<T>},
-
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-		Did: pallet_did,
+		DID: pallet_did,
 	}
 );
 
@@ -84,16 +83,44 @@ impl pallet_balances::Config for Test {
 }
 
 parameter_types! {
-	pub CouncilMotionDuration: u64 = 7;
-	pub const CouncilMaxProposals: u32 = 100;
-	pub const CouncilMaxMembers: u32 = 100;
+	pub const MaxString: u8 = 100;
+	pub const MaxCredentialsTypes: u8 = 50;
+	pub const MaxCredentialTypeLength: u32 = 32;
+	pub const MaxServices: u8 = 10;
+	pub const MaxHash: u32 = 512;
+	pub const DidDeposit: u64 = 5;
 }
+
+impl pallet_did::Config for Test {
+	type RuntimeCall = RuntimeCall;
+	type RuntimeEvent = RuntimeEvent;
+	type DidIdentifier = u64;
+	type AuthenticationAddress = H160;
+	type AssertionAddress = H160;
+	type DidDeposit = DidDeposit;
+	type Currency = Balances;
+	type GovernanceOrigin = frame_system::EnsureRoot<u64>;
+	type MaxHash = MaxHash;
+	type MaxString = MaxString;
+	type MaxCredentialsTypes = MaxCredentialsTypes;
+	type MaxCredentialTypeLength = MaxCredentialTypeLength;
+	type MaxServices = MaxServices;
+	type WeightInfo = ();
+}
+
+pub(crate) const ALICE: u64 = 1;
+pub(crate) const BOB: u64 = 2;
+pub(crate) const ACCOUNT_00: u64 = 0;
+pub(crate) const ACCOUNT_01: u64 = 1;
+pub(crate) const ACCOUNT_02: u64 = 2;
+pub(crate) const ACCOUNT_03: u64 = 3;
+pub(crate) const ACCOUNT_04: u64 = 4;
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut ext: sp_io::TestExternalities = GenesisConfig {
 		balances: pallet_balances::GenesisConfig::<Test> {
-			balances: vec![(1, 10), (2, 20), (3, 30), (4, 40), (5, 50)],
+			balances: vec![(0, 2), (1, 10), (2, 20), (3, 30), (4, 40), (5, 50)],
 		},
 	}
 	.build_storage()
