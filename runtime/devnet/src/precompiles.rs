@@ -24,10 +24,10 @@ use pallet_evm::{
 use pallet_evm_precompile_assets_erc20::{AddressToAssetId, Erc20AssetsPrecompileSet};
 use pallet_evm_precompile_blake2::Blake2F;
 use pallet_evm_precompile_bn128::{Bn128Add, Bn128Mul, Bn128Pairing};
+use pallet_evm_precompile_dispatch::Dispatch;
 use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, Identity, Ripemd160, Sha256};
-use pallet_evm_precompile_dispatch::Dispatch;
 use sp_core::H160;
 use sp_std::{fmt::Debug, marker::PhantomData};
 
