@@ -211,8 +211,8 @@ impl WeightInfo for () {
 	// Storage: DID Did (r:1 w:1)
 	fn update_did() -> Weight {
 		Weight::from_ref_time(16_000_000 as u64)
-			.saturating_add(T::DbWeight::get().reads(1 as u64))
-			.saturating_add(T::DbWeight::get().writes(1 as u64))
+			.saturating_add(RocksDbWeight::get().reads(1 as u64))
+			.saturating_add(RocksDbWeight::get().writes(1 as u64))
 	}
 	// Storage: DID Did (r:1 w:1)
 	// Storage: DID Issuers (r:1 w:0)
