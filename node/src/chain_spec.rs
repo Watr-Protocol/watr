@@ -433,8 +433,14 @@ fn devnet_testnet_genesis(
 		aura: Default::default(),
 		aura_ext: Default::default(),
 		assets: devnet::AssetsConfig {
-			assets: vec![(1984, root_key.clone(), true, 10_000), (2018, root_key.clone(), true, 10_000)],
-			metadata: vec![(1984, b"Tether USD".to_vec(), b"USDt".to_vec(), 6), (2018, b"Native TUSD".to_vec(), b"NTUSD".to_vec(), 18)],
+			assets: vec![
+				(1984, root_key.clone(), true, 10_000),
+				(2018, root_key.clone(), true, 10_000),
+			],
+			metadata: vec![
+				(1984, b"Tether USD".to_vec(), b"USDt".to_vec(), 6),
+				(2018, b"Native TUSD".to_vec(), b"NTUSD".to_vec(), 18),
+			],
 			accounts: vec![],
 		},
 		parachain_system: Default::default(),
@@ -451,16 +457,17 @@ fn devnet_testnet_genesis(
 			accounts: {
 				let mut map = BTreeMap::new();
 				map.insert(
-					H160::from_str("0xfFFFffFF000000000000000000000000000007e2").expect("invalid address"),
+					H160::from_str("0xfFFFffFF000000000000000000000000000007e2")
+						.expect("invalid address"),
 					fp_evm::GenesisAccount {
-					 	nonce: Default::default(),
+						nonce: Default::default(),
 						balance: Default::default(),
 						storage: Default::default(),
-						code: vec![0x60, 0x00, 0x60, 0x00, 0xfd]
-					}
+						code: vec![0x60, 0x00, 0x60, 0x00, 0xfd],
+					},
 				);
 				map
-			}
+			},
 		},
 		ethereum: Default::default(),
 		base_fee: Default::default(),
