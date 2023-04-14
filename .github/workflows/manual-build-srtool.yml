@@ -22,6 +22,10 @@ on:
         description: The runtime_dir to be used
         default: runtime/devnet
         required: true
+      ref:
+        description: The ref to be used for the repo
+        default: main
+        required: false
 jobs:
   build:
     name: Build ${{ github.event.inputs.repository }}/${{ github.event.inputs.package }} ${{ github.event.inputs.ref }}
