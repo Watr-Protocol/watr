@@ -18,12 +18,14 @@
 // which is generated directly to the upstream Parachain Template in Cumulus
 // https://github.com/paritytech/cumulus/tree/master/parachain-template
 
+use std::str::FromStr;
+
 use cumulus_primitives_core::ParaId;
 use hex_literal::hex;
 use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
-use sp_core::{sr25519, Pair, Public};
+use sp_core::{sr25519, Pair, Public, H160};
 use sp_runtime::traits::{IdentifyAccount, Verify};
 use std::collections::BTreeMap;
 
@@ -431,8 +433,8 @@ fn devnet_testnet_genesis(
 		aura: Default::default(),
 		aura_ext: Default::default(),
 		assets: devnet::AssetsConfig {
-			assets: vec![(1984, root_key, true, 10_000)],
-			metadata: vec![(1984, b"Tether USD".to_vec(), b"USDt".to_vec(), 6)],
+			assets: vec![(1984, root_key.clone(), true, 10_000), (2018, root_key.clone(), true, 10_000)],
+			metadata: vec![(1984, b"Tether USD".to_vec(), b"USDt".to_vec(), 6), (2018, b"Native TUSD".to_vec(), b"NTUSD".to_vec(), 18)],
 			accounts: vec![],
 		},
 		parachain_system: Default::default(),
@@ -445,7 +447,21 @@ fn devnet_testnet_genesis(
 		treasury: Default::default(),
 
 		// EVM compatibility
-		evm: EVMConfig { accounts: { BTreeMap::new() } },
+		evm: EVMConfig {
+			accounts: {
+				let mut map = BTreeMap::new();
+				map.insert(
+					H160::from_str("0xfFFFffFF000000000000000000000000000007e2").expect("invalid address"),
+					fp_evm::GenesisAccount {
+					 	nonce: Default::default(),
+						balance: Default::default(),
+						storage: Default::default(),
+						code: vec![0x60, 0x00, 0x60, 0x00, 0xfd]
+					}
+				);
+				map
+			}
+		},
 		ethereum: Default::default(),
 		base_fee: Default::default(),
 	}
