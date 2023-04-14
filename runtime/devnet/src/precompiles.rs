@@ -40,7 +40,7 @@ use crate::AssetId;
 /// to Erc20AssetsPrecompileSet
 pub const ASSET_PRECOMPILE_ADDRESS_PREFIX: &[u8] = &[255u8; 4];
 
-pub const TUSD_PRECOMPILE_ADDRESS: AssetId = 2010;
+pub const TUSD_PRECOMPILE_ADDRESS: AssetId = 2018;
 
 /// The PrecompileSet installed in the Astar runtime.
 #[derive(Debug, Default, Clone, Copy)]
