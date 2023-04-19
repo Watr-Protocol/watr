@@ -1,6 +1,6 @@
 [package]
 name = "watr-runtime"
-version = "1.21.0"
+version = "1.21.1"
 authors = ["Parity Technologies <admin@parity.io>"]
 description = "Watr Runtime"
 license = "GPL-3.0-only"
