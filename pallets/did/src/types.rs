@@ -117,7 +117,7 @@ impl<T: Config> Service<T> {
 	Copy, Clone, Default, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo,
 )]
 pub struct ServicesWitness {
-	/// The number of Services insterts
+	/// The number of Services inserts
 	#[codec(compact)]
 	pub inserts: u32,
 	/// The number of Services removals

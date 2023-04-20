@@ -133,7 +133,7 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxCredentialTypeLength: Get<u32>;
 
-		/// Origin for priviledged actions
+		/// Origin for privileged actions
 		type GovernanceOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 
 		/// Weight information for extrinsics in this pallet.
@@ -254,7 +254,7 @@ pub mod pallet {
 		IssuerNotRevoked,
 		/// The origin is not an Issuer
 		NotIssuer,
-		/// The maximum number of Credentials has been excedeed
+		/// The maximum number of Credentials has been exceeded
 		MaxCredentials,
 		/// Unable to create DID that already exists
 		DidAlreadyExists,
@@ -268,7 +268,7 @@ pub mod pallet {
 		ServiceNotInDid,
 		/// Too many references to a service. Not likely to happen
 		TooManyServiceConsumers,
-		/// The maximum number of Services in the DID has been excedeed
+		/// The maximum number of Services in the DID has been exceeded
 		TooManyServicesInDid,
 	}
 
