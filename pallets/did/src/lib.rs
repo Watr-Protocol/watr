@@ -783,14 +783,14 @@ impl<T: Config> Pallet<T> {
 				.err()
 				.ok_or(Error::<T>::ServiceAlreadyInDid)?;
 			document_services_keys
-				.try_insert(pos, service_key.clone())
+				.try_insert(pos, service_key)
 				.map_err(|_| Error::<T>::TooManyServicesInDid)?;
 			let pos = services_keys
 				.binary_search(&service_key)
 				.err()
 				.ok_or(Error::<T>::ServiceAlreadyInDid)?;
 			services_keys
-				.try_insert(pos, service_key.clone())
+				.try_insert(pos, service_key)
 				.map_err(|_| Error::<T>::TooManyServicesInDid)?;
 		}
 		Ok(services_keys)
@@ -804,7 +804,7 @@ impl<T: Config> Pallet<T> {
 		let service_key = T::Hashing::hash_of(&service);
 
 		// if the service exists increment its consumers, otherwise insert a new service
-		if let Some(mut existing_service) = Services::<T>::get(service_key.clone()) {
+		if let Some(mut existing_service) = Services::<T>::get(service_key) {
 			// `inc_consumers` may overflow, so handle it just in case
 			existing_service
 				.inc_consumers()
@@ -833,7 +833,7 @@ impl<T: Config> Pallet<T> {
 			let deleted_key = document_services_keys.remove(pos);
 
 			// House cleaning. Check consumers and possibly delete from storage
-			Self::do_remove_service(deleted_key.clone(), services_witness)?;
+			Self::do_remove_service(deleted_key, services_witness)?;
 		}
 		Ok(())
 	}
