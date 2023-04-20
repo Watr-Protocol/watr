@@ -441,7 +441,7 @@ pub mod pallet {
 			// Try to mutate document
 			Did::<T>::try_mutate(did.clone(), |maybe_doc| -> DispatchResultWithPostInfo {
 				let document = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
-				Self::ensure_controller(controller, &document)?;
+				Self::ensure_controller(controller, document)?;
 				// Insert new services
 				let services_keys = Self::do_add_did_services(
 					services,
@@ -469,7 +469,7 @@ pub mod pallet {
 			Did::<T>::try_mutate(did.clone(), |maybe_doc| -> DispatchResultWithPostInfo {
 				let document = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
 				// ensure that the caller is the controller of the DID
-				Self::ensure_controller(controller, &document)?;
+				Self::ensure_controller(controller, document)?;
 
 				Self::do_remove_did_services(
 					&services_keys,
@@ -701,7 +701,7 @@ impl<T: Config> Pallet<T> {
 			let document = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
 
 			// Check if origin is either governance or controller
-			Self::ensure_governance_or_controller(origin, &document)?;
+			Self::ensure_governance_or_controller(origin, document)?;
 
 			// If present, update `controller`
 			if let Some(controller) = controller {
@@ -827,7 +827,7 @@ impl<T: Config> Pallet<T> {
 		// Iterate over each service and remove it from the document
 		for service_key in keys_to_remove {
 			let pos = document_services_keys
-				.binary_search(&service_key)
+				.binary_search(service_key)
 				.ok()
 				.ok_or(Error::<T>::ServiceNotInDid)?;
 			let deleted_key = document_services_keys.remove(pos);
@@ -912,7 +912,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn ensure_issuer_is_active(issuer_did: &DidIdentifierOf<T>) -> DispatchResult {
-		let issuer_info = Issuers::<T>::get(&issuer_did).ok_or(Error::<T>::NotIssuer)?;
+		let issuer_info = Issuers::<T>::get(issuer_did).ok_or(Error::<T>::NotIssuer)?;
 		ensure!(issuer_info.status == IssuerStatus::Active, Error::<T>::IssuerNotActive);
 		Ok(())
 	}
