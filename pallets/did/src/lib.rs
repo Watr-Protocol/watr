@@ -56,9 +56,6 @@ pub mod pallet {
 	/// The current storage version.
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(0);
 
-	/// Reference to a payload of data of variable size.
-	pub type Payload = [u8];
-
 	/// Type for a DID subject identifier.
 	pub type DidIdentifierOf<T> = <T as Config>::DidIdentifier;
 
