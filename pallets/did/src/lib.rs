@@ -724,8 +724,6 @@ impl<T: Config> Pallet<T> {
 			}
 
 			// If present, update the `services` BoundedVec
-			// TODO: Improve delete/write looking for Vec intersection
-			// between new ones and existing services
 			if let Some(new_services) = services {
 				// Clean all original services
 				Self::do_remove_did_services(
