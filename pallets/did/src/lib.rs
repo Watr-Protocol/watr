@@ -326,7 +326,7 @@ pub mod pallet {
 		#[pallet::call_index(1)]
 		#[pallet::weight(
 			T::WeightInfo::update_did().saturating_add(
-				T::WeightInfo::add_did_services(services.clone().or_else(|| Some(BoundedVec::default())).unwrap().len() as u32)
+				T::WeightInfo::add_did_services(services.clone().or_else(|| Some(BoundedVec::default())).expect("value is always Ok").len() as u32)
 					.saturating_add(
 						T::WeightInfo::remove_did_services(T::MaxServices::get())
 					)
@@ -365,7 +365,7 @@ pub mod pallet {
 		#[pallet::call_index(2)]
 		#[pallet::weight(
 			T::WeightInfo::update_did().saturating_add(
-				T::WeightInfo::add_did_services(services.clone().or_else(|| Some(BoundedVec::default())).unwrap().len() as u32)
+				T::WeightInfo::add_did_services(services.clone().or_else(|| Some(BoundedVec::default())).expect("value is always Ok").len() as u32)
 					.saturating_add(
 						T::WeightInfo::remove_did_services(T::MaxServices::get())
 					)
