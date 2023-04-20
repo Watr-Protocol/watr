@@ -697,7 +697,7 @@ impl<T: Config> Pallet<T> {
 		services: Option<BoundedVec<ServiceInfo<T>, T::MaxServices>>,
 		services_witness: &mut ServicesWitness,
 	) -> Result<Document<T>, DispatchError> {
-		Did::<T>::try_mutate(did.clone(), |maybe_doc| -> Result<Document<T>, DispatchError> {
+		Did::<T>::try_mutate(did, |maybe_doc| -> Result<Document<T>, DispatchError> {
 			let document = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
 
 			// Check if origin is either governance or controller
