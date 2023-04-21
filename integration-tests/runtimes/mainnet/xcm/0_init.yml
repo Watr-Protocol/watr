@@ -12,7 +12,7 @@ settings:
       paraId: &watr_id 2058
   variables:
     common:
-      xcm_verison: &xcm_version '2'
+      xcm_version: &xcm_version '2'
       require_weight_at_most: &weight_at_most 1000000000
     chains:
       relay_chain:

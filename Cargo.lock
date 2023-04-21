@@ -6002,7 +6002,7 @@ dependencies = [
 [[package]]
 name = "pallet-evm-precompile-assets-erc20"
 version = "0.5.2"
-source = "git+https://github.com/Watr-Protocol/astar-frame.git?branch=polkadot-v0.9.30#b63d01c803601b19af226e659ea37d3e7672a3cb"
+source = "git+https://github.com/Watr-Protocol/astar-frame.git?branch=polkadot-v0.9.30#9d5ac6a9b04d35a13c6cf029c9ce2775190eb8c5"
 dependencies = [
  "fp-evm",
  "frame-support",
@@ -8203,7 +8203,7 @@ checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
 [[package]]
 name = "precompile-utils"
 version = "0.4.3"
-source = "git+https://github.com/Watr-Protocol/astar-frame.git?branch=polkadot-v0.9.30#b63d01c803601b19af226e659ea37d3e7672a3cb"
+source = "git+https://github.com/Watr-Protocol/astar-frame.git?branch=polkadot-v0.9.30#9d5ac6a9b04d35a13c6cf029c9ce2775190eb8c5"
 dependencies = [
  "evm 0.37.0",
  "fp-evm",
@@ -8226,7 +8226,7 @@ dependencies = [
 [[package]]
 name = "precompile-utils-macro"
 version = "0.1.0"
-source = "git+https://github.com/Watr-Protocol/astar-frame.git?branch=polkadot-v0.9.30#b63d01c803601b19af226e659ea37d3e7672a3cb"
+source = "git+https://github.com/Watr-Protocol/astar-frame.git?branch=polkadot-v0.9.30#9d5ac6a9b04d35a13c6cf029c9ce2775190eb8c5"
 dependencies = [
  "num_enum",
  "proc-macro2",
@@ -12618,7 +12618,7 @@ dependencies = [
 
 [[package]]
 name = "watr-common"
-version = "1.2.0"
+version = "1.21.1"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -12640,7 +12640,7 @@ dependencies = [
 
 [[package]]
 name = "watr-devnet-runtime"
-version = "1.2.0"
+version = "1.21.1"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",
@@ -12698,6 +12698,7 @@ dependencies = [
  "polkadot-parachain",
  "polkadot-primitives",
  "polkadot-runtime-common",
+ "precompile-utils",
  "scale-info",
  "serde",
  "smallvec",
@@ -12805,7 +12806,7 @@ dependencies = [
 
 [[package]]
 name = "watr-runtime"
-version = "1.2.0"
+version = "1.21.1"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",

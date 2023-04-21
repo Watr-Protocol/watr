@@ -1,0 +1,90 @@
+name: Deterministic Build
+
+env:
+  SUBWASM_VERSION: 0.18.0
+
+on:
+  workflow_dispatch:
+    inputs:
+      srtool_tag:
+        description: The SRTOOL tag to use
+        default: 1.66.1
+        required: false
+      srtool_image:
+        description: The SRTOOL image to use
+        default: paritytech/srtool
+        required: false
+      package:
+        description: The package to be used
+        default: watr-devnet-runtime
+        required: true
+      runtime_dir:
+        description: The runtime_dir to be used
+        default: runtime/devnet
+        required: true
+      ref:
+        description: The ref to be used for the repo
+        default: main
+        required: false
+jobs:
+  build:
+    name: Build ${{ github.event.inputs.repository }}/${{ github.event.inputs.package }} ${{ github.event.inputs.ref }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
+        with:
+          repository: ${{ github.event.inputs.repository }}
+          ref: ${{ github.event.inputs.ref }}
+          fetch-depth: 0
+
+      - name: Srtool build
+        id: srtool_build
+        uses: chevdor/srtool-actions@v0.6.0
+        with:
+          package: ${{ github.event.inputs.package }}
+          image: ${{ github.event.inputs.srtool_image }}
+          tag: ${{ github.event.inputs.srtool_tag }}
+          runtime_dir: ${{ github.event.inputs.runtime_dir }}
+
+      - name: Summary
+        run: |
+          echo '${{ steps.srtool_build.outputs.json }}' | jq > ${{ github.event.inputs.package }}-srtool-digest.json
+          cat ${{ github.event.inputs.package }}-srtool-digest.json
+          echo "Runtime location: ${{ steps.srtool_build.outputs.wasm }}"
+
+      # it takes a while to build the runtime, so let's save the artifact as soon as we have it
+      - name: Archive Artifacts for ${{ github.event.inputs.package }}
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
+        with:
+          name: ${{ github.event.inputs.package }}
+          path: |
+            ${{ steps.srtool_build.outputs.wasm }}
+            ${{ steps.srtool_build.outputs.wasm_compressed }}
+            ${{ github.event.inputs.package }}-srtool-digest.json
+
+      # We now get extra information thanks to subwasm,
+      - name: Install subwasm ${{ env.SUBWASM_VERSION }}
+        run: |
+          wget https://github.com/chevdor/subwasm/releases/download/v${{ env.SUBWASM_VERSION }}/subwasm_linux_amd64_v${{ env.SUBWASM_VERSION }}.deb
+          sudo dpkg -i subwasm_linux_amd64_v${{ env.SUBWASM_VERSION }}.deb
+          subwasm --version
+      - name: Show Runtime information
+        run: |
+          subwasm info ${{ steps.srtool_build.outputs.wasm }}
+          subwasm info ${{ steps.srtool_build.outputs.wasm_compressed }}
+          subwasm --json info ${{ steps.srtool_build.outputs.wasm }} > ${{ github.event.inputs.package }}-info.json
+          subwasm --json info ${{ steps.srtool_build.outputs.wasm_compressed }} > ${{ github.event.inputs.package }}-info_compressed.json
+      - name: Extract the metadata
+        run: |
+          subwasm meta ${{ steps.srtool_build.outputs.wasm }}
+          subwasm --json meta ${{ steps.srtool_build.outputs.wasm }} > ${{ github.event.inputs.package }}-metadata.json
+
+      - name: Archive Subwasm results
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # v3.1.0
+        with:
+          name: ${{ github.event.inputs.package }}-info
+          path: |
+            ${{ github.event.inputs.package }}-info.json
+            ${{ github.event.inputs.package }}-info_compressed.json
+            ${{ github.event.inputs.package }}-metadata.json
+            ${{ github.event.inputs.package }}-diff.txt
