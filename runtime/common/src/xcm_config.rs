@@ -161,7 +161,7 @@ impl<
 							},
 							_ => false,
 						};
-						let deposit_assset_is_correct = matches!(
+						let deposit_asset_is_correct = matches!(
 							&inner_xcm[1],
 							DepositAsset {
 								assets: Wild(All),
@@ -172,7 +172,7 @@ impl<
 								}
 							}
 						);
-						buy_execution_is_correct && deposit_assset_is_correct
+						buy_execution_is_correct && deposit_asset_is_correct
 					} else {
 						false
 					},

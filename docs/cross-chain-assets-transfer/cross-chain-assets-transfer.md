@@ -12,7 +12,7 @@ The derivate USDt asset in Watr:
 ### Reserve Transfer USDt from Statemint to Watr
 1. Get some USDt in an account you own in Statemint with some DOTs
 
-2. Reseve Transfer USDt to Watr:
+2. Reserve Transfer USDt to Watr:
 
 	Encoded Call example of Bob Statemint sending to Bob Watr
 	```
@@ -47,17 +47,17 @@ The derivate USDt asset in Watr:
 		![send_back_events_watr.png](images/send_back_events_watr.png)
 
 	- Statemint
-		- USDt sent amount is Bruned from the Watr Sovereign account in Statemint
+		- USDt sent amount is burned from the Watr Sovereign account in Statemint
 		- USDt sent amount minus fees are Issued to Bob Statemint
 		- USDt fees are sent to block author (collator)
 		![send_back_events_statemint.png](images/send_back_events_statemint.png)
 
 ## Note
 - Minimum amount that can be sent from Statemint to Watr in `32,000` (32 cents) which is the required USDt fee in Watr
-	- If a lower amount is sent, the asset will be transfered to the Watr Sovereign account in Statemint but it will fail in Watr.
+	- If a lower amount is sent, the asset will be transferred to the Watr Sovereign account in Statemint but it will fail in Watr.
 		- `xcmpQueue.Fail.TooExpensive` (not able to pay the fees)
 
-- Similarly will happen when sending from Watr to Statmint. Minimum amount that can be sent (at the time of writting) is `1183` (1 milicent)
+- Similarly will happen when sending from Watr to Statemint. Minimum amount that can be sent (at the time of writing) is `1183` (1 milicent)
 	- If a lower amount is sent, the asset will be burned from the Watr sender and from the Watr Sovereign account in Statemint, but it fail trying to deposit it in the beneficiary.
 		- `xcmpQueue.Fail.TooExpensive` (not able to pay the fees)
 

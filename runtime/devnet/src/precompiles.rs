@@ -19,7 +19,8 @@
 // https://github.com/AstarNetwork/Astar/blob/master/runtime/astar/src/precompiles.rs
 
 use pallet_evm::{
-	ExitRevert, Precompile, PrecompileFailure, PrecompileHandle, PrecompileResult, PrecompileSet,
+	AddressMapping, ExitRevert, Precompile, PrecompileFailure, PrecompileHandle, PrecompileResult,
+	PrecompileSet,
 };
 use pallet_evm_precompile_assets_erc20::{AddressToAssetId, Erc20AssetsPrecompileSet};
 use pallet_evm_precompile_blake2::Blake2F;
@@ -27,12 +28,19 @@ use pallet_evm_precompile_bn128::{Bn128Add, Bn128Mul, Bn128Pairing};
 use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, Identity, Ripemd160, Sha256};
+use precompile_utils::error;
 use sp_core::H160;
 use sp_std::{fmt::Debug, marker::PhantomData};
+
+use crate::sp_api_hidden_includes_construct_runtime::hidden_include::traits::fungibles::roles::Inspect;
+
+use crate::AssetId;
 
 /// The asset precompile address prefix. Addresses that match against this prefix will be routed
 /// to Erc20AssetsPrecompileSet
 pub const ASSET_PRECOMPILE_ADDRESS_PREFIX: &[u8] = &[255u8; 4];
+
+pub const TUSD_PRECOMPILE_ADDRESS: AssetId = 2018;
 
 /// The PrecompileSet installed in the Astar runtime.
 #[derive(Debug, Default, Clone, Copy)]
@@ -58,6 +66,7 @@ impl<R> FrontierPrecompiles<R> {
 impl<R> pallet_evm::PrecompileSet for FrontierPrecompiles<R>
 where
 	Erc20AssetsPrecompileSet<R>: PrecompileSet,
+	<R as pallet_assets::Config>::AssetId: From<AssetId>,
 	R: pallet_evm::Config
 		+ pallet_assets::Config
 		+ pallet_xcm::Config
@@ -86,8 +95,22 @@ where
 			// nor Ethereum precompiles :
 			a if a == hash(1024) => Some(Sha3FIPS256::execute(handle)),
 			// If the address matches asset prefix, the we route through the asset precompile set
-			a if &a.to_fixed_bytes()[0..4] == ASSET_PRECOMPILE_ADDRESS_PREFIX =>
-				Erc20AssetsPrecompileSet::<R>::new().execute(handle),
+			a if &a.to_fixed_bytes()[0..4] == ASSET_PRECOMPILE_ADDRESS_PREFIX => {
+				// Get asset id to check if it is TUSD
+				let asset_id = R::address_to_asset_id(a).unwrap_or(0.into());
+				// If asset is TUSD, ensure origin is TUSD contract. May return error
+				if asset_id == TUSD_PRECOMPILE_ADDRESS.into() {
+					let owner = pallet_assets::Pallet::<R>::issuer(asset_id);
+					let origin = R::AddressMapping::into_account_id(handle.context().caller);
+
+					if Some(origin.clone()) != owner.clone() {
+						return Some(Err(error("bad origin for tusd precompile")))
+					}
+				}
+
+				Erc20AssetsPrecompileSet::<R>::new().execute(handle)
+			},
+
 			// Default
 			_ => None,
 		}
