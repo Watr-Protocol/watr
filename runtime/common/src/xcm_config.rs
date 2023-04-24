@@ -17,12 +17,12 @@
 use core::marker::PhantomData;
 use frame_support::{
 	log,
-	traits::{Contains, Get},
+	traits::{Contains, ContainsPair, Get},
 };
 use sp_std::{borrow::Borrow, result};
 
 use xcm::latest::prelude::*;
-use xcm_executor::traits::{Convert, FilterAssetLocation};
+use xcm_executor::traits::{Convert };
 
 pub struct AsForeignToLocal<Prefix, Asset, AssetId, ConvertAssetId>(
 	PhantomData<(Prefix, Asset, AssetId, ConvertAssetId)>,
@@ -80,17 +80,17 @@ fn matches_prefix(prefix: &MultiLocation, loc: &MultiLocation) -> bool {
 			.zip(loc.interior().iter())
 			.all(|(prefix_junction, junction)| prefix_junction == junction)
 }
-pub struct ReserveAssetsFrom<T>(PhantomData<T>);
-impl<T: Get<MultiLocation>> FilterAssetLocation for ReserveAssetsFrom<T> {
-	fn filter_asset_location(asset: &MultiAsset, origin: &MultiLocation) -> bool {
-		let prefix = T::get();
-		log::trace!(target: "xcm::AssetsFrom", "prefix: {:?}, origin: {:?}", prefix, origin);
-		&prefix == origin &&
-			match asset {
-				MultiAsset { id: xcm::latest::AssetId::Concrete(asset_loc), fun: Fungible(_a) } =>
-					matches_prefix(&prefix, asset_loc),
-				_ => false,
-			}
+
+/// Accepts an asset if it is a native asset from a particular `MultiLocation`.
+pub struct ConcreteNativeAssetFrom<Location>(PhantomData<Location>);
+impl<Location: Get<MultiLocation>> ContainsPair<MultiAsset, MultiLocation>
+	for ConcreteNativeAssetFrom<Location>
+{
+	fn contains(asset: &MultiAsset, origin: &MultiLocation) -> bool {
+		log::trace!(target: "xcm::filter_asset_location",
+			"ConcreteNativeAsset asset: {:?}, origin: {:?}, location: {:?}",
+			asset, origin, Location::get());
+		matches!(asset.id, Concrete(ref id) if id == origin && origin == &Location::get())
 	}
 }
 
@@ -98,7 +98,7 @@ pub struct AllowOnlySendToReservePerAsset<SelfLocation, ReserveAssetPallet, Asse
 	PhantomData<(SelfLocation, ReserveAssetPallet, Assets)>,
 );
 impl<
-		SelfLocation: Get<MultiLocation>,
+		SelfLocation: Get<Junctions>,
 		ReserveAssetPallet: Get<MultiLocation>,
 		Assets: Get<(u128, u128)>,
 		RuntimeCall,
@@ -119,7 +119,7 @@ impl<
 		};
 		let reserve_asset_location = reserve_pallet_location.clone();
 		let self_location = SelfLocation::get();
-		if reserve_pallet_location.reanchor(&reserve_location, &self_location).is_err() {
+		if reserve_pallet_location.reanchor(&reserve_location, self_location).is_err() {
 			return false
 		};
 		let reserve_asset_location_as_local = reserve_pallet_location.clone();
@@ -165,7 +165,7 @@ impl<
 							&inner_xcm[1],
 							DepositAsset {
 								assets: Wild(All),
-								max_assets: 1,
+								// max_assets: 1,
 								beneficiary: MultiLocation {
 									parents: 0,
 									interior: X1(AccountId32 { network: Any, id: _ })
