@@ -18,7 +18,7 @@ settings:
         sudo:
           signer: &rc_sudo_signer //Alice
         destinations:
-          statemint: &rc->stmt_dest { v1: { 0, interior: { x1: { parachain: *stmt_id }}}}
+          statemint: &rc->stmt_dest { v2: { 0, interior: { x1: { parachain: *stmt_id }}}}
       statemint_parachain:
         asset_ower:
           signer: &stmt_asset_owner_signer //Alice
@@ -56,7 +56,7 @@ settings:
             }
           }
         destinations:
-          watr: &stmt->watr_dest { v1: { parents: 1, interior: { x1: { parachain: *watr_id } }}}
+          watr: &stmt->watr_dest { v2: { parents: 1, interior: { x1: { parachain: *watr_id } }}}
       watr_parachain:
         sovereign_account: &watr_sovereign_sibl 13cKp88gCrt9hrrXLFurrbvTU6Bbs6F65CQmY588ZSwvK7Q8 # Statemint
         asset_receiver:
@@ -207,7 +207,7 @@ tests:
                   args: [
                     *stmt->watr_dest, # destination
                     { # beneficiary
-                      V1: {
+                      v2: {
                         parents: 0,
                         interior: {
                           X1: {
@@ -220,7 +220,7 @@ tests:
                       }
                     },
                     { # assets
-                      V1: [
+                      v2: [
                         {
                           id: {
                             Concrete: *stmt_local_asset_location
@@ -278,7 +278,7 @@ tests:
                   args: [
                     *stmt->watr_dest, # destination
                     { # beneficiary
-                      V1: {
+                      v2: {
                         parents: 0,
                         interior: {
                           X1: {
@@ -291,7 +291,7 @@ tests:
                       }
                     },
                     { # assets
-                      V1: [
+                      v2: [
                         {
                           id: {
                             Concrete: *stmt_wrong_local_asset_location

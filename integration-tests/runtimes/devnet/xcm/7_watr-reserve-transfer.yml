@@ -13,11 +13,11 @@ settings:
     chains:
       statemint_parachain:
         account: &stmt_acc '0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48' # Bob
-        beneficiary: &stmt_benef {v1: { parents: 0, interior: { x1: { accountId32: { network: { any: true }, id: *stmt_acc }}}}}
+        beneficiary: &stmt_benef {v2: { parents: 0, interior: { x1: { accountId32: { network: { any: true }, id: *stmt_acc }}}}}
       watr_parachain:
         signer: &watr_signer //Bob
         destinations:
-          stmt: &watr->stmt_dest { v1: { parents: 1, interior: { X1: { Parachain: *stmt_id }}}}
+          stmt: &watr->stmt_dest { v2: { parents: 1, interior: { X1: { Parachain: *stmt_id }}}}
         assets:
           id: &watr_asset_id 1984
           pallet_id: &watr_assets_pallet_id 50
@@ -47,7 +47,7 @@ tests:
                   args: [
                     *watr->stmt_dest, # destination
                     *stmt_benef, # beneficiary
-                    { v1: [ *watr_asset ] }, # assets
+                    { v2: [ *watr_asset ] }, # assets
                     0, # feeAssetItem
                     { unlimited: true } # weightLimit
                   ]

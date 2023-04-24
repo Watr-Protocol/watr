@@ -32,19 +32,19 @@ settings:
         sudo:
           signer: &rc_sudo_signer //Alice
         destinations:
-          statemint: &rc->stmt_dest { v1: { 0, interior: { x1: { parachain: *stmt_id }}}}
+          statemint: &rc->stmt_dest { v2: { 0, interior: { x1: { parachain: *stmt_id }}}}
         dot: &rc_dot { concrete: { 0, interior: { here: true }}}
         dot_fungible: &rc_dot_fungible { id: *rc_dot, fun: { fungible: *amount }}
       statemint_parachain:
         sovereign_account: &stmt_sovereign 13YMK2edbuhwMBxeUWm9c643A2wyYHwSVh1bCM7tShtg7Dtk
         destinations:
-          relay_chain: &stmt->rc_dest { v1: { parents: 1, interior: { here: true }}}
+          relay_chain: &stmt->rc_dest { v2: { parents: 1, interior: { here: true }}}
       watr_parachain:
         sudo:
           signer: &watr_sudo_signer //Alice
         sovereign_account: &watr_sovereign 13YMK2ds88hFaG8NnFxmjxaeDcWJ9gBz1YmLH7bdgivMTcq4
         destinations:
-          relay_chain: &watr->rc_dest { v1: { parents: 1, interior: { here: true }}}
+          relay_chain: &watr->rc_dest { v2: { parents: 1, interior: { here: true }}}
   decodedCalls:
     init_open_channel_with_stmt:
       chain: *relay_chain

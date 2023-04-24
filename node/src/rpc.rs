@@ -44,7 +44,7 @@ use sp_blockchain::{
 	Backend as BlockchainBackend, Error as BlockChainError, HeaderBackend, HeaderMetadata,
 };
 
-use sp_runtime::traits::BlakeTwo256;
+use sp_runtime::traits::{BlakeTwo256, Block as BlockT};
 
 // Frontier
 use fc_rpc::{
@@ -53,6 +53,7 @@ use fc_rpc::{
 };
 use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
 use fp_storage::EthereumStorageSchema;
+use fp_rpc::EthereumRuntimeRPCApi;
 
 /// Full client dependencies.
 pub struct FullDeps<C, P, A: ChainApi> {
@@ -82,35 +83,31 @@ pub struct FullDeps<C, P, A: ChainApi> {
 	pub block_data_cache: Arc<EthBlockDataCacheTask<Block>>,
 }
 
-pub fn overrides_handle<C, BE>(client: Arc<C>) -> Arc<OverrideHandle<Block>>
+pub fn overrides_handle<B, C, BE>(client: Arc<C>) -> Arc<OverrideHandle<B>>
 where
-	C: ProvideRuntimeApi<Block> + StorageProvider<Block, BE> + AuxStore,
-	C: HeaderBackend<Block> + HeaderMetadata<Block, Error = BlockChainError>,
-	C: Send + Sync + 'static,
-	C::Api: fp_rpc::EthereumRuntimeRPCApi<Block>,
-	BE: Backend<Block> + 'static,
-	BE::State: StateBackend<BlakeTwo256>,
+	B: BlockT,
+	C: ProvideRuntimeApi<B>,
+	C::Api: EthereumRuntimeRPCApi<B>,
+	C: HeaderBackend<B> + StorageProvider<B, BE> + 'static,
+	BE: Backend<B> + 'static,
 {
 	let mut overrides_map = BTreeMap::new();
 	overrides_map.insert(
 		EthereumStorageSchema::V1,
-		Box::new(SchemaV1Override::new(client.clone()))
-			as Box<dyn StorageOverride<_> + Send + Sync>,
+		Box::new(SchemaV1Override::new(client.clone())) as Box<dyn StorageOverride<_>>,
 	);
 	overrides_map.insert(
 		EthereumStorageSchema::V2,
-		Box::new(SchemaV2Override::new(client.clone()))
-			as Box<dyn StorageOverride<_> + Send + Sync>,
+		Box::new(SchemaV2Override::new(client.clone())) as Box<dyn StorageOverride<_>>,
 	);
 	overrides_map.insert(
 		EthereumStorageSchema::V3,
-		Box::new(SchemaV3Override::new(client.clone()))
-			as Box<dyn StorageOverride<_> + Send + Sync>,
+		Box::new(SchemaV3Override::new(client.clone())) as Box<dyn StorageOverride<_>>,
 	);
 
 	Arc::new(OverrideHandle {
 		schemas: overrides_map,
-		fallback: Box::new(RuntimeApiStorageOverride::new(client)),
+		fallback: Box::new(RuntimeApiStorageOverride::new(client.clone())),
 	})
 }
 
