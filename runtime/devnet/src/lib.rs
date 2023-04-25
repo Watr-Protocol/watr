@@ -541,6 +541,27 @@ impl pallet_assets::Config for Runtime {
 	type AssetAccountDeposit = AssetAccountDeposit;
 }
 
+pub struct EvmRevertCodeHandler;
+impl pallet_xc_asset_config::XcAssetChanged<Runtime> for EvmRevertCodeHandler {
+	fn xc_asset_registered(asset_id: AssetId) {
+		let address = Runtime::asset_id_to_address(asset_id);
+		pallet_evm::AccountCodes::<Runtime>::insert(address, vec![0x60, 0x00, 0x60, 0x00, 0xfd]);
+	}
+
+	fn xc_asset_unregistered(asset_id: AssetId) {
+		let address = Runtime::asset_id_to_address(asset_id);
+		pallet_evm::AccountCodes::<Runtime>::remove(address);
+	}
+}
+
+impl pallet_xc_asset_config::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type AssetId = AssetId;
+	type XcAssetChanged = EvmRevertCodeHandler;
+	type ManagerOrigin = frame_system::EnsureRoot<AccountId>;
+	type WeightInfo = pallet_xc_asset_config::weights::SubstrateWeight<Runtime>;
+}
+
 impl pallet_utility::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type RuntimeCall = RuntimeCall;
@@ -843,6 +864,7 @@ construct_runtime!(
 		PolkadotXcm: pallet_xcm::{Pallet, Call, Event<T>, Origin, Config} = 31,
 		CumulusXcm: cumulus_pallet_xcm::{Pallet, Event<T>, Origin} = 32,
 		DmpQueue: cumulus_pallet_dmp_queue::{Pallet, Call, Storage, Event<T>} = 33,
+		XcAssetConfig: pallet_xc_asset_config::{Pallet, Call, Storage, Event<T>} = 34,
 
 		Multisig: pallet_multisig::{Pallet, Call, Storage, Event<T>} = 41,
 		Identity: pallet_identity::{Pallet, Call, Storage, Event<T>} = 42,
