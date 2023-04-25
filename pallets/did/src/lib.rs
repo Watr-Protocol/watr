@@ -514,11 +514,9 @@ pub mod pallet {
 				IssuedCredentials::<T>::try_mutate(
 					(subject_did.clone(), &credential, issuer_did.clone()),
 					|maybe_issued_credential| -> DispatchResult {
-						*maybe_issued_credential = Some(
-							CredentialInfo {
-								verifiable_credential_hash: verifiable_credential_hash.clone(),
-							}
-						);
+						*maybe_issued_credential = Some(CredentialInfo {
+							verifiable_credential_hash: verifiable_credential_hash.clone(),
+						});
 						Ok(())
 					},
 				)?;
