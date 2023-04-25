@@ -543,23 +543,23 @@ impl pallet_assets::Config for Runtime {
 
 pub struct EvmRevertCodeHandler;
 impl pallet_xc_asset_config::XcAssetChanged<Runtime> for EvmRevertCodeHandler {
-    fn xc_asset_registered(asset_id: AssetId) {
-        let address = Runtime::asset_id_to_address(asset_id);
-        pallet_evm::AccountCodes::<Runtime>::insert(address, vec![0x60, 0x00, 0x60, 0x00, 0xfd]);
-    }
+	fn xc_asset_registered(asset_id: AssetId) {
+		let address = Runtime::asset_id_to_address(asset_id);
+		pallet_evm::AccountCodes::<Runtime>::insert(address, vec![0x60, 0x00, 0x60, 0x00, 0xfd]);
+	}
 
-    fn xc_asset_unregistered(asset_id: AssetId) {
-        let address = Runtime::asset_id_to_address(asset_id);
-        pallet_evm::AccountCodes::<Runtime>::remove(address);
-    }
+	fn xc_asset_unregistered(asset_id: AssetId) {
+		let address = Runtime::asset_id_to_address(asset_id);
+		pallet_evm::AccountCodes::<Runtime>::remove(address);
+	}
 }
 
 impl pallet_xc_asset_config::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type AssetId = AssetId;
-    type XcAssetChanged = EvmRevertCodeHandler;
-    type ManagerOrigin = frame_system::EnsureRoot<AccountId>;
-    type WeightInfo = pallet_xc_asset_config::weights::SubstrateWeight<Runtime>;
+	type RuntimeEvent = RuntimeEvent;
+	type AssetId = AssetId;
+	type XcAssetChanged = EvmRevertCodeHandler;
+	type ManagerOrigin = frame_system::EnsureRoot<AccountId>;
+	type WeightInfo = pallet_xc_asset_config::weights::SubstrateWeight<Runtime>;
 }
 
 impl pallet_utility::Config for Runtime {
