@@ -25,7 +25,7 @@ use super::{
 };
 use frame_support::{
 	match_types, parameter_types,
-	traits::{Everything, Nothing, PalletInfoAccess},
+	traits::{ConstU32, Everything, Nothing, PalletInfoAccess},
 	weights::{Weight, constants::WEIGHT_REF_TIME_PER_SECOND},
 };
 
@@ -56,7 +56,8 @@ use frame_system::EnsureRoot;
 parameter_types! {
 	pub const USDT: (u128, u128) = (1984, 1984); // (Reserve AssetId, Local AssetId)
 	pub const RelayLocation: MultiLocation = MultiLocation::parent();
-	pub SelfReserve: MultiLocation = MultiLocation { parents:0, interior: Here };
+	// pub SelfReserve: MultiLocation = MultiLocation { parents:0, interior: Here };
+	pub SelfReserve: Junctions = Junctions::Here;
 	pub StatemintLocation: MultiLocation = MultiLocation::new(1, X1(Parachain(1000)));
 	pub StatemintAssetsPalletLocation: MultiLocation =
 		MultiLocation::new(1, X2(Parachain(1000), PalletInstance(50)));
@@ -82,7 +83,7 @@ pub fn base_tx_fee() -> Balance {
 
 pub fn default_fee_per_second() -> u128 {
 	let base_weight = Balance::from(ExtrinsicBaseWeight::get().ref_time());
-	let base_tx_per_second = (WEIGHT_REF_TIME_PER_SECOND.ref_time() as u128) / base_weight;
+	let base_tx_per_second = (WEIGHT_REF_TIME_PER_SECOND as u128) / base_weight;
 	base_tx_per_second * base_tx_fee()
 }
 
@@ -167,7 +168,7 @@ pub type XcmOriginToTransactDispatchOrigin = (
 
 parameter_types! {
 	// One XCM operation is 1_000_000_000 weight - almost certainly a conservative estimate.
-	pub UnitWeightCost: Weight = 1_000_000_000;
+	pub UnitWeightCost: Weight = Weight::from_parts(1_000_000_000, 64 * 1024);
 	pub const MaxInstructions: u32 = 100;
 }
 
@@ -257,10 +258,17 @@ impl pallet_xcm::Config for Runtime {
 	type Weigher = FixedWeightBounds<UnitWeightCost, RuntimeCall, MaxInstructions>;
 	type RuntimeOrigin = RuntimeOrigin;
 	type RuntimeCall = RuntimeCall;
+	type UniversalLocation = UniversalLocation;
 
 	const VERSION_DISCOVERY_QUEUE_SIZE: u32 = 100;
 	// ^ Override for AdvertisedXcmVersion default
 	type AdvertisedXcmVersion = pallet_xcm::CurrentXcmVersion;
+	type Currency = Balances;
+	type CurrencyMatcher = ();
+	type TrustedLockers = ();
+	type SovereignAccountOf = LocationToAccountId;
+	type MaxLockers = ConstU32<8>;
+	type WeightInfo = pallet_xcm::TestWeightInfo;
 }
 
 impl cumulus_pallet_xcm::Config for Runtime {
@@ -277,6 +285,7 @@ impl cumulus_pallet_xcmp_queue::Config for Runtime {
 	type ControllerOrigin = EnsureRoot<AccountId>;
 	type ControllerOriginConverter = XcmOriginToTransactDispatchOrigin;
 	type WeightInfo = weights::cumulus_pallet_xcmp_queue::WeightInfo<Runtime>;
+	type PriceForSiblingDelivery = ();
 }
 
 impl cumulus_pallet_dmp_queue::Config for Runtime {
