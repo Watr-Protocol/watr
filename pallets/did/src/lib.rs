@@ -744,7 +744,7 @@ impl<T: Config> Pallet<T> {
 		})
 	}
 
-	pub fn do_remove_did(
+	fn do_remove_did(
 		origin: OriginFor<T>,
 		did: DidIdentifierOf<T>,
 		services_witness: &mut ServicesWitness,
@@ -867,7 +867,7 @@ impl<T: Config> Pallet<T> {
 		)
 	}
 
-	pub fn do_remove_issuer(issuer: DidIdentifierOf<T>) -> DispatchResult {
+	fn do_remove_issuer(issuer: DidIdentifierOf<T>) -> DispatchResult {
 		Issuers::<T>::try_mutate_exists(issuer.clone(), |maybe_info| -> DispatchResult {
 			// Take from storage (sets to None). Will be deleted if successful
 			let info = maybe_info.take().ok_or(Error::<T>::IssuerDoesNotExist)?;
@@ -881,7 +881,7 @@ impl<T: Config> Pallet<T> {
 		})
 	}
 
-	pub fn do_revoke_credentials(
+	fn do_revoke_credentials(
 		issuer_did: &DidIdentifierOf<T>,
 		subject_did: &DidIdentifierOf<T>,
 		credentials: &Vec<CredentialOf<T>>,
