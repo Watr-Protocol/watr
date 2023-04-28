@@ -463,6 +463,12 @@ pub mod pallet {
 					&mut document.services,
 					&mut services_witness,
 				)?;
+
+				// if document.services is empty, set it to the new services
+				if document.services.is_empty() {
+					document.services = services_keys.clone();
+				}
+
 				Self::deposit_event(Event::DidServicesAdded { did, new_services: services_keys });
 
 				Ok(Some(T::WeightInfo::add_did_services(services_witness.inserts)).into())
@@ -801,7 +807,7 @@ impl<T: Config> Pallet<T> {
 
 		for service in services_to_add {
 			let service_key = Self::do_add_service(service, services_witness)?;
-			if document_services_keys.len() > 0 {
+			if !document_services_keys.is_empty() {
 				let pos = document_services_keys
 					.binary_search(&service_key)
 					.err()
