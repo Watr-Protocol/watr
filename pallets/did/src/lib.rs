@@ -777,18 +777,20 @@ impl<T: Config> Pallet<T> {
 		document_services_keys: &mut ServiceKeysOf<T>,
 		services_witness: &mut ServicesWitness,
 	) -> Result<ServiceKeysOf<T>, DispatchError> {
-		// if existing_services is `Some` use it to insert into, otherwise create a new BoundedVec
 		let mut services_keys = <ServiceKeysOf<T>>::default();
 
 		for service in services_to_add {
 			let service_key = Self::do_add_service(service, services_witness)?;
-			let pos = document_services_keys
-				.binary_search(&service_key)
-				.err()
-				.ok_or(Error::<T>::ServiceAlreadyInDid)?;
-			document_services_keys
-				.try_insert(pos, service_key.clone())
-				.map_err(|_| Error::<T>::TooManyServicesInDid)?;
+			if document_services_keys.len() > 0 {
+				let pos = document_services_keys
+					.binary_search(&service_key)
+					.err()
+					.ok_or(Error::<T>::ServiceAlreadyInDid)?;
+				document_services_keys
+					.try_insert(pos, service_key.clone())
+					.map_err(|_| Error::<T>::TooManyServicesInDid)?;
+			}
+
 			let pos = services_keys
 				.binary_search(&service_key)
 				.err()
