@@ -354,6 +354,7 @@ pub mod pallet {
 				assertion,
 				services.clone(),
 				&mut services_witness,
+				|origin, document| Self::ensure_controller(ensure_signed(origin)?, &document),
 			)?;
 
 			Self::deposit_event(Event::DidUpdated { did, document });
@@ -394,6 +395,7 @@ pub mod pallet {
 				assertion,
 				services,
 				&mut services_witness,
+				|origin, _| Self::ensure_governance(origin),
 			)?;
 
 			Self::deposit_event(Event::DidForcedUpdated { did, document });
@@ -409,7 +411,12 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			// For keeping track of Services inserts/removals
 			let mut services_witness = ServicesWitness::default();
-			Self::do_remove_did(origin, did.clone(), &mut services_witness)?;
+			Self::do_remove_did(
+				origin, 
+				did.clone(), 
+				&mut services_witness,
+				|origin, document| Self::ensure_controller(ensure_signed(origin)?, &document),
+			)?;
 			Self::deposit_event(Event::DidRemoved { did });
 
 			Ok(Some(T::WeightInfo::remove_did(services_witness.removals)).into())
@@ -425,7 +432,12 @@ pub mod pallet {
 			T::GovernanceOrigin::ensure_origin(origin.clone())?;
 			// For keeping track of Services inserts/removals
 			let mut services_witness = ServicesWitness::default();
-			Self::do_remove_did(origin, did.clone(), &mut services_witness)?;
+			Self::do_remove_did(
+				origin, 
+				did.clone(), 
+				&mut services_witness,
+				|origin, _| Self::ensure_governance(origin),
+			)?;
 			Self::deposit_event(Event::DidForcedRemoved { did });
 
 			Ok(Pays::No.into())
@@ -698,12 +710,16 @@ impl<T: Config> Pallet<T> {
 		assertion: Option<T::AssertionAddress>,
 		services: Option<BoundedVec<ServiceInfo<T>, T::MaxServices>>,
 		services_witness: &mut ServicesWitness,
+		origin_check: impl FnOnce(
+			OriginFor<T>,
+			&Document<T>,
+		) -> DispatchResult,
 	) -> Result<Document<T>, DispatchError> {
 		Did::<T>::try_mutate(did.clone(), |maybe_doc| -> Result<Document<T>, DispatchError> {
 			let document = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
 
 			// Check if origin is either governance or controller
-			Self::ensure_governance_or_controller(origin, &document)?;
+			origin_check(origin, &document)?;
 
 			// If present, update `controller`
 			if let Some(controller) = controller {
@@ -748,13 +764,17 @@ impl<T: Config> Pallet<T> {
 		origin: OriginFor<T>,
 		did: DidIdentifierOf<T>,
 		services_witness: &mut ServicesWitness,
+		origin_check: impl FnOnce(
+			OriginFor<T>,
+			&Document<T>,
+		) -> DispatchResult,
 	) -> DispatchResult {
 		Did::<T>::try_mutate(did.clone(), |maybe_doc| -> DispatchResult {
 			// Take from storage (sets to None). Will be deleted if successful
 			let document = maybe_doc.take().ok_or(Error::<T>::DidNotFound)?;
 
 			// Check if origin is either governance or controller
-			Self::ensure_governance_or_controller(origin, &document)?;
+			origin_check(origin, &document)?;
 
 			Self::do_remove_did_services(
 				&document.services,
@@ -908,21 +928,20 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	// Check if origin is either governance or controller
-	fn ensure_governance_or_controller(
-		origin: OriginFor<T>,
-		document: &Document<T>,
-	) -> DispatchResult {
-		T::GovernanceOrigin::ensure_origin(origin.clone())
-			.map_or_else(|_| Self::ensure_controller(ensure_signed(origin)?, document), |_| Ok(()))
+	/// Ensures that origin is governance
+	fn ensure_governance(origin: OriginFor<T>) -> DispatchResult {
+		T::GovernanceOrigin::ensure_origin(origin)?;
+		Ok(())
 	}
 
+	/// Ensure that the issuer status is active
 	fn ensure_issuer_is_active(issuer_did: &DidIdentifierOf<T>) -> DispatchResult {
 		let issuer_info = Issuers::<T>::get(&issuer_did).ok_or(Error::<T>::NotIssuer)?;
 		ensure!(issuer_info.status == IssuerStatus::Active, Error::<T>::IssuerNotActive);
 		Ok(())
 	}
 
+	/// Ensure that the credential type exists
 	fn ensure_valid_credentials(credentials: &Vec<CredentialOf<T>>) -> DispatchResult {
 		let credential_types = <CredentialsTypes<T>>::get();
 
