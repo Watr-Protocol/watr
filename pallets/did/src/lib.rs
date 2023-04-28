@@ -383,7 +383,6 @@ pub mod pallet {
 			assertion: Option<T::AssertionAddress>,
 			services: Option<BoundedVec<ServiceInfo<T>, T::MaxServices>>,
 		) -> DispatchResultWithPostInfo {
-			T::GovernanceOrigin::ensure_origin(origin.clone())?;
 			// For keeping track of Services inserts/removals
 			let mut services_witness = ServicesWitness::default();
 
@@ -412,8 +411,8 @@ pub mod pallet {
 			// For keeping track of Services inserts/removals
 			let mut services_witness = ServicesWitness::default();
 			Self::do_remove_did(
-				origin, 
-				did.clone(), 
+				origin,
+				did.clone(),
 				&mut services_witness,
 				|origin, document| Self::ensure_controller(ensure_signed(origin)?, &document),
 			)?;
@@ -428,13 +427,11 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			did: DidIdentifierOf<T>,
 		) -> DispatchResultWithPostInfo {
-			// Origin ONLY GovernanceOrigin
-			T::GovernanceOrigin::ensure_origin(origin.clone())?;
 			// For keeping track of Services inserts/removals
 			let mut services_witness = ServicesWitness::default();
 			Self::do_remove_did(
-				origin, 
-				did.clone(), 
+				origin,
+				did.clone(),
 				&mut services_witness,
 				|origin, _| Self::ensure_governance(origin),
 			)?;
