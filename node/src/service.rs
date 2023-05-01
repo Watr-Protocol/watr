@@ -36,7 +36,7 @@ use sc_consensus::ImportQueue;
 
 // Cumulus Imports
 use cumulus_client_consensus_aura::{AuraConsensus, BuildAuraConsensusParams, SlotProportion};
-use cumulus_client_consensus_common::ParachainConsensus;
+use cumulus_client_consensus_common::{ParachainBlockImport, ParachainConsensus};
 use cumulus_client_network::BlockAnnounceValidator;
 use cumulus_client_service::{
 	prepare_node_config, start_collator, start_full_node, StartCollatorParams, StartFullNodeParams,
@@ -44,9 +44,9 @@ use cumulus_client_service::{
 use cumulus_primitives_core::ParaId;
 use cumulus_relay_chain_inprocess_interface::build_inprocess_relay_chain;
 use cumulus_relay_chain_interface::{RelayChainError, RelayChainInterface, RelayChainResult};
-use cumulus_relay_chain_rpc_interface::{create_client_and_start_worker, RelayChainRpcInterface};
 use cumulus_relay_chain_minimal_node::build_minimal_relay_chain_node;
- 
+use cumulus_relay_chain_rpc_interface::{create_client_and_start_worker, RelayChainRpcInterface};
+
 // Substrate Imports
 use sc_executor::{NativeElseWasmExecutor, NativeExecutionDispatch};
 use sc_network::{NetworkBlock, NetworkService};
@@ -125,7 +125,20 @@ pub fn new_partial<RuntimeApi, Executor, BIQ>(
 			Block,
 			TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>,
 		>,
-		(Option<Telemetry>, Option<TelemetryWorkerHandle>, Arc<fc_db::Backend<Block>>),
+		(
+			ParachainBlockImport<
+				Block,
+				FrontierBlockImport<
+					Block,
+					Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>>,
+					TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>,
+				>,
+				TFullBackend<Block>,
+			>,
+			Option<Telemetry>,
+			Option<TelemetryWorkerHandle>,
+			Arc<fc_db::Backend<Block>>,
+		),
 	>,
 	sc_service::Error,
 >
@@ -147,10 +160,14 @@ where
 	Executor: sc_executor::NativeExecutionDispatch + 'static,
 	BIQ: FnOnce(
 		Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>>,
-		FrontierBlockImport<
+		ParachainBlockImport<
 			Block,
-			Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>>,
-			TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>,
+			FrontierBlockImport<
+				Block,
+				Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>>,
+				TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>,
+			>,
+			TFullBackend<Block>,
 		>,
 		&Configuration,
 		Option<TelemetryHandle>,
@@ -209,9 +226,12 @@ where
 	let frontier_block_import =
 		FrontierBlockImport::new(client.clone(), client.clone(), frontier_backend.clone());
 
+	let parachain_block_import: ParachainBlockImport<_, _, _> =
+        ParachainBlockImport::new(frontier_block_import, backend.clone());
+
 	let import_queue = build_import_queue(
 		client.clone(),
-		frontier_block_import,
+		parachain_block_import.clone(),
 		config,
 		telemetry.as_ref().map(|telemetry| telemetry.handle()),
 		&task_manager,
@@ -225,7 +245,7 @@ where
 		task_manager,
 		transaction_pool,
 		select_chain: (),
-		other: (telemetry, telemetry_worker_handle, frontier_backend),
+		other: (parachain_block_import, telemetry, telemetry_worker_handle, frontier_backend),
 	};
 
 	Ok(params)
@@ -296,10 +316,14 @@ where
 	Executor: sc_executor::NativeExecutionDispatch + 'static,
 	BIQ: FnOnce(
 			Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>>,
-			FrontierBlockImport<
+			ParachainBlockImport<
 				Block,
-				Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>>,
-				TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>,
+				FrontierBlockImport<
+					Block,
+					Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>>,
+					TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>,
+				>,
+				TFullBackend<Block>,
 			>,
 			&Configuration,
 			Option<TelemetryHandle>,
@@ -313,6 +337,15 @@ where
 		> + 'static,
 	BIC: FnOnce(
 		Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>>,
+		ParachainBlockImport<
+			Block,
+			FrontierBlockImport<
+				Block,
+				Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>>,
+				TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>,
+			>,
+			TFullBackend<Block>,
+		>,
 		Option<&Registry>,
 		Option<TelemetryHandle>,
 		&TaskManager,
@@ -331,7 +364,8 @@ where
 	let parachain_config = prepare_node_config(parachain_config);
 
 	let params = new_partial::<RuntimeApi, Executor, BIQ>(&parachain_config, build_import_queue)?;
-	let (mut telemetry, telemetry_worker_handle, frontier_backend) = params.other;
+	let (parachain_block_import, mut telemetry, telemetry_worker_handle, frontier_backend) =
+		params.other;
 
 	let client = params.client.clone();
 	let backend = params.backend.clone();
@@ -477,13 +511,14 @@ where
 
 	let relay_chain_slot_duration = Duration::from_secs(6);
 
-    let overseer_handle = relay_chain_interface
-        .overseer_handle()
-        .map_err(|e| sc_service::Error::Application(Box::new(e)))?;
+	let overseer_handle = relay_chain_interface
+		.overseer_handle()
+		.map_err(|e| sc_service::Error::Application(Box::new(e)))?;
 
 	if is_authority {
 		let parachain_consensus = build_consensus(
 			client.clone(),
+			parachain_block_import,
 			prometheus_registry.as_ref(),
 			telemetry.as_ref().map(|t| t.handle()),
 			&task_manager,
@@ -539,10 +574,14 @@ pub fn parachain_build_import_queue<
 	RuntimeExecutor: NativeExecutionDispatch + 'static,
 >(
 	client: Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<RuntimeExecutor>>>,
-	block_import: FrontierBlockImport<
+	block_import: ParachainBlockImport<
 		Block,
-		Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<RuntimeExecutor>>>,
-		TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<RuntimeExecutor>>,
+		FrontierBlockImport<
+			Block,
+			Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<RuntimeExecutor>>>,
+			TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<RuntimeExecutor>>,
+		>,
+		TFullBackend<Block>,
 	>,
 	config: &Configuration,
 	telemetry: Option<TelemetryHandle>,
@@ -644,6 +683,7 @@ where
 		id,
 		parachain_build_import_queue::<RuntimeApi, RuntimeExecutor>,
 		|client,
+		 block_import,
 		 prometheus_registry,
 		 telemetry,
 		 task_manager,
@@ -691,7 +731,7 @@ where
 							Ok((slot, time, parachain_inherent))
 						}
 					},
-					block_import: client.clone(),
+					block_import,
 					para_client: client,
 					backoff_authoring_blocks: Option::<()>::None,
 					sync_oracle,

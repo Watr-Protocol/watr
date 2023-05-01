@@ -19,28 +19,26 @@
 // https://github.com/paritytech/cumulus/tree/master/parachain-template
 
 use super::{
-	weights, weights::ExtrinsicBaseWeight, AccountId, AllPalletsWithSystem, AssetId, Assets, Authorship, Balance,
-	Balances, ParachainInfo, ParachainSystem, PolkadotXcm, Runtime, RuntimeCall, RuntimeEvent,
-	RuntimeOrigin, WeightToFee, XcmpQueue, KILOWEI,
+	weights, weights::ExtrinsicBaseWeight, AccountId, AllPalletsWithSystem, AssetId, Assets,
+	Authorship, Balance, Balances, ParachainInfo, ParachainSystem, PolkadotXcm, Runtime,
+	RuntimeCall, RuntimeEvent, RuntimeOrigin, WeightToFee, XcmpQueue, KILOWEI,
 };
 use frame_support::{
 	match_types, parameter_types,
 	traits::{ConstU32, Everything, Nothing, PalletInfoAccess},
-	weights::{Weight, constants::WEIGHT_REF_TIME_PER_SECOND},
-
+	weights::{constants::WEIGHT_REF_TIME_PER_SECOND, Weight},
 };
 
 use pallet_xcm::XcmPassthrough;
 use polkadot_parachain::primitives::Sibling;
-use xcm::latest::prelude::*;
-use xcm::prelude::AssetId as XcmAssetId;
+use xcm::{latest::prelude::*, prelude::AssetId as XcmAssetId};
 use xcm_builder::{
 	AccountId32Aliases, AllowKnownQueryResponses, AllowSubscriptionsFrom,
 	AllowTopLevelPaidExecutionFrom, AsPrefixedGeneralIndex, ConvertedConcreteAssetId,
 	CurrencyAdapter, EnsureXcmOrigin, FixedRateOfFungible, FixedWeightBounds, FungiblesAdapter,
-	IsConcrete, NativeAsset, ParentIsPreset, RelayChainAsNative,
+	IsConcrete, NativeAsset, NoChecking, ParentIsPreset, RelayChainAsNative,
 	SiblingParachainAsNative, SiblingParachainConvertsVia, SignedAccountId32AsNative,
-	SignedToAccountId32, SovereignSignedViaLocation, TakeWeightCredit, UsingComponents, NoChecking
+	SignedToAccountId32, SovereignSignedViaLocation, TakeWeightCredit, UsingComponents,
 };
 use xcm_executor::{traits::JustTry, XcmExecutor};
 
@@ -203,7 +201,7 @@ impl xcm_executor::Config for XcmConfig {
 	type IsReserve = Reserves;
 	// Teleporting is disabled.
 	type IsTeleporter = ();
-	type UniversalLocation = UniversalLocation; 
+	type UniversalLocation = UniversalLocation;
 	type Barrier = Barrier;
 	type Weigher = FixedWeightBounds<UnitWeightCost, RuntimeCall, MaxInstructions>;
 	type Trader = (

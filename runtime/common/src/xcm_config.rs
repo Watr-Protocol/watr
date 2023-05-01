@@ -22,7 +22,7 @@ use frame_support::{
 use sp_std::{borrow::Borrow, result};
 
 use xcm::latest::prelude::*;
-use xcm_executor::traits::{Convert };
+use xcm_executor::traits::Convert;
 
 pub struct AsForeignToLocal<Prefix, Asset, AssetId, ConvertAssetId>(
 	PhantomData<(Prefix, Asset, AssetId, ConvertAssetId)>,

@@ -31,9 +31,9 @@ pub mod xcm_config;
 
 pub use watr_common::{
 	impls::{AccountIdOf, DealWithFees, ToStakingPot},
-	AccountId, AssetIdForTrustBackedAssets, AuraId, Balance, BlockNumber, DidIdentifier, Hash, Index, Signature,
-	AVERAGE_ON_INITIALIZE_RATIO, DAYS, HOURS, MAXIMUM_BLOCK_WEIGHT, MINUTES, NORMAL_DISPATCH_RATIO,
-	SLOT_DURATION, WEIGHT_PER_GAS,
+	AccountId, AssetIdForTrustBackedAssets, AuraId, Balance, BlockNumber, DidIdentifier, Hash,
+	Index, Signature, AVERAGE_ON_INITIALIZE_RATIO, DAYS, HOURS, MAXIMUM_BLOCK_WEIGHT, MINUTES,
+	NORMAL_DISPATCH_RATIO, SLOT_DURATION, WEIGHT_PER_GAS,
 };
 
 use cumulus_pallet_parachain_system::RelayNumberStrictlyIncreases;
@@ -66,9 +66,9 @@ pub use frame_support::{
 	parameter_types,
 	traits::{
 		fungibles::{Balanced, CreditOf},
-		AsEnsureOriginWithArg, ConstU32, ConstU8, Currency as CurrencyT, EitherOfDiverse, Everything, FindAuthor,
-		Imbalance, InstanceFilter, KeyOwnerProofSystem, LockIdentifier, OnRuntimeUpgrade,
-		OnUnbalanced, PrivilegeCmp,
+		AsEnsureOriginWithArg, ConstU32, ConstU8, Currency as CurrencyT, EitherOfDiverse,
+		Everything, FindAuthor, Imbalance, InstanceFilter, KeyOwnerProofSystem, LockIdentifier,
+		OnRuntimeUpgrade, OnUnbalanced, PrivilegeCmp,
 	},
 	weights::{
 		constants::WEIGHT_REF_TIME_PER_SECOND, ConstantMultiplier, Weight, WeightToFeeCoefficient,
@@ -78,7 +78,7 @@ pub use frame_support::{
 };
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
-	EnsureRoot, EnsureSigned
+	EnsureRoot, EnsureSigned,
 };
 use pallet_balances::NegativeImbalance;
 pub use sp_runtime::{MultiAddress, Perbill, Permill};
