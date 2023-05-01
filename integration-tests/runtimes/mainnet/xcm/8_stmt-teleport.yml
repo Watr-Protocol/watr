@@ -14,12 +14,12 @@ settings:
       statemint_parachain:
         signer: &stmt_signer //Alice
         destinations:
-          watr: &stmt->watr_dest { v1: { parents: 1, interior: { x1: { parachain: *watr_id } }}}
+          watr: &stmt->watr_dest { v2: { parents: 1, interior: { x1: { parachain: *watr_id } }}}
         native: &stmt_native { concrete: { parents: 1, interior: { here: true }}}
         native_fungible: &stmt_native_fungible { id: *stmt_native, fun: { fungible: 1000000000 }}
       watr_parachain:
         account: &watr_acc '0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48' # Bob
-        beneficiary: &watr_benef {v1: { parents: 0, interior: { x1: { accountId32: { network: { any: true }, id: *watr_acc }}}}}
+        beneficiary: &watr_benef {v2: { parents: 0, interior: { x1: { accountId32: { network: { any: true }, id: *watr_acc }}}}}
 
 tests:
   - name: STATEMINE | PALLET XCM - TELEPORT
@@ -36,7 +36,7 @@ tests:
                   args: [
                     *stmt->watr_dest, # destination
                     *watr_benef, # beneficiary
-                    { v1: [ *stmt_native_fungible ] }, # assets
+                    { v2: [ *stmt_native_fungible ] }, # assets
                     0, # feeAssetItem
                     { unlimited: true } # weightLimit
                   ]

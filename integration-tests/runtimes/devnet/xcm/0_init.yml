@@ -19,7 +19,7 @@ settings:
         sudo:
           signer: &rc_sudo_signer //Alice
         destinations:
-          statemint: &rc->stmt_dest { v1: { 0, interior: { x1: { parachain: *stmt_id }}}}
+          statemint: &rc->stmt_dest { v2: { 0, interior: { x1: { parachain: *stmt_id }}}}
       watr_parachain:
         sudo:
           signer: &watr_sudo_signer //Alice

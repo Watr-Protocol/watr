@@ -16,7 +16,7 @@ settings:
       watr_parachain:
         signer: &watr_signer //Bob
         destinations:
-          stmt: &watr->stmt_dest { v1: { parents: 1, interior: { X1: { Parachain: *stmt_id }}}}
+          stmt: &watr->stmt_dest { v2: { parents: 1, interior: { X1: { Parachain: *stmt_id }}}}
   decodedCalls:
     system_remark:
       chain: *relay_chain
