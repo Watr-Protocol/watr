@@ -56,9 +56,6 @@ pub mod pallet {
 	/// The current storage version.
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(0);
 
-	/// Reference to a payload of data of variable size.
-	pub type Payload = [u8];
-
 	/// Type for a DID subject identifier.
 	pub type DidIdentifierOf<T> = <T as Config>::DidIdentifier;
 
@@ -136,7 +133,7 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxCredentialTypeLength: Get<u32>;
 
-		/// Origin for priviledged actions
+		/// Origin for privileged actions
 		type GovernanceOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 
 		/// Weight information for extrinsics in this pallet.
@@ -257,7 +254,7 @@ pub mod pallet {
 		IssuerNotRevoked,
 		/// The origin is not an Issuer
 		NotIssuer,
-		/// The maximum number of Credentials has been excedeed
+		/// The maximum number of Credentials has been exceeded
 		MaxCredentials,
 		/// Unable to create DID that already exists
 		DidAlreadyExists,
@@ -271,7 +268,7 @@ pub mod pallet {
 		ServiceNotInDid,
 		/// Too many references to a service. Not likely to happen
 		TooManyServiceConsumers,
-		/// The maximum number of Services in the DID has been excedeed
+		/// The maximum number of Services in the DID has been exceeded
 		TooManyServicesInDid,
 	}
 
@@ -329,7 +326,7 @@ pub mod pallet {
 		#[pallet::call_index(1)]
 		#[pallet::weight(
 			T::WeightInfo::update_did().saturating_add(
-				T::WeightInfo::add_did_services(services.clone().or_else(|| Some(BoundedVec::default())).unwrap().len() as u32)
+				T::WeightInfo::add_did_services(services.clone().or_else(|| Some(BoundedVec::default())).expect("value is always Ok").len() as u32)
 					.saturating_add(
 						T::WeightInfo::remove_did_services(T::MaxServices::get())
 					)
@@ -369,7 +366,7 @@ pub mod pallet {
 		#[pallet::call_index(2)]
 		#[pallet::weight(
 			T::WeightInfo::update_did().saturating_add(
-				T::WeightInfo::add_did_services(services.clone().or_else(|| Some(BoundedVec::default())).unwrap().len() as u32)
+				T::WeightInfo::add_did_services(services.clone().or_else(|| Some(BoundedVec::default())).expect("value is always Ok").len() as u32)
 					.saturating_add(
 						T::WeightInfo::remove_did_services(T::MaxServices::get())
 					)
@@ -453,7 +450,7 @@ pub mod pallet {
 			// Try to mutate document
 			Did::<T>::try_mutate(did.clone(), |maybe_doc| -> DispatchResultWithPostInfo {
 				let document = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
-				Self::ensure_controller(controller, &document)?;
+				Self::ensure_controller(controller, document)?;
 				// Insert new services
 				let services_keys = Self::do_add_did_services(
 					services,
@@ -487,7 +484,7 @@ pub mod pallet {
 			Did::<T>::try_mutate(did.clone(), |maybe_doc| -> DispatchResultWithPostInfo {
 				let document = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
 				// ensure that the caller is the controller of the DID
-				Self::ensure_controller(controller, &document)?;
+				Self::ensure_controller(controller, document)?;
 
 				Self::do_remove_did_services(
 					&services_keys,
@@ -532,10 +529,9 @@ pub mod pallet {
 				IssuedCredentials::<T>::try_mutate(
 					(subject_did.clone(), &credential, issuer_did.clone()),
 					|maybe_issued_credential| -> DispatchResult {
-						let issued_credential = CredentialInfo {
+						*maybe_issued_credential = Some(CredentialInfo {
 							verifiable_credential_hash: verifiable_credential_hash.clone(),
-						};
-						*maybe_issued_credential = Some(issued_credential);
+						});
 						Ok(())
 					},
 				)?;
@@ -718,7 +714,7 @@ impl<T: Config> Pallet<T> {
 			&Document<T>,
 		) -> DispatchResult,
 	) -> Result<Document<T>, DispatchError> {
-		Did::<T>::try_mutate(did.clone(), |maybe_doc| -> Result<Document<T>, DispatchError> {
+		Did::<T>::try_mutate(did, |maybe_doc| -> Result<Document<T>, DispatchError> {
 			let document = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
 
 			// Check if origin is either governance or controller
@@ -742,8 +738,6 @@ impl<T: Config> Pallet<T> {
 			}
 
 			// If present, update the `services` BoundedVec
-			// TODO: Improve delete/write looking for Vec intersection
-			// between new ones and existing services
 			if let Some(new_services) = services {
 				// Clean all original services
 				Self::do_remove_did_services(
@@ -810,7 +804,7 @@ impl<T: Config> Pallet<T> {
 					.err()
 					.ok_or(Error::<T>::ServiceAlreadyInDid)?;
 				document_services_keys
-					.try_insert(pos, service_key.clone())
+					.try_insert(pos, service_key)
 					.map_err(|_| Error::<T>::TooManyServicesInDid)?;
 			}
 
@@ -819,7 +813,7 @@ impl<T: Config> Pallet<T> {
 				.err()
 				.ok_or(Error::<T>::ServiceAlreadyInDid)?;
 			services_keys
-				.try_insert(pos, service_key.clone())
+				.try_insert(pos, service_key)
 				.map_err(|_| Error::<T>::TooManyServicesInDid)?;
 		}
 		Ok(services_keys)
@@ -833,7 +827,7 @@ impl<T: Config> Pallet<T> {
 		let service_key = T::Hashing::hash_of(&service);
 
 		// if the service exists increment its consumers, otherwise insert a new service
-		if let Some(mut existing_service) = Services::<T>::get(service_key.clone()) {
+		if let Some(mut existing_service) = Services::<T>::get(service_key) {
 			// `inc_consumers` may overflow, so handle it just in case
 			existing_service
 				.inc_consumers()
@@ -856,13 +850,13 @@ impl<T: Config> Pallet<T> {
 		// Iterate over each service and remove it from the document
 		for service_key in keys_to_remove {
 			let pos = document_services_keys
-				.binary_search(&service_key)
+				.binary_search(service_key)
 				.ok()
 				.ok_or(Error::<T>::ServiceNotInDid)?;
 			let deleted_key = document_services_keys.remove(pos);
 
 			// House cleaning. Check consumers and possibly delete from storage
-			Self::do_remove_service(deleted_key.clone(), services_witness)?;
+			Self::do_remove_service(deleted_key, services_witness)?;
 		}
 		Ok(())
 	}
@@ -939,7 +933,7 @@ impl<T: Config> Pallet<T> {
 
 	/// Ensure that the issuer status is active
 	fn ensure_issuer_is_active(issuer_did: &DidIdentifierOf<T>) -> DispatchResult {
-		let issuer_info = Issuers::<T>::get(&issuer_did).ok_or(Error::<T>::NotIssuer)?;
+		let issuer_info = Issuers::<T>::get(issuer_did).ok_or(Error::<T>::NotIssuer)?;
 		ensure!(issuer_info.status == IssuerStatus::Active, Error::<T>::IssuerNotActive);
 		Ok(())
 	}
