@@ -883,7 +883,7 @@ impl<T: Config> Pallet<T> {
 
 	fn do_remove_issuer(issuer: DidIdentifierOf<T>) -> DispatchResult {
 		Issuers::<T>::try_mutate_exists(issuer.clone(), |maybe_info| -> DispatchResult {
-			// Take from storage (sets to None). Will be deleted if successful
+			// Get mutable reference to issuer info. Will not be removed from storage
 			let info = maybe_info.as_mut().ok_or(Error::<T>::IssuerDoesNotExist)?;
 			ensure!(
 				*info == IssuerInfo { status: IssuerStatus::Revoked },
