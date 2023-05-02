@@ -681,25 +681,42 @@ fn reactivate_issuer_works() {
 #[test]
 fn remove_issuer_works() {
 	new_test_ext().execute_with(|| {
+		let _ = create_default_did(ACCOUNT_01, ACCOUNT_01);
+		let _ = create_default_did(ACCOUNT_02, ACCOUNT_02);
+
 		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_01));
 		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_02));
 		assert_ok!(DID::revoke_issuer(RuntimeOrigin::root(), ACCOUNT_01));
 
-		assert_noop!(DID::remove_issuer(RuntimeOrigin::signed(1), ACCOUNT_01), BadOrigin);
-
-		assert_ok!(DID::remove_issuer(RuntimeOrigin::root(), ACCOUNT_01));
+		assert_ok!(DID::remove_did(RuntimeOrigin::signed(1), ACCOUNT_01));
 
 		let issuer_info = Issuers::<Test>::get(ACCOUNT_01);
-		assert_eq!(issuer_info, None);
+		assert_eq!(issuer_info, Some(IssuerInfo { status: IssuerStatus::Deleted }));
 
 		assert_noop!(
-			DID::remove_issuer(RuntimeOrigin::root(), ACCOUNT_02),
+			DID::force_remove_did(RuntimeOrigin::root(), ACCOUNT_02),
 			Error::<Test>::IssuerNotRevoked
 		);
 
 		assert_noop!(
-			DID::remove_issuer(RuntimeOrigin::root(), ACCOUNT_03),
-			Error::<Test>::IssuerDoesNotExist
+			DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_01),
+			Error::<Test>::IssuerAlreadyExists
+		);
+
+		assert_noop!(
+			DID::create_did(
+				RuntimeOrigin::signed(1),
+				ACCOUNT_01,
+				H160::from([0u8; 20]),
+				None,
+				BoundedVec::default()
+			),
+			Error::<Test>::IssuerIsDeleted
+		);
+
+		assert_noop!(
+			DID::reactivate_issuer(RuntimeOrigin::root(), ACCOUNT_01),
+			Error::<Test>::IssuerIsDeleted
 		);
 
 		let events = events();

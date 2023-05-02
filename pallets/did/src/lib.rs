@@ -252,6 +252,8 @@ pub mod pallet {
 		IssuerNotActive,
 		/// Issuer status is not Revoked
 		IssuerNotRevoked,
+		/// Issuer is deleted and can not be created again
+		IssuerIsDeleted,
 		/// The origin is not an Issuer
 		NotIssuer,
 		/// The maximum number of Credentials has been exceeded
@@ -288,6 +290,7 @@ pub mod pallet {
 
 			// Check that DID does not exist yet
 			ensure!(!Did::<T>::contains_key(did.clone()), Error::<T>::DidAlreadyExists);
+			ensure!(!Issuers::<T>::contains_key(did.clone()), Error::<T>::IssuerIsDeleted);
 
 			// Reserve did deposit.
 			// If user does not have enough balance returns `InsufficientBalance`
@@ -407,12 +410,9 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			// For keeping track of Services inserts/removals
 			let mut services_witness = ServicesWitness::default();
-			Self::do_remove_did(
-				origin,
-				did.clone(),
-				&mut services_witness,
-				|origin, document| Self::ensure_controller(ensure_signed(origin)?, &document),
-			)?;
+			Self::do_remove_did(origin, did.clone(), &mut services_witness, |origin, document| {
+				Self::ensure_controller(ensure_signed(origin)?, &document)
+			})?;
 			Self::deposit_event(Event::DidRemoved { did });
 
 			Ok(Some(T::WeightInfo::remove_did(services_witness.removals)).into())
@@ -426,12 +426,9 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			// For keeping track of Services inserts/removals
 			let mut services_witness = ServicesWitness::default();
-			Self::do_remove_did(
-				origin,
-				did.clone(),
-				&mut services_witness,
-				|origin, _| Self::ensure_governance(origin),
-			)?;
+			Self::do_remove_did(origin, did.clone(), &mut services_witness, |origin, _| {
+				Self::ensure_governance(origin)
+			})?;
 			Self::deposit_event(Event::DidForcedRemoved { did });
 
 			Ok(Pays::No.into())
@@ -631,6 +628,10 @@ pub mod pallet {
 			Issuers::<T>::try_mutate(issuer.clone(), |maybe_info| -> DispatchResult {
 				let info = maybe_info.as_mut().ok_or(Error::<T>::IssuerDoesNotExist)?;
 				ensure!(
+					*info != IssuerInfo { status: IssuerStatus::Deleted },
+					Error::<T>::IssuerIsDeleted
+				);
+				ensure!(
 					*info == IssuerInfo { status: IssuerStatus::Revoked },
 					Error::<T>::IssuerNotRevoked
 				);
@@ -709,10 +710,7 @@ impl<T: Config> Pallet<T> {
 		assertion: Option<T::AssertionAddress>,
 		services: Option<BoundedVec<ServiceInfo<T>, T::MaxServices>>,
 		services_witness: &mut ServicesWitness,
-		origin_check: impl FnOnce(
-			OriginFor<T>,
-			&Document<T>,
-		) -> DispatchResult,
+		origin_check: impl FnOnce(OriginFor<T>, &Document<T>) -> DispatchResult,
 	) -> Result<Document<T>, DispatchError> {
 		Did::<T>::try_mutate(did, |maybe_doc| -> Result<Document<T>, DispatchError> {
 			let document = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
@@ -761,10 +759,7 @@ impl<T: Config> Pallet<T> {
 		origin: OriginFor<T>,
 		did: DidIdentifierOf<T>,
 		services_witness: &mut ServicesWitness,
-		origin_check: impl FnOnce(
-			OriginFor<T>,
-			&Document<T>,
-		) -> DispatchResult,
+		origin_check: impl FnOnce(OriginFor<T>, &Document<T>) -> DispatchResult,
 	) -> DispatchResult {
 		Did::<T>::try_mutate(did.clone(), |maybe_doc| -> DispatchResult {
 			// Take from storage (sets to None). Will be deleted if successful
@@ -889,11 +884,14 @@ impl<T: Config> Pallet<T> {
 	fn do_remove_issuer(issuer: DidIdentifierOf<T>) -> DispatchResult {
 		Issuers::<T>::try_mutate_exists(issuer.clone(), |maybe_info| -> DispatchResult {
 			// Take from storage (sets to None). Will be deleted if successful
-			let info = maybe_info.take().ok_or(Error::<T>::IssuerDoesNotExist)?;
+			let info = maybe_info.as_mut().ok_or(Error::<T>::IssuerDoesNotExist)?;
 			ensure!(
-				info == IssuerInfo { status: IssuerStatus::Revoked },
+				*info == IssuerInfo { status: IssuerStatus::Revoked },
 				Error::<T>::IssuerNotRevoked
 			);
+
+			// Update status to `Deleted` to prevent issuer from being reinstated
+			info.status = IssuerStatus::Deleted;
 
 			Self::deposit_event(Event::IssuerRemoved { issuer });
 			Ok(())

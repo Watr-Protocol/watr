@@ -78,6 +78,7 @@ pub enum IssuerStatus {
 	#[default]
 	Active,
 	Revoked,
+	Deleted,
 }
 
 #[derive(Clone, Decode, Default, Encode, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
