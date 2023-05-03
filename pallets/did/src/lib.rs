@@ -294,9 +294,9 @@ pub mod pallet {
 			ensure!(!Did::<T>::contains_key(did.clone()), Error::<T>::DidAlreadyExists);
 			
 			// Check that we are not re-creating a DID for a Deleted Issuer. 
-			if let Some(issuer_info) = Issuers::<T>::get(did.clone()) {
-				ensure!(issuer_info.status != IssuerStatus::Deleted, Error::<T>::IssuerIsDeleted);
-			}
+			// If there is a key for an Issuer, and the document does not exist, 
+			// we can infer that the Issuer had been deleted. 
+			ensure!(!Issuers::<T>::contains_key(did.clone()), Error::<T>::IssuerIsDeleted);
 
 			// Reserve did deposit.
 			// If user does not have enough balance returns `InsufficientBalance`
