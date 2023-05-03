@@ -246,6 +246,8 @@ pub mod pallet {
 		IssuedCredentialDoesNotExist,
 		/// Unable to create issuer that already exists
 		IssuerAlreadyExists,
+		/// Unable to create an issuer that does not have a DID
+		IssuerDoesNotHaveDid,
 		/// Unable to find issuer
 		IssuerDoesNotExist,
 		/// Issuer status is not Active
@@ -290,7 +292,11 @@ pub mod pallet {
 
 			// Check that DID does not exist yet
 			ensure!(!Did::<T>::contains_key(did.clone()), Error::<T>::DidAlreadyExists);
-			ensure!(!Issuers::<T>::contains_key(did.clone()), Error::<T>::IssuerIsDeleted);
+			
+			// Check that we are not re-creating a DID for a Deleted Issuer. 
+			if let Some(issuer_info) = Issuers::<T>::get(did.clone()) {
+				ensure!(issuer_info.status != IssuerStatus::Deleted, Error::<T>::IssuerIsDeleted);
+			}
 
 			// Reserve did deposit.
 			// If user does not have enough balance returns `InsufficientBalance`
@@ -592,6 +598,7 @@ pub mod pallet {
 		pub fn add_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
+			ensure!(Did::<T>::contains_key(issuer.clone()), Error::<T>::IssuerDoesNotHaveDid);
 			ensure!(!Issuers::<T>::contains_key(&issuer), Error::<T>::IssuerAlreadyExists);
 			// Add issuer to storage with status Active
 			Issuers::<T>::insert(issuer.clone(), IssuerInfo { status: IssuerStatus::Active });
