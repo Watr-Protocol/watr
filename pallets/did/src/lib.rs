@@ -649,15 +649,6 @@ pub mod pallet {
 		}
 
 		#[pallet::call_index(13)]
-		#[pallet::weight(T::WeightInfo::remove_issuer())]
-		pub fn remove_issuer(origin: OriginFor<T>, issuer: DidIdentifierOf<T>) -> DispatchResult {
-			// Origin ONLY GovernanceOrigin
-			T::GovernanceOrigin::ensure_origin(origin.clone())?;
-			Self::do_remove_issuer(issuer)?;
-			Ok(())
-		}
-
-		#[pallet::call_index(14)]
 		#[pallet::weight(T::WeightInfo::add_credentials_type(credentials.len() as u32))]
 		pub fn add_credentials_type(
 			origin: OriginFor<T>,
@@ -682,7 +673,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::call_index(15)]
+		#[pallet::call_index(14)]
 		#[pallet::weight(T::WeightInfo::remove_credentials_type(credentials.len() as u32))]
 		pub fn remove_credentials_type(
 			origin: OriginFor<T>,
