@@ -602,6 +602,12 @@ fn add_issuer_works() {
 		let issuer_info = Issuers::<Test>::get(ACCOUNT_01);
 		assert_eq!(issuer_info, None);
 
+		assert_noop!(
+			DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_01),
+			Error::<Test>::IssuerDoesNotHaveDid
+		);
+
+		let _ = create_default_did(ACCOUNT_01, ACCOUNT_01);
 		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_01));
 
 		let issuer_info = Issuers::<Test>::get(ACCOUNT_01).unwrap();
@@ -622,12 +628,14 @@ fn add_issuer_works() {
 #[test]
 fn revoke_issuer_works() {
 	new_test_ext().execute_with(|| {
+		let _ = create_default_did(ACCOUNT_01, ACCOUNT_01);
 		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_01));
 		assert_ok!(DID::revoke_issuer(RuntimeOrigin::root(), ACCOUNT_01));
 
 		let issuer_info = Issuers::<Test>::get(ACCOUNT_01).unwrap();
 		assert_eq!(issuer_info.status, IssuerStatus::Revoked);
 
+		let _ = create_default_did(ACCOUNT_02, ACCOUNT_02);
 		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_02));
 
 		assert_noop!(DID::revoke_issuer(RuntimeOrigin::signed(1), ACCOUNT_02), BadOrigin);
@@ -652,7 +660,9 @@ fn revoke_issuer_works() {
 #[test]
 fn reactivate_issuer_works() {
 	new_test_ext().execute_with(|| {
+		let _ = create_default_did(ACCOUNT_01, ACCOUNT_01);
 		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_01));
+		let _ = create_default_did(ACCOUNT_02, ACCOUNT_02);
 		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_02));
 		assert_ok!(DID::revoke_issuer(RuntimeOrigin::root(), ACCOUNT_01));
 
@@ -700,7 +710,7 @@ fn remove_issuer_works() {
 
 		assert_noop!(
 			DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_01),
-			Error::<Test>::IssuerAlreadyExists
+			Error::<Test>::IssuerDoesNotHaveDid
 		);
 
 		assert_noop!(

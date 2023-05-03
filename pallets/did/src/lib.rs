@@ -292,10 +292,10 @@ pub mod pallet {
 
 			// Check that DID does not exist yet
 			ensure!(!Did::<T>::contains_key(did.clone()), Error::<T>::DidAlreadyExists);
-			
-			// Check that we are not re-creating a DID for a Deleted Issuer. 
-			// If there is a key for an Issuer, and the document does not exist, 
-			// we can infer that the Issuer had been deleted. 
+
+			// Check that we are not re-creating a DID for a Deleted Issuer.
+			// If there is a key for an Issuer, and the document does not exist,
+			// we can infer that the Issuer had been deleted.
 			ensure!(!Issuers::<T>::contains_key(did.clone()), Error::<T>::IssuerIsDeleted);
 
 			// Reserve did deposit.
