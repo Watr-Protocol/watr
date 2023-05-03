@@ -18,7 +18,7 @@
 //!
 //! THIS FILE WAS AUTO-GENERATED USING THE SUBSTRATE BENCHMARK CLI VERSION 4.0.0-dev
 //! DATE: 2023-05-03, STEPS: `50`, REPEAT: 20, LOW RANGE: `[]`, HIGH RANGE: `[]`
-//! HOSTNAME: `Lanas-MBP`, CPU: `<UNKNOWN>`
+//! HOSTNAME: `MacBook-Pro.local`, CPU: `<UNKNOWN>`
 //! EXECUTION: Some(Wasm), WASM-EXECUTION: Compiled, CHAIN: Some("devnet-dev"), DB CACHE: 1024
 
 // Executed Command:
