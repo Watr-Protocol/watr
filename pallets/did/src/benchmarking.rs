@@ -89,11 +89,14 @@ fn create_credential<T: Config>(i: u32, seed: u8) -> CredentialOf<T> {
 	credential_type
 }
 
-fn create_credentials<T: Config>(i: u32, seed: u8) -> Vec<CredentialOf<T>> {
-	let mut credentials = Vec::<CredentialOf<T>>::new();
+fn create_credentials<T: Config>(
+	i: u32,
+	seed: u8,
+) -> BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes> {
+	let mut credentials = BoundedVec::<CredentialOf<T>, T::MaxCredentialsTypes>::default();
 	for j in 0..i {
 		let credential = create_credential::<T>(j, seed);
-		let _ = credentials.push(credential);
+		let _ = credentials.try_push(credential);
 	}
 	credentials
 }
@@ -549,10 +552,10 @@ benchmarks! {
 
 		assert_ok!(DID::<T>::add_credentials_type(RawOrigin::Root.into(), credentials_types.clone()));
 	}: _(
-		RawOrigin::Root, credentials_types.to_vec().clone()
+		RawOrigin::Root, credentials_types.clone()
 	)
 	verify {
 		assert_eq!(CredentialsTypes::<T>::get(), Vec::default());
-		assert_last_event::<T>(Event::CredentialTypesRemoved {credentials: credentials_types.to_vec()}.into());
+		assert_last_event::<T>(Event::CredentialTypesRemoved {credentials: credentials_types}.into());
 	}
 }
