@@ -133,10 +133,6 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxCredentialTypeLength: Get<u32>;
 
-		/// The maximum length of a Credentials vector
-		#[pallet::constant]
-		type MaxCredentialVecLength: Get<u32>;
-
 		/// Origin for privileged actions
 		type GovernanceOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 
@@ -179,10 +175,10 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		CredentialTypesAdded {
-			credentials: BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>
+			credentials: BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>,
 		},
 		CredentialTypesRemoved {
-			credentials: BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>
+			credentials: BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>,
 		},
 		DidCreated {
 			did: DidIdentifierOf<T>,
@@ -213,18 +209,18 @@ pub mod pallet {
 		CredentialsIssued {
 			issuer: DidIdentifierOf<T>,
 			did: DidIdentifierOf<T>,
-			credentials: BoundedVec<CredentialOf<T>, T::MaxCredentialVecLength>,
+			credentials: BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>,
 			verifiable_credential_hash: HashOf<T>,
 		},
 		CredentialsRevoked {
 			issuer: DidIdentifierOf<T>,
 			did: DidIdentifierOf<T>,
-			credentials: BoundedVec<CredentialOf<T>, T::MaxCredentialVecLength>
+			credentials: BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>,
 		},
 		CredentialsForcedRevoked {
 			issuer: DidIdentifierOf<T>,
 			did: DidIdentifierOf<T>,
-			credentials: BoundedVec<CredentialOf<T>, T::MaxCredentialVecLength>
+			credentials: BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>,
 		},
 		IssuerRemoved {
 			issuer: DidIdentifierOf<T>,
@@ -514,7 +510,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			issuer_did: DidIdentifierOf<T>,
 			subject_did: DidIdentifierOf<T>,
-			credentials: BoundedVec<CredentialOf<T>, T::MaxCredentialVecLength>,
+			credentials: BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>,
 			verifiable_credential_hash: HashOf<T>,
 		) -> DispatchResult {
 			let controller = ensure_signed(origin)?;
@@ -559,7 +555,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			issuer_did: DidIdentifierOf<T>,
 			subject_did: DidIdentifierOf<T>,
-			credentials: BoundedVec<CredentialOf<T>, T::MaxCredentialVecLength>,
+			credentials: BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>,
 		) -> DispatchResult {
 			let controller = ensure_signed(origin)?;
 
@@ -572,7 +568,7 @@ pub mod pallet {
 			Self::deposit_event(Event::CredentialsRevoked {
 				issuer: issuer_did,
 				did: subject_did,
-				credentials
+				credentials,
 			});
 			Ok(())
 		}
@@ -583,7 +579,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			issuer_did: DidIdentifierOf<T>,
 			subject_did: DidIdentifierOf<T>,
-			credentials: BoundedVec<CredentialOf<T>, T::MaxCredentialVecLength>,
+			credentials: BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>,
 		) -> DispatchResultWithPostInfo {
 			T::GovernanceOrigin::ensure_origin(origin.clone())?;
 
@@ -592,7 +588,7 @@ pub mod pallet {
 			Self::deposit_event(Event::CredentialsForcedRevoked {
 				issuer: issuer_did,
 				did: subject_did,
-				credentials
+				credentials,
 			});
 			Ok(Pays::No.into())
 		}
@@ -656,7 +652,7 @@ pub mod pallet {
 		#[pallet::weight(T::WeightInfo::add_credentials_type(credentials.len() as u32))]
 		pub fn add_credentials_type(
 			origin: OriginFor<T>,
-			credentials: BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>
+			credentials: BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>,
 		) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
@@ -681,7 +677,7 @@ pub mod pallet {
 		#[pallet::weight(T::WeightInfo::remove_credentials_type(credentials.len() as u32))]
 		pub fn remove_credentials_type(
 			origin: OriginFor<T>,
-			credentials: BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>
+			credentials: BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes>,
 		) -> DispatchResult {
 			// Origin ONLY GovernanceOrigin
 			T::GovernanceOrigin::ensure_origin(origin)?;
