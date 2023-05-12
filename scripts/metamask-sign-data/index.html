@@ -1,0 +1,13 @@
+<html>
+  <head>
+    <script src="metamask-sign-data.js"></script>
+  </head>
+  <body>
+    <p>JSON Object:</p>
+    <textarea id="jsonInput"></textarea></body></br>
+    <button onclick="signData(JSON.parse(document.getElementById('jsonInput').value))">Sign Data</button>
+    <br><br>
+    <p>Ethereum Account: <span id="accountAddress"></span></p>
+    <p>Signed Data: <span id="signedData"></span></p>
+  </body>
+</html>

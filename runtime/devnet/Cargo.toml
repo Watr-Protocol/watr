@@ -97,6 +97,7 @@ pallet-evm-precompile-sha3fips = {  git = 'https://github.com/paritytech/frontie
 pallet-evm-precompile-simple = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30", default-features = false }
 pallet-evm-precompile-blake2 = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30", default-features = false }
 pallet-evm-precompile-bn128 = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30", default-features = false }
+pallet-evm-precompile-dispatch = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.30", default-features = false }
 
 # Astar Pallets
 pallet-evm-precompile-assets-erc20 = { git = "https://github.com/Watr-Protocol/astar-frame.git", branch = "polkadot-v0.9.30", default-features = false }
@@ -109,6 +110,7 @@ pallet-identity = {git = "https://github.com/paritytech/substrate", package = "p
 # Local
 watr-common = {path = "../common", default-features = false }
 pallet-motion = { default-features = false, path = "../../pallets/motion" }
+pallet-did = { default-features = false, path = "../../pallets/did" }
 
 [features]
 default = [
@@ -138,6 +140,7 @@ std = [
 	"pallet-collator-selection/std",
 	"pallet-collective/std",
 	"pallet-motion/std",
+	"pallet-did/std",
 	"pallet-preimage/std",
 	"pallet-session/std",
 	"pallet-scheduler/std",
@@ -205,6 +208,7 @@ runtime-benchmarks = [
 	"pallet-identity/runtime-benchmarks",
 	"pallet-xcm/runtime-benchmarks",
 	"pallet-xc-asset-config/runtime-benchmarks",
+	"pallet-did/runtime-benchmarks",
 	"sp-runtime/runtime-benchmarks",
 	"xcm-builder/runtime-benchmarks",
 	"cumulus-pallet-session-benchmarking/runtime-benchmarks",
