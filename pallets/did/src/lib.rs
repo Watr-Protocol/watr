@@ -360,7 +360,7 @@ pub mod pallet {
 				assertion,
 				services.clone(),
 				&mut services_witness,
-				|origin, document| Self::ensure_controller(ensure_signed(origin)?, &document),
+				|origin, document| Self::ensure_controller(ensure_signed(origin)?, document),
 			)?;
 
 			Self::deposit_event(Event::DidUpdated { did, document });
@@ -417,7 +417,7 @@ pub mod pallet {
 			// For keeping track of Services inserts/removals
 			let mut services_witness = ServicesWitness::default();
 			Self::do_remove_did(origin, did.clone(), &mut services_witness, |origin, document| {
-				Self::ensure_controller(ensure_signed(origin)?, &document)
+				Self::ensure_controller(ensure_signed(origin)?, document)
 			})?;
 			Self::deposit_event(Event::DidRemoved { did });
 
@@ -714,7 +714,7 @@ impl<T: Config> Pallet<T> {
 			let document = maybe_doc.as_mut().ok_or(Error::<T>::DidNotFound)?;
 
 			// Check if origin is either governance or controller
-			origin_check(origin, &document)?;
+			origin_check(origin, document)?;
 
 			// If present, update `controller`
 			if let Some(controller) = controller {
