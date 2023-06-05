@@ -65,7 +65,7 @@ pub use frame_support::{
 	dispatch::DispatchClass,
 	parameter_types,
 	traits::{
-		fungibles::{Balanced, CreditOf},
+		fungibles::Balanced,
 		AsEnsureOriginWithArg, ConstU32, ConstU8, Currency as CurrencyT, EitherOfDiverse,
 		Everything, FindAuthor, Imbalance, InstanceFilter, KeyOwnerProofSystem, LockIdentifier,
 		OnRuntimeUpgrade, OnUnbalanced, PrivilegeCmp,
@@ -766,7 +766,7 @@ impl<R> OnUnbalanced<NegativeImbalance<R>> for EVMDealWithFees<R>
 where
 	R: pallet_balances::Config + pallet_collator_selection::Config + core::fmt::Debug,
 	AccountIdOf<R>:
-		From<polkadot_primitives::v2::AccountId> + Into<polkadot_primitives::v2::AccountId>,
+		From<polkadot_primitives::v4::AccountId> + Into<polkadot_primitives::v4::AccountId>,
 	<R as frame_system::Config>::RuntimeEvent: From<pallet_balances::Event<R>>,
 {
 	// this is called from pallet_evm for Ethereum-based transactions
