@@ -65,7 +65,7 @@ where
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<PrecompileResult> {
 		let address = handle.code_address();
-		if self.is_precompile(address) && address > hash(9) && handle.context().address != address {
+		if self.is_precompile(address, 0) && address > hash(9) && handle.context().address != address {
 			return Some(Err(PrecompileFailure::Revert {
 				exit_status: ExitRevert::Reverted,
 				output: b"cannot be called with DELEGATECALL or CALLCODE".to_vec(),
@@ -93,9 +93,9 @@ where
 		}
 	}
 
-	fn is_precompile(&self, address: H160) -> bool {
+	fn is_precompile(&self, address: H160, gas: u64) -> bool {
 		Self::used_addresses().any(|x| x == address) ||
-			Erc20AssetsPrecompileSet::<R>::new().is_precompile(address)
+			Erc20AssetsPrecompileSet::<R>::new().is_precompile(address, gas)
 	}
 }
 
