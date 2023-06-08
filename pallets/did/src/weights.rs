@@ -64,262 +64,436 @@ pub trait WeightInfo {
 /// Weights for pallet_did using the Substrate node and recommended hardware.
 pub struct SubstrateWeight<T>(PhantomData<T>);
 impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
-	// Storage: DID Did (r:1 w:1)
-	// Storage: DID Services (r:1 w:1)
+	/// Storage: DID Did (r:1 w:1)
+	/// Proof: DID Did (max_values: None, max_size: Some(442), added: 2917, mode: MaxEncodedLen)
+	/// Storage: DID Services (r:10 w:10)
+	/// Proof: DID Services (max_values: None, max_size: Some(155), added: 2630, mode: MaxEncodedLen)
 	/// The range of component `m` is `[0, 10]`.
 	fn create_did(m: u32, ) -> Weight {
-		// Minimum execution time:  nanoseconds.
-		Weight::from_ref_time(64_000_000 as u64)
-			// Standard Error: 21_643
-			.saturating_add(Weight::from_ref_time(7_142_105 as u64).saturating_mul(m as u64))
-			.saturating_add(T::DbWeight::get().reads(1 as u64))
-			.saturating_add(T::DbWeight::get().reads((1 as u64).saturating_mul(m as u64)))
-			.saturating_add(T::DbWeight::get().writes(1 as u64))
-			.saturating_add(T::DbWeight::get().writes((1 as u64).saturating_mul(m as u64)))
+		// Proof Size summary in bytes:
+		//  Measured:  `42`
+		//  Estimated: `3907 + m * (2630 ±0)`
+		// Minimum execution time: 25_000_000 picoseconds.
+		Weight::from_parts(26_443_381, 0)
+			.saturating_add(Weight::from_parts(0, 3907))
+			// Standard Error: 10_347
+			.saturating_add(Weight::from_parts(3_734_207, 0).saturating_mul(m.into()))
+			.saturating_add(T::DbWeight::get().reads(1))
+			.saturating_add(T::DbWeight::get().reads((1_u64).saturating_mul(m.into())))
+			.saturating_add(T::DbWeight::get().writes(1))
+			.saturating_add(T::DbWeight::get().writes((1_u64).saturating_mul(m.into())))
+			.saturating_add(Weight::from_parts(0, 2630).saturating_mul(m.into()))
 	}
-	// Storage: DID Did (r:1 w:1)
+	/// Storage: DID Did (r:1 w:1)
+	/// Proof: DID Did (max_values: None, max_size: Some(442), added: 2917, mode: MaxEncodedLen)
 	fn update_did() -> Weight {
-		Weight::from_ref_time(16_000_000 as u64)
-			.saturating_add(T::DbWeight::get().reads(1 as u64))
-			.saturating_add(T::DbWeight::get().writes(1 as u64))
+		// Proof Size summary in bytes:
+		//  Measured:  `193`
+		//  Estimated: `3907`
+		// Minimum execution time: 13_000_000 picoseconds.
+		Weight::from_parts(13_000_000, 0)
+			.saturating_add(Weight::from_parts(0, 3907))
+			.saturating_add(T::DbWeight::get().reads(1))
+			.saturating_add(T::DbWeight::get().writes(1))
 	}
-	// Storage: DID Did (r:1 w:1)
-	// Storage: DID Issuers (r:1 w:0)
-	// Storage: DID Services (r:1 w:1)
+	/// Storage: DID Did (r:1 w:1)
+	/// Proof: DID Did (max_values: None, max_size: Some(442), added: 2917, mode: MaxEncodedLen)
+	/// Storage: DID Services (r:10 w:10)
+	/// Proof: DID Services (max_values: None, max_size: Some(155), added: 2630, mode: MaxEncodedLen)
+	/// Storage: DID Issuers (r:1 w:0)
+	/// Proof: DID Issuers (max_values: None, max_size: Some(49), added: 2524, mode: MaxEncodedLen)
 	/// The range of component `m` is `[0, 10]`.
 	fn remove_did(m: u32, ) -> Weight {
-		// Minimum execution time:  nanoseconds.
-		Weight::from_ref_time(68_000_000 as u64)
-			// Standard Error: 21_161
-			.saturating_add(Weight::from_ref_time(6_619_806 as u64).saturating_mul(m as u64))
-			.saturating_add(T::DbWeight::get().reads(2 as u64))
-			.saturating_add(T::DbWeight::get().reads((1 as u64).saturating_mul(m as u64)))
-			.saturating_add(T::DbWeight::get().writes(1 as u64))
-			.saturating_add(T::DbWeight::get().writes((1 as u64).saturating_mul(m as u64)))
+		// Proof Size summary in bytes:
+		//  Measured:  `210 + m * (97 ±0)`
+		//  Estimated: `3907 + m * (2630 ±0)`
+		// Minimum execution time: 26_000_000 picoseconds.
+		Weight::from_parts(26_618_623, 0)
+			.saturating_add(Weight::from_parts(0, 3907))
+			// Standard Error: 8_291
+			.saturating_add(Weight::from_parts(3_312_251, 0).saturating_mul(m.into()))
+			.saturating_add(T::DbWeight::get().reads(2))
+			.saturating_add(T::DbWeight::get().reads((1_u64).saturating_mul(m.into())))
+			.saturating_add(T::DbWeight::get().writes(1))
+			.saturating_add(T::DbWeight::get().writes((1_u64).saturating_mul(m.into())))
+			.saturating_add(Weight::from_parts(0, 2630).saturating_mul(m.into()))
 	}
-	// Storage: DID Did (r:1 w:1)
-	// Storage: DID Services (r:1 w:1)
+	/// Storage: DID Did (r:1 w:1)
+	/// Proof: DID Did (max_values: None, max_size: Some(442), added: 2917, mode: MaxEncodedLen)
+	/// Storage: DID Services (r:10 w:10)
+	/// Proof: DID Services (max_values: None, max_size: Some(155), added: 2630, mode: MaxEncodedLen)
 	/// The range of component `m` is `[0, 10]`.
 	fn add_did_services(m: u32, ) -> Weight {
-		// Minimum execution time:  nanoseconds.
-		Weight::from_ref_time(42_000_000 as u64)
-			// Standard Error: 18_085
-			.saturating_add(Weight::from_ref_time(6_660_318 as u64).saturating_mul(m as u64))
-			.saturating_add(T::DbWeight::get().reads(1 as u64))
-			.saturating_add(T::DbWeight::get().reads((1 as u64).saturating_mul(m as u64)))
-			.saturating_add(T::DbWeight::get().writes(1 as u64))
-			.saturating_add(T::DbWeight::get().writes((1 as u64).saturating_mul(m as u64)))
+		// Proof Size summary in bytes:
+		//  Measured:  `193`
+		//  Estimated: `3907 + m * (2630 ±0)`
+		// Minimum execution time: 11_000_000 picoseconds.
+		Weight::from_parts(12_149_772, 0)
+			.saturating_add(Weight::from_parts(0, 3907))
+			// Standard Error: 6_677
+			.saturating_add(Weight::from_parts(3_808_899, 0).saturating_mul(m.into()))
+			.saturating_add(T::DbWeight::get().reads(1))
+			.saturating_add(T::DbWeight::get().reads((1_u64).saturating_mul(m.into())))
+			.saturating_add(T::DbWeight::get().writes(1))
+			.saturating_add(T::DbWeight::get().writes((1_u64).saturating_mul(m.into())))
+			.saturating_add(Weight::from_parts(0, 2630).saturating_mul(m.into()))
 	}
-	// Storage: DID Did (r:1 w:1)
-	// Storage: DID Services (r:1 w:1)
+	/// Storage: DID Did (r:1 w:1)
+	/// Proof: DID Did (max_values: None, max_size: Some(442), added: 2917, mode: MaxEncodedLen)
+	/// Storage: DID Services (r:10 w:10)
+	/// Proof: DID Services (max_values: None, max_size: Some(155), added: 2630, mode: MaxEncodedLen)
 	/// The range of component `m` is `[0, 10]`.
 	fn remove_did_services(m: u32, ) -> Weight {
-		// Minimum execution time:  nanoseconds.
-		Weight::from_ref_time(43_000_000 as u64)
-			// Standard Error: 39_299
-			.saturating_add(Weight::from_ref_time(6_753_947 as u64).saturating_mul(m as u64))
-			.saturating_add(T::DbWeight::get().reads(1 as u64))
-			.saturating_add(T::DbWeight::get().reads((1 as u64).saturating_mul(m as u64)))
-			.saturating_add(T::DbWeight::get().writes(1 as u64))
-			.saturating_add(T::DbWeight::get().writes((1 as u64).saturating_mul(m as u64)))
+		// Proof Size summary in bytes:
+		//  Measured:  `210 + m * (97 ±0)`
+		//  Estimated: `3907 + m * (2630 ±0)`
+		// Minimum execution time: 11_000_000 picoseconds.
+		Weight::from_parts(11_837_729, 0)
+			.saturating_add(Weight::from_parts(0, 3907))
+			// Standard Error: 8_476
+			.saturating_add(Weight::from_parts(3_480_590, 0).saturating_mul(m.into()))
+			.saturating_add(T::DbWeight::get().reads(1))
+			.saturating_add(T::DbWeight::get().reads((1_u64).saturating_mul(m.into())))
+			.saturating_add(T::DbWeight::get().writes(1))
+			.saturating_add(T::DbWeight::get().writes((1_u64).saturating_mul(m.into())))
+			.saturating_add(Weight::from_parts(0, 2630).saturating_mul(m.into()))
 	}
-	// Storage: DID Did (r:2 w:0)
-	// Storage: DID Issuers (r:1 w:0)
-	// Storage: DID CredentialsTypes (r:1 w:0)
-	// Storage: DID IssuedCredentials (r:1 w:1)
+	/// Storage: DID Did (r:2 w:0)
+	/// Proof: DID Did (max_values: None, max_size: Some(442), added: 2917, mode: MaxEncodedLen)
+	/// Storage: DID Issuers (r:1 w:0)
+	/// Proof: DID Issuers (max_values: None, max_size: Some(49), added: 2524, mode: MaxEncodedLen)
+	/// Storage: DID CredentialsTypes (r:1 w:0)
+	/// Proof: DID CredentialsTypes (max_values: Some(1), max_size: Some(1651), added: 2146, mode: MaxEncodedLen)
+	/// Storage: DID IssuedCredentials (r:50 w:50)
+	/// Proof: DID IssuedCredentials (max_values: None, max_size: Some(659), added: 3134, mode: MaxEncodedLen)
 	/// The range of component `c` is `[0, 50]`.
 	fn issue_credentials(c: u32, ) -> Weight {
-		// Minimum execution time:  nanoseconds.
-		Weight::from_ref_time(56_000_000 as u64)
-			// Standard Error: 9_443
-			.saturating_add(Weight::from_ref_time(6_982_442 as u64).saturating_mul(c as u64))
-			.saturating_add(T::DbWeight::get().reads(4 as u64))
-			.saturating_add(T::DbWeight::get().reads((1 as u64).saturating_mul(c as u64)))
-			.saturating_add(T::DbWeight::get().writes((1 as u64).saturating_mul(c as u64)))
+		// Proof Size summary in bytes:
+		//  Measured:  `377 + c * (6 ±0)`
+		//  Estimated: `6824 + c * (3134 ±0)`
+		// Minimum execution time: 18_000_000 picoseconds.
+		Weight::from_parts(19_180_388, 0)
+			.saturating_add(Weight::from_parts(0, 6824))
+			// Standard Error: 2_663
+			.saturating_add(Weight::from_parts(4_833_099, 0).saturating_mul(c.into()))
+			.saturating_add(T::DbWeight::get().reads(4))
+			.saturating_add(T::DbWeight::get().reads((1_u64).saturating_mul(c.into())))
+			.saturating_add(T::DbWeight::get().writes((1_u64).saturating_mul(c.into())))
+			.saturating_add(Weight::from_parts(0, 3134).saturating_mul(c.into()))
 	}
-	// Storage: DID Did (r:1 w:0)
-	// Storage: DID IssuedCredentials (r:1 w:1)
+	/// Storage: DID Did (r:1 w:0)
+	/// Proof: DID Did (max_values: None, max_size: Some(442), added: 2917, mode: MaxEncodedLen)
+	/// Storage: DID IssuedCredentials (r:50 w:50)
+	/// Proof: DID IssuedCredentials (max_values: None, max_size: Some(659), added: 3134, mode: MaxEncodedLen)
 	/// The range of component `c` is `[0, 50]`.
 	fn revoke_credentials(c: u32, ) -> Weight {
-		// Minimum execution time:  nanoseconds.
-		Weight::from_ref_time(42_000_000 as u64)
-			// Standard Error: 12_265
-			.saturating_add(Weight::from_ref_time(9_217_172 as u64).saturating_mul(c as u64))
-			.saturating_add(T::DbWeight::get().reads(1 as u64))
-			.saturating_add(T::DbWeight::get().reads((1 as u64).saturating_mul(c as u64)))
-			.saturating_add(T::DbWeight::get().writes((1 as u64).saturating_mul(c as u64)))
+		// Proof Size summary in bytes:
+		//  Measured:  `365 + c * (594 ±0)`
+		//  Estimated: `3907 + c * (3134 ±0)`
+		// Minimum execution time: 11_000_000 picoseconds.
+		Weight::from_parts(13_183_278, 0)
+			.saturating_add(Weight::from_parts(0, 3907))
+			// Standard Error: 4_448
+			.saturating_add(Weight::from_parts(5_919_849, 0).saturating_mul(c.into()))
+			.saturating_add(T::DbWeight::get().reads(1))
+			.saturating_add(T::DbWeight::get().reads((1_u64).saturating_mul(c.into())))
+			.saturating_add(T::DbWeight::get().writes((1_u64).saturating_mul(c.into())))
+			.saturating_add(Weight::from_parts(0, 3134).saturating_mul(c.into()))
 	}
-	// Storage: DID Issuers (r:1 w:1)
+	/// Storage: DID Issuers (r:1 w:1)
+	/// Proof: DID Issuers (max_values: None, max_size: Some(49), added: 2524, mode: MaxEncodedLen)
 	fn add_issuer() -> Weight {
-		Weight::from_ref_time(15_000_000 as u64)
-			.saturating_add(T::DbWeight::get().reads(1 as u64))
-			.saturating_add(T::DbWeight::get().writes(1 as u64))
+		// Proof Size summary in bytes:
+		//  Measured:  `42`
+		//  Estimated: `3514`
+		// Minimum execution time: 10_000_000 picoseconds.
+		Weight::from_parts(10_000_000, 0)
+			.saturating_add(Weight::from_parts(0, 3514))
+			.saturating_add(T::DbWeight::get().reads(1))
+			.saturating_add(T::DbWeight::get().writes(1))
 	}
-	// Storage: DID Issuers (r:1 w:1)
+	/// Storage: DID Issuers (r:1 w:1)
+	/// Proof: DID Issuers (max_values: None, max_size: Some(49), added: 2524, mode: MaxEncodedLen)
 	fn revoke_issuer() -> Weight {
-		Weight::from_ref_time(17_000_000 as u64)
-			.saturating_add(T::DbWeight::get().reads(1 as u64))
-			.saturating_add(T::DbWeight::get().writes(1 as u64))
+		// Proof Size summary in bytes:
+		//  Measured:  `117`
+		//  Estimated: `3514`
+		// Minimum execution time: 12_000_000 picoseconds.
+		Weight::from_parts(12_000_000, 0)
+			.saturating_add(Weight::from_parts(0, 3514))
+			.saturating_add(T::DbWeight::get().reads(1))
+			.saturating_add(T::DbWeight::get().writes(1))
 	}
-	// Storage: DID Issuers (r:1 w:1)
+	/// Storage: DID Issuers (r:1 w:1)
+	/// Proof: DID Issuers (max_values: None, max_size: Some(49), added: 2524, mode: MaxEncodedLen)
 	fn reactivate_issuer() -> Weight {
-		Weight::from_ref_time(16_000_000 as u64)
-			.saturating_add(T::DbWeight::get().reads(1 as u64))
-			.saturating_add(T::DbWeight::get().writes(1 as u64))
+		// Proof Size summary in bytes:
+		//  Measured:  `117`
+		//  Estimated: `3514`
+		// Minimum execution time: 10_000_000 picoseconds.
+		Weight::from_parts(11_000_000, 0)
+			.saturating_add(Weight::from_parts(0, 3514))
+			.saturating_add(T::DbWeight::get().reads(1))
+			.saturating_add(T::DbWeight::get().writes(1))
 	}
-	// Storage: DID Issuers (r:1 w:1)
+	/// Storage: DID Issuers (r:1 w:1)
+	/// Proof: DID Issuers (max_values: None, max_size: Some(49), added: 2524, mode: MaxEncodedLen)
 	fn remove_issuer() -> Weight {
-		Weight::from_ref_time(16_000_000 as u64)
-			.saturating_add(T::DbWeight::get().reads(1 as u64))
-			.saturating_add(T::DbWeight::get().writes(1 as u64))
+		// Proof Size summary in bytes:
+		//  Measured:  `117`
+		//  Estimated: `3514`
+		// Minimum execution time: 10_000_000 picoseconds.
+		Weight::from_parts(11_000_000, 0)
+			.saturating_add(Weight::from_parts(0, 3514))
+			.saturating_add(T::DbWeight::get().reads(1))
+			.saturating_add(T::DbWeight::get().writes(1))
 	}
-	// Storage: DID CredentialsTypes (r:1 w:1)
+	/// Storage: DID CredentialsTypes (r:1 w:1)
+	/// Proof: DID CredentialsTypes (max_values: Some(1), max_size: Some(1651), added: 2146, mode: MaxEncodedLen)
 	/// The range of component `m` is `[0, 50]`.
 	fn add_credentials_type(m: u32, ) -> Weight {
-		Weight::from_ref_time(14_000_000 as u64)
-			// Standard Error: 1_026
-			.saturating_add(Weight::from_ref_time(374_417 as u64).saturating_mul(m as u64))
-			.saturating_add(T::DbWeight::get().reads(1 as u64))
-			.saturating_add(T::DbWeight::get().writes(1 as u64))
+		// Proof Size summary in bytes:
+		//  Measured:  `42`
+		//  Estimated: `3136`
+		// Minimum execution time: 8_000_000 picoseconds.
+		Weight::from_parts(10_360_273, 0)
+			.saturating_add(Weight::from_parts(0, 3136))
+			// Standard Error: 1_583
+			.saturating_add(Weight::from_parts(520_543, 0).saturating_mul(m.into()))
+			.saturating_add(T::DbWeight::get().reads(1))
+			.saturating_add(T::DbWeight::get().writes(1))
 	}
-	// Storage: DID CredentialsTypes (r:1 w:1)
+	/// Storage: DID CredentialsTypes (r:1 w:1)
+	/// Proof: DID CredentialsTypes (max_values: Some(1), max_size: Some(1651), added: 2146, mode: MaxEncodedLen)
 	/// The range of component `m` is `[0, 50]`.
 	fn remove_credentials_type(m: u32, ) -> Weight {
-		Weight::from_ref_time(15_000_000 as u64)
-			// Standard Error: 908
-			.saturating_add(Weight::from_ref_time(366_787 as u64).saturating_mul(m as u64))
-			.saturating_add(T::DbWeight::get().reads(1 as u64))
-			.saturating_add(T::DbWeight::get().writes(1 as u64))
+		// Proof Size summary in bytes:
+		//  Measured:  `70 + m * (6 ±0)`
+		//  Estimated: `3136`
+		// Minimum execution time: 9_000_000 picoseconds.
+		Weight::from_parts(10_842_469, 0)
+			.saturating_add(Weight::from_parts(0, 3136))
+			// Standard Error: 1_519
+			.saturating_add(Weight::from_parts(459_197, 0).saturating_mul(m.into()))
+			.saturating_add(T::DbWeight::get().reads(1))
+			.saturating_add(T::DbWeight::get().writes(1))
 	}
 }
 
 // For backwards compatibility and tests
 impl WeightInfo for () {
-	// Storage: DID Did (r:1 w:1)
-	// Storage: DID Services (r:1 w:1)
+	/// Storage: DID Did (r:1 w:1)
+	/// Proof: DID Did (max_values: None, max_size: Some(442), added: 2917, mode: MaxEncodedLen)
+	/// Storage: DID Services (r:10 w:10)
+	/// Proof: DID Services (max_values: None, max_size: Some(155), added: 2630, mode: MaxEncodedLen)
 	/// The range of component `m` is `[0, 10]`.
 	fn create_did(m: u32, ) -> Weight {
-		// Minimum execution time:  nanoseconds.
-		Weight::from_ref_time(64_000_000 as u64)
-			// Standard Error: 21_643
-			.saturating_add(Weight::from_ref_time(7_142_105 as u64).saturating_mul(m as u64))
-			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-			.saturating_add(RocksDbWeight::get().reads((1 as u64).saturating_mul(m as u64)))
-			.saturating_add(RocksDbWeight::get().writes(1 as u64))
-			.saturating_add(RocksDbWeight::get().writes((1 as u64).saturating_mul(m as u64)))
+		// Proof Size summary in bytes:
+		//  Measured:  `42`
+		//  Estimated: `3907 + m * (2630 ±0)`
+		// Minimum execution time: 25_000_000 picoseconds.
+		Weight::from_parts(26_443_381, 0)
+			.saturating_add(Weight::from_parts(0, 3907))
+			// Standard Error: 10_347
+			.saturating_add(Weight::from_parts(3_734_207, 0).saturating_mul(m.into()))
+			.saturating_add(RocksDbWeight::get().reads(1))
+			.saturating_add(RocksDbWeight::get().reads((1_u64).saturating_mul(m.into())))
+			.saturating_add(RocksDbWeight::get().writes(1))
+			.saturating_add(RocksDbWeight::get().writes((1_u64).saturating_mul(m.into())))
+			.saturating_add(Weight::from_parts(0, 2630).saturating_mul(m.into()))
 	}
-	// Storage: DID Did (r:1 w:1)
+	/// Storage: DID Did (r:1 w:1)
+	/// Proof: DID Did (max_values: None, max_size: Some(442), added: 2917, mode: MaxEncodedLen)
 	fn update_did() -> Weight {
-		Weight::from_ref_time(16_000_000 as u64)
-			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-			.saturating_add(RocksDbWeight::get().writes(1 as u64))
+		// Proof Size summary in bytes:
+		//  Measured:  `193`
+		//  Estimated: `3907`
+		// Minimum execution time: 13_000_000 picoseconds.
+		Weight::from_parts(13_000_000, 0)
+			.saturating_add(Weight::from_parts(0, 3907))
+			.saturating_add(RocksDbWeight::get().reads(1))
+			.saturating_add(RocksDbWeight::get().writes(1))
 	}
-	// Storage: DID Did (r:1 w:1)
-	// Storage: DID Issuers (r:1 w:0)
-	// Storage: DID Services (r:1 w:1)
+	/// Storage: DID Did (r:1 w:1)
+	/// Proof: DID Did (max_values: None, max_size: Some(442), added: 2917, mode: MaxEncodedLen)
+	/// Storage: DID Services (r:10 w:10)
+	/// Proof: DID Services (max_values: None, max_size: Some(155), added: 2630, mode: MaxEncodedLen)
+	/// Storage: DID Issuers (r:1 w:0)
+	/// Proof: DID Issuers (max_values: None, max_size: Some(49), added: 2524, mode: MaxEncodedLen)
 	/// The range of component `m` is `[0, 10]`.
 	fn remove_did(m: u32, ) -> Weight {
-		// Minimum execution time:  nanoseconds.
-		Weight::from_ref_time(68_000_000 as u64)
-			// Standard Error: 21_161
-			.saturating_add(Weight::from_ref_time(6_619_806 as u64).saturating_mul(m as u64))
-			.saturating_add(RocksDbWeight::get().reads(2 as u64))
-			.saturating_add(RocksDbWeight::get().reads((1 as u64).saturating_mul(m as u64)))
-			.saturating_add(RocksDbWeight::get().writes(1 as u64))
-			.saturating_add(RocksDbWeight::get().writes((1 as u64).saturating_mul(m as u64)))
+		// Proof Size summary in bytes:
+		//  Measured:  `210 + m * (97 ±0)`
+		//  Estimated: `3907 + m * (2630 ±0)`
+		// Minimum execution time: 26_000_000 picoseconds.
+		Weight::from_parts(26_618_623, 0)
+			.saturating_add(Weight::from_parts(0, 3907))
+			// Standard Error: 8_291
+			.saturating_add(Weight::from_parts(3_312_251, 0).saturating_mul(m.into()))
+			.saturating_add(RocksDbWeight::get().reads(2))
+			.saturating_add(RocksDbWeight::get().reads((1_u64).saturating_mul(m.into())))
+			.saturating_add(RocksDbWeight::get().writes(1))
+			.saturating_add(RocksDbWeight::get().writes((1_u64).saturating_mul(m.into())))
+			.saturating_add(Weight::from_parts(0, 2630).saturating_mul(m.into()))
 	}
-	// Storage: DID Did (r:1 w:1)
-	// Storage: DID Services (r:1 w:1)
+	/// Storage: DID Did (r:1 w:1)
+	/// Proof: DID Did (max_values: None, max_size: Some(442), added: 2917, mode: MaxEncodedLen)
+	/// Storage: DID Services (r:10 w:10)
+	/// Proof: DID Services (max_values: None, max_size: Some(155), added: 2630, mode: MaxEncodedLen)
 	/// The range of component `m` is `[0, 10]`.
 	fn add_did_services(m: u32, ) -> Weight {
-		// Minimum execution time:  nanoseconds.
-		Weight::from_ref_time(42_000_000 as u64)
-			// Standard Error: 18_085
-			.saturating_add(Weight::from_ref_time(6_660_318 as u64).saturating_mul(m as u64))
-			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-			.saturating_add(RocksDbWeight::get().reads((1 as u64).saturating_mul(m as u64)))
-			.saturating_add(RocksDbWeight::get().writes(1 as u64))
-			.saturating_add(RocksDbWeight::get().writes((1 as u64).saturating_mul(m as u64)))
+		// Proof Size summary in bytes:
+		//  Measured:  `193`
+		//  Estimated: `3907 + m * (2630 ±0)`
+		// Minimum execution time: 11_000_000 picoseconds.
+		Weight::from_parts(12_149_772, 0)
+			.saturating_add(Weight::from_parts(0, 3907))
+			// Standard Error: 6_677
+			.saturating_add(Weight::from_parts(3_808_899, 0).saturating_mul(m.into()))
+			.saturating_add(RocksDbWeight::get().reads(1))
+			.saturating_add(RocksDbWeight::get().reads((1_u64).saturating_mul(m.into())))
+			.saturating_add(RocksDbWeight::get().writes(1))
+			.saturating_add(RocksDbWeight::get().writes((1_u64).saturating_mul(m.into())))
+			.saturating_add(Weight::from_parts(0, 2630).saturating_mul(m.into()))
 	}
-	// Storage: DID Did (r:1 w:1)
-	// Storage: DID Services (r:1 w:1)
+	/// Storage: DID Did (r:1 w:1)
+	/// Proof: DID Did (max_values: None, max_size: Some(442), added: 2917, mode: MaxEncodedLen)
+	/// Storage: DID Services (r:10 w:10)
+	/// Proof: DID Services (max_values: None, max_size: Some(155), added: 2630, mode: MaxEncodedLen)
 	/// The range of component `m` is `[0, 10]`.
 	fn remove_did_services(m: u32, ) -> Weight {
-		// Minimum execution time:  nanoseconds.
-		Weight::from_ref_time(43_000_000 as u64)
-			// Standard Error: 39_299
-			.saturating_add(Weight::from_ref_time(6_753_947 as u64).saturating_mul(m as u64))
-			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-			.saturating_add(RocksDbWeight::get().reads((1 as u64).saturating_mul(m as u64)))
-			.saturating_add(RocksDbWeight::get().writes(1 as u64))
-			.saturating_add(RocksDbWeight::get().writes((1 as u64).saturating_mul(m as u64)))
+		// Proof Size summary in bytes:
+		//  Measured:  `210 + m * (97 ±0)`
+		//  Estimated: `3907 + m * (2630 ±0)`
+		// Minimum execution time: 11_000_000 picoseconds.
+		Weight::from_parts(11_837_729, 0)
+			.saturating_add(Weight::from_parts(0, 3907))
+			// Standard Error: 8_476
+			.saturating_add(Weight::from_parts(3_480_590, 0).saturating_mul(m.into()))
+			.saturating_add(RocksDbWeight::get().reads(1))
+			.saturating_add(RocksDbWeight::get().reads((1_u64).saturating_mul(m.into())))
+			.saturating_add(RocksDbWeight::get().writes(1))
+			.saturating_add(RocksDbWeight::get().writes((1_u64).saturating_mul(m.into())))
+			.saturating_add(Weight::from_parts(0, 2630).saturating_mul(m.into()))
 	}
-	// Storage: DID Did (r:2 w:0)
-	// Storage: DID Issuers (r:1 w:0)
-	// Storage: DID CredentialsTypes (r:1 w:0)
-	// Storage: DID IssuedCredentials (r:1 w:1)
+	/// Storage: DID Did (r:2 w:0)
+	/// Proof: DID Did (max_values: None, max_size: Some(442), added: 2917, mode: MaxEncodedLen)
+	/// Storage: DID Issuers (r:1 w:0)
+	/// Proof: DID Issuers (max_values: None, max_size: Some(49), added: 2524, mode: MaxEncodedLen)
+	/// Storage: DID CredentialsTypes (r:1 w:0)
+	/// Proof: DID CredentialsTypes (max_values: Some(1), max_size: Some(1651), added: 2146, mode: MaxEncodedLen)
+	/// Storage: DID IssuedCredentials (r:50 w:50)
+	/// Proof: DID IssuedCredentials (max_values: None, max_size: Some(659), added: 3134, mode: MaxEncodedLen)
 	/// The range of component `c` is `[0, 50]`.
 	fn issue_credentials(c: u32, ) -> Weight {
-		// Minimum execution time:  nanoseconds.
-		Weight::from_ref_time(56_000_000 as u64)
-			// Standard Error: 9_443
-			.saturating_add(Weight::from_ref_time(6_982_442 as u64).saturating_mul(c as u64))
-			.saturating_add(RocksDbWeight::get().reads(4 as u64))
-			.saturating_add(RocksDbWeight::get().reads((1 as u64).saturating_mul(c as u64)))
-			.saturating_add(RocksDbWeight::get().writes((1 as u64).saturating_mul(c as u64)))
+		// Proof Size summary in bytes:
+		//  Measured:  `377 + c * (6 ±0)`
+		//  Estimated: `6824 + c * (3134 ±0)`
+		// Minimum execution time: 18_000_000 picoseconds.
+		Weight::from_parts(19_180_388, 0)
+			.saturating_add(Weight::from_parts(0, 6824))
+			// Standard Error: 2_663
+			.saturating_add(Weight::from_parts(4_833_099, 0).saturating_mul(c.into()))
+			.saturating_add(RocksDbWeight::get().reads(4))
+			.saturating_add(RocksDbWeight::get().reads((1_u64).saturating_mul(c.into())))
+			.saturating_add(RocksDbWeight::get().writes((1_u64).saturating_mul(c.into())))
+			.saturating_add(Weight::from_parts(0, 3134).saturating_mul(c.into()))
 	}
-	// Storage: DID Did (r:1 w:0)
-	// Storage: DID IssuedCredentials (r:1 w:1)
+	/// Storage: DID Did (r:1 w:0)
+	/// Proof: DID Did (max_values: None, max_size: Some(442), added: 2917, mode: MaxEncodedLen)
+	/// Storage: DID IssuedCredentials (r:50 w:50)
+	/// Proof: DID IssuedCredentials (max_values: None, max_size: Some(659), added: 3134, mode: MaxEncodedLen)
 	/// The range of component `c` is `[0, 50]`.
 	fn revoke_credentials(c: u32, ) -> Weight {
-		// Minimum execution time:  nanoseconds.
-		Weight::from_ref_time(42_000_000 as u64)
-			// Standard Error: 12_265
-			.saturating_add(Weight::from_ref_time(9_217_172 as u64).saturating_mul(c as u64))
-			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-			.saturating_add(RocksDbWeight::get().reads((1 as u64).saturating_mul(c as u64)))
-			.saturating_add(RocksDbWeight::get().writes((1 as u64).saturating_mul(c as u64)))
+		// Proof Size summary in bytes:
+		//  Measured:  `365 + c * (594 ±0)`
+		//  Estimated: `3907 + c * (3134 ±0)`
+		// Minimum execution time: 11_000_000 picoseconds.
+		Weight::from_parts(13_183_278, 0)
+			.saturating_add(Weight::from_parts(0, 3907))
+			// Standard Error: 4_448
+			.saturating_add(Weight::from_parts(5_919_849, 0).saturating_mul(c.into()))
+			.saturating_add(RocksDbWeight::get().reads(1))
+			.saturating_add(RocksDbWeight::get().reads((1_u64).saturating_mul(c.into())))
+			.saturating_add(RocksDbWeight::get().writes((1_u64).saturating_mul(c.into())))
+			.saturating_add(Weight::from_parts(0, 3134).saturating_mul(c.into()))
 	}
-	// Storage: DID Issuers (r:1 w:1)
+	/// Storage: DID Issuers (r:1 w:1)
+	/// Proof: DID Issuers (max_values: None, max_size: Some(49), added: 2524, mode: MaxEncodedLen)
 	fn add_issuer() -> Weight {
-		Weight::from_ref_time(15_000_000 as u64)
-			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-			.saturating_add(RocksDbWeight::get().writes(1 as u64))
+		// Proof Size summary in bytes:
+		//  Measured:  `42`
+		//  Estimated: `3514`
+		// Minimum execution time: 10_000_000 picoseconds.
+		Weight::from_parts(10_000_000, 0)
+			.saturating_add(Weight::from_parts(0, 3514))
+			.saturating_add(RocksDbWeight::get().reads(1))
+			.saturating_add(RocksDbWeight::get().writes(1))
 	}
-	// Storage: DID Issuers (r:1 w:1)
+	/// Storage: DID Issuers (r:1 w:1)
+	/// Proof: DID Issuers (max_values: None, max_size: Some(49), added: 2524, mode: MaxEncodedLen)
 	fn revoke_issuer() -> Weight {
-		Weight::from_ref_time(17_000_000 as u64)
-			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-			.saturating_add(RocksDbWeight::get().writes(1 as u64))
+		// Proof Size summary in bytes:
+		//  Measured:  `117`
+		//  Estimated: `3514`
+		// Minimum execution time: 12_000_000 picoseconds.
+		Weight::from_parts(12_000_000, 0)
+			.saturating_add(Weight::from_parts(0, 3514))
+			.saturating_add(RocksDbWeight::get().reads(1))
+			.saturating_add(RocksDbWeight::get().writes(1))
 	}
-	// Storage: DID Issuers (r:1 w:1)
+	/// Storage: DID Issuers (r:1 w:1)
+	/// Proof: DID Issuers (max_values: None, max_size: Some(49), added: 2524, mode: MaxEncodedLen)
 	fn reactivate_issuer() -> Weight {
-		Weight::from_ref_time(16_000_000 as u64)
-			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-			.saturating_add(RocksDbWeight::get().writes(1 as u64))
+		// Proof Size summary in bytes:
+		//  Measured:  `117`
+		//  Estimated: `3514`
+		// Minimum execution time: 10_000_000 picoseconds.
+		Weight::from_parts(11_000_000, 0)
+			.saturating_add(Weight::from_parts(0, 3514))
+			.saturating_add(RocksDbWeight::get().reads(1))
+			.saturating_add(RocksDbWeight::get().writes(1))
 	}
-	// Storage: DID Issuers (r:1 w:1)
+	/// Storage: DID Issuers (r:1 w:1)
+	/// Proof: DID Issuers (max_values: None, max_size: Some(49), added: 2524, mode: MaxEncodedLen)
 	fn remove_issuer() -> Weight {
-		Weight::from_ref_time(16_000_000 as u64)
-			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-			.saturating_add(RocksDbWeight::get().writes(1 as u64))
+		// Proof Size summary in bytes:
+		//  Measured:  `117`
+		//  Estimated: `3514`
+		// Minimum execution time: 10_000_000 picoseconds.
+		Weight::from_parts(11_000_000, 0)
+			.saturating_add(Weight::from_parts(0, 3514))
+			.saturating_add(RocksDbWeight::get().reads(1))
+			.saturating_add(RocksDbWeight::get().writes(1))
 	}
-	// Storage: DID CredentialsTypes (r:1 w:1)
+	/// Storage: DID CredentialsTypes (r:1 w:1)
+	/// Proof: DID CredentialsTypes (max_values: Some(1), max_size: Some(1651), added: 2146, mode: MaxEncodedLen)
 	/// The range of component `m` is `[0, 50]`.
 	fn add_credentials_type(m: u32, ) -> Weight {
-		Weight::from_ref_time(14_000_000 as u64)
-			// Standard Error: 1_026
-			.saturating_add(Weight::from_ref_time(374_417 as u64).saturating_mul(m as u64))
-			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-			.saturating_add(RocksDbWeight::get().writes(1 as u64))
+		// Proof Size summary in bytes:
+		//  Measured:  `42`
+		//  Estimated: `3136`
+		// Minimum execution time: 8_000_000 picoseconds.
+		Weight::from_parts(10_360_273, 0)
+			.saturating_add(Weight::from_parts(0, 3136))
+			// Standard Error: 1_583
+			.saturating_add(Weight::from_parts(520_543, 0).saturating_mul(m.into()))
+			.saturating_add(RocksDbWeight::get().reads(1))
+			.saturating_add(RocksDbWeight::get().writes(1))
 	}
-	// Storage: DID CredentialsTypes (r:1 w:1)
+	/// Storage: DID CredentialsTypes (r:1 w:1)
+	/// Proof: DID CredentialsTypes (max_values: Some(1), max_size: Some(1651), added: 2146, mode: MaxEncodedLen)
 	/// The range of component `m` is `[0, 50]`.
 	fn remove_credentials_type(m: u32, ) -> Weight {
-		Weight::from_ref_time(15_000_000 as u64)
-			// Standard Error: 908
-			.saturating_add(Weight::from_ref_time(366_787 as u64).saturating_mul(m as u64))
-			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-			.saturating_add(RocksDbWeight::get().writes(1 as u64))
+		// Proof Size summary in bytes:
+		//  Measured:  `70 + m * (6 ±0)`
+		//  Estimated: `3136`
+		// Minimum execution time: 9_000_000 picoseconds.
+		Weight::from_parts(10_842_469, 0)
+			.saturating_add(Weight::from_parts(0, 3136))
+			// Standard Error: 1_519
+			.saturating_add(Weight::from_parts(459_197, 0).saturating_mul(m.into()))
+			.saturating_add(RocksDbWeight::get().reads(1))
+			.saturating_add(RocksDbWeight::get().writes(1))
 	}
 }

@@ -39,6 +39,7 @@ sc-consensus = { git = "https://github.com/paritytech/substrate", branch = "polk
 sc-executor = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.42" }
 sc-keystore = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.42" }
 sc-network = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.42" }
+sc-network-sync = {git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.42"}
 sc-rpc = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.42" }
 sc-rpc-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.42" }
 sc-service = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.42" }
@@ -106,8 +107,11 @@ substrate-build-script-utils = { git = "https://github.com/paritytech/substrate"
 [features]
 default = []
 runtime-benchmarks = [
+	"frame-benchmarking/runtime-benchmarks",
+	"frame-benchmarking-cli/runtime-benchmarks",
+	"sc-service/runtime-benchmarks",
 	"watr-runtime/runtime-benchmarks",
-	"polkadot-cli/runtime-benchmarks",
+	"polkadot-service/runtime-benchmarks",
 ]
 
 rpc-binary-search-estimate = ["fc-rpc/rpc-binary-search-estimate"]

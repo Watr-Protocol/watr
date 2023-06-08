@@ -35,10 +35,11 @@ use sc_client_api::{
 	client::BlockchainEvents,
 };
 use sc_network::NetworkService;
+use sc_network_sync::SyncingService;
 use sc_rpc::{DenyUnsafe, SubscriptionTaskExecutor};
 use sc_transaction_pool::{ChainApi, Pool};
 use sc_transaction_pool_api::TransactionPool;
-use sp_api::ProvideRuntimeApi;
+use sp_api::{CallApiAt, ProvideRuntimeApi};
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{
 	Backend as BlockchainBackend, Error as BlockChainError, HeaderBackend, HeaderMetadata,
@@ -52,8 +53,8 @@ use fc_rpc::{
 	SchemaV2Override, SchemaV3Override, StorageOverride,
 };
 use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
-use fp_storage::EthereumStorageSchema;
 use fp_rpc::EthereumRuntimeRPCApi;
+use fp_storage::EthereumStorageSchema;
 
 /// Full client dependencies.
 pub struct FullDeps<C, P, A: ChainApi> {
@@ -69,6 +70,8 @@ pub struct FullDeps<C, P, A: ChainApi> {
 	pub is_authority: bool,
 	/// Network service
 	pub network: Arc<NetworkService<Block, Hash>>,
+	/// Chain syncing service
+	pub sync: Arc<SyncingService<Block>>,
 	/// EthFilterApi pool.
 	pub filter_pool: Option<FilterPool>,
 	/// Backend.
@@ -152,6 +155,7 @@ where
 		+ Sync
 		+ 'static,
 	C: sc_client_api::BlockBackend<Block>,
+	C: CallApiAt<Block>,
 	C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>
 		+ pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>
 		+ fp_rpc::ConvertTransactionRuntimeApi<Block>
@@ -178,6 +182,7 @@ where
 		deny_unsafe,
 		is_authority,
 		network,
+		sync,
 		filter_pool,
 		backend,
 		fee_history_cache,
@@ -199,7 +204,7 @@ where
 			pool.clone(),
 			graph,
 			no_tx_converter,
-			network.clone(),
+			sync.clone(),
 			signers,
 			overrides.clone(),
 			backend.clone(),
@@ -209,6 +214,7 @@ where
 			fee_history_cache,
 			fee_history_cache_limit,
 			10,
+			None,
 		)
 		.into_rpc(),
 	)?;
@@ -229,13 +235,23 @@ where
 		)?;
 	}
 
+	// Sinks for pubsub notifications.
+	// Everytime a new subscription is created, a new mpsc channel is added to the sink pool.
+	// The MappingSyncWorker sends through the channel on block import and the subscription emits a notification to the subscriber on receiving a message through this channel.
+	// This way we avoid race conditions when using native substrate block import notification stream.
+	let pubsub_notification_sinks: fc_mapping_sync::EthereumBlockNotificationSinks<
+		fc_mapping_sync::EthereumBlockNotification<Block>,
+	> = Default::default();
+	let pubsub_notification_sinks = Arc::new(pubsub_notification_sinks);
+
 	io.merge(
 		EthPubSub::new(
 			pool,
 			client.clone(),
-			network.clone(),
+			sync.clone(),
 			subscription_task_executor,
 			overrides,
+			pubsub_notification_sinks,
 		)
 		.into_rpc(),
 	)?;
