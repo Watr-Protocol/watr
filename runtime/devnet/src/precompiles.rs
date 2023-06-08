@@ -19,8 +19,8 @@
 // https://github.com/AstarNetwork/Astar/blob/master/runtime/astar/src/precompiles.rs
 
 use pallet_evm::{
-	AddressMapping, ExitRevert, Precompile, PrecompileFailure, PrecompileHandle, PrecompileResult,
-	PrecompileSet,
+	AddressMapping, ExitRevert, IsPrecompileResult, Precompile, PrecompileFailure,
+	PrecompileHandle, PrecompileResult, PrecompileSet
 };
 use pallet_evm_precompile_assets_erc20::{AddressToAssetId, Erc20AssetsPrecompileSet};
 use pallet_evm_precompile_blake2::Blake2F;
@@ -76,7 +76,12 @@ where
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<PrecompileResult> {
 		let address = handle.code_address();
-		if self.is_precompile(address) && address > hash(9) && handle.context().address != address {
+
+		let is_precompile = match self.is_precompile(address, 0) {
+			IsPrecompileResult::Answer { is_precompile, .. } => is_precompile,
+			_ => false,
+		};
+		if is_precompile && address > hash(9) && handle.context().address != address {
 			return Some(Err(PrecompileFailure::Revert {
 				exit_status: ExitRevert::Reverted,
 				output: b"cannot be called with DELEGATECALL or CALLCODE".to_vec(),
@@ -119,9 +124,15 @@ where
 		}
 	}
 
-	fn is_precompile(&self, address: H160) -> bool {
-		Self::used_addresses().any(|x| x == address) ||
-			Erc20AssetsPrecompileSet::<R>::new().is_precompile(address)
+	fn is_precompile(&self, address: H160, gas: u64) -> IsPrecompileResult {
+		match Erc20AssetsPrecompileSet::<R>::new().is_precompile(address, gas) {
+			IsPrecompileResult::Answer { is_precompile, extra_cost } =>
+				IsPrecompileResult::Answer {
+					is_precompile: Self::used_addresses().any(|x| x == address) || is_precompile,
+					extra_cost,
+				},
+			_ => IsPrecompileResult::Answer { is_precompile: false, extra_cost: 0 },
+		}
 	}
 }
 

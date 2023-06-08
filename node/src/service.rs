@@ -43,19 +43,19 @@ use cumulus_client_service::{
 };
 use cumulus_primitives_core::ParaId;
 use cumulus_relay_chain_inprocess_interface::build_inprocess_relay_chain;
-use cumulus_relay_chain_interface::{RelayChainError, RelayChainInterface, RelayChainResult};
+use cumulus_relay_chain_interface::{RelayChainInterface, RelayChainResult};
 use cumulus_relay_chain_minimal_node::build_minimal_relay_chain_node;
-use cumulus_relay_chain_rpc_interface::{create_client_and_start_worker, RelayChainRpcInterface};
 
 // Substrate Imports
 use sc_executor::{NativeElseWasmExecutor, NativeExecutionDispatch};
-use sc_network::{NetworkBlock, NetworkService};
+use sc_network::NetworkBlock;
+use sc_network_sync::SyncingService;
 use sc_service::{Configuration, PartialComponents, TFullBackend, TFullClient, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryHandle, TelemetryWorker, TelemetryWorkerHandle};
 use sp_api::ConstructRuntimeApi;
 use sp_core::Pair;
-use sp_keystore::SyncCryptoStorePtr;
-use sp_runtime::{app_crypto::AppKey, traits::BlakeTwo256};
+use sp_keystore::KeystorePtr;
+use sp_runtime::{app_crypto::AppCrypto, traits::BlakeTwo256};
 use substrate_prometheus_endpoint::Registry;
 
 // Frontier
@@ -191,12 +191,7 @@ where
 		})
 		.transpose()?;
 
-	let executor = sc_executor::NativeElseWasmExecutor::<Executor>::new(
-		config.wasm_method,
-		config.default_heap_pages,
-		config.max_runtime_instances,
-		config.runtime_cache_size,
-	);
+	let executor = sc_service::new_native_or_wasm_executor(config);
 
 	let (client, backend, keystore_container, task_manager) =
 		sc_service::new_full_parts::<Block, RuntimeApi, _>(
@@ -227,7 +222,7 @@ where
 		FrontierBlockImport::new(client.clone(), client.clone(), frontier_backend.clone());
 
 	let parachain_block_import: ParachainBlockImport<_, _, _> =
-        ParachainBlockImport::new(frontier_block_import, backend.clone());
+		ParachainBlockImport::new(frontier_block_import, backend.clone());
 
 	let import_queue = build_import_queue(
 		client.clone(),
@@ -356,8 +351,8 @@ where
 				TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>,
 			>,
 		>,
-		Arc<NetworkService<Block, Hash>>,
-		SyncCryptoStorePtr,
+		Arc<SyncingService<Block>>,
+		KeystorePtr,
 		bool,
 	) -> Result<Box<dyn ParachainConsensus<Block>>, sc_service::Error>,
 {
@@ -378,12 +373,7 @@ where
 		&mut task_manager,
 		collator_options.clone(),
 		hwbench.clone(),
-	)
-	.await
-	.map_err(|e| match e {
-		RelayChainError::ServiceError(polkadot_service::Error::Sub(x)) => x,
-		s => s.to_string().into(),
-	})?;
+	).await.map_err(|e| sc_service::Error::Application(Box::new(e) as Box<_>))?;
 
 	let block_announce_validator = BlockAnnounceValidator::new(relay_chain_interface.clone(), id);
 
@@ -392,7 +382,7 @@ where
 	let prometheus_registry = parachain_config.prometheus_registry().cloned();
 	let transaction_pool = params.transaction_pool.clone();
 	let import_queue = params.import_queue.service();
-	let (network, system_rpc_tx, tx_handler_controller, start_network) =
+	let (network, system_rpc_tx, tx_handler_controller, start_network, sync_service) =
 		sc_service::build_network(sc_service::BuildNetworkParams {
 			config: &parachain_config,
 			client: client.clone(),
@@ -409,6 +399,15 @@ where
 	let fee_history_cache: FeeHistoryCache = Arc::new(std::sync::Mutex::new(BTreeMap::new()));
 	let overrides = crate::rpc::overrides_handle(client.clone());
 
+	// Sinks for pubsub notifications.
+	// Everytime a new subscription is created, a new mpsc channel is added to the sink pool.
+	// The MappingSyncWorker sends through the channel on block import and the subscription emits a notification to the subscriber on receiving a message through this channel.
+	// This way we avoid race conditions when using native substrate block import notification stream.
+	let pubsub_notification_sinks: fc_mapping_sync::EthereumBlockNotificationSinks<
+		fc_mapping_sync::EthereumBlockNotification<Block>,
+	> = Default::default();
+	let pubsub_notification_sinks = Arc::new(pubsub_notification_sinks);
+
 	// Frontier offchain DB task. Essential.
 	// Maps emulated ethereum data to substrate native data.
 	task_manager.spawn_essential_handle().spawn(
@@ -424,6 +423,8 @@ where
 			3,
 			0,
 			SyncStrategy::Parachain,
+			sync_service.clone(),
+			pubsub_notification_sinks,
 		)
 		.for_each(|()| future::ready(())),
 	);
@@ -468,6 +469,7 @@ where
 		let frontier_backend = frontier_backend.clone();
 		let overrides = overrides.clone();
 		let fee_history_cache = fee_history_cache.clone();
+		let sync_service = sync_service.clone();
 
 		Box::new(move |deny_unsafe, subscription_task_executor| {
 			let deps = crate::rpc::FullDeps {
@@ -477,6 +479,7 @@ where
 				deny_unsafe,
 				is_authority,
 				network: network.clone(),
+				sync: sync_service.clone(),
 				filter_pool: filter_pool.clone(),
 				backend: frontier_backend.clone(),
 				fee_history_cache: fee_history_cache.clone(),
@@ -496,17 +499,18 @@ where
 		transaction_pool: transaction_pool.clone(),
 		task_manager: &mut task_manager,
 		config: parachain_config,
-		keystore: params.keystore_container.sync_keystore(),
+		keystore: params.keystore_container.keystore(),
 		backend: backend.clone(),
 		network: network.clone(),
 		system_rpc_tx,
 		tx_handler_controller,
+		sync_service: sync_service.clone(),
 		telemetry: telemetry.as_mut(),
 	})?;
 
 	let announce_block = {
-		let network = network.clone();
-		Arc::new(move |hash, data| network.announce_block(hash, data))
+		let sync_service = sync_service.clone();
+		Arc::new(move |hash, data| sync_service.announce_block(hash, data))
 	};
 
 	let relay_chain_slot_duration = Duration::from_secs(6);
@@ -524,8 +528,8 @@ where
 			&task_manager,
 			relay_chain_interface.clone(),
 			transaction_pool,
-			network,
-			params.keystore_container.sync_keystore(),
+			sync_service.clone(),
+			params.keystore_container.keystore(),
 			force_authoring,
 		)?;
 
@@ -544,6 +548,7 @@ where
 			collator_key: collator_key.expect("Command line arguments do not allow this. qed"),
 			relay_chain_slot_duration,
 			recovery_handle: Box::new(overseer_handle),
+			sync_service
 		};
 
 		start_collator(params).await?;
@@ -557,6 +562,7 @@ where
 			relay_chain_slot_duration,
 			import_queue,
 			recovery_handle: Box::new(overseer_handle),
+			sync_service
 		};
 
 		start_full_node(params)?;
@@ -608,7 +614,7 @@ where
 			StateBackend = sc_client_api::StateBackendFor<TFullBackend<Block>, Block>,
 		> + sp_offchain::OffchainWorkerApi<Block>
 		+ sp_block_builder::BlockBuilder<Block>
-		+ sp_consensus_aura::AuraApi<Block, <<AuraId as AppKey>::Pair as Pair>::Public>
+		+ sp_consensus_aura::AuraApi<Block, <<AuraId as AppCrypto>::Pair as Pair>::Public>
 		+ fp_rpc::EthereumRuntimeRPCApi<Block>
 		+ fp_rpc::ConvertTransactionRuntimeApi<Block>
 		+ substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>,
@@ -670,7 +676,7 @@ where
 		> + sp_offchain::OffchainWorkerApi<Block>
 		+ sp_block_builder::BlockBuilder<Block>
 		+ cumulus_primitives_core::CollectCollationInfo<Block>
-		+ sp_consensus_aura::AuraApi<Block, <<AuraId as AppKey>::Pair as Pair>::Public>
+		+ sp_consensus_aura::AuraApi<Block, <<AuraId as AppCrypto>::Pair as Pair>::Public>
 		+ pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>
 		+ substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>
 		+ fp_rpc::EthereumRuntimeRPCApi<Block>

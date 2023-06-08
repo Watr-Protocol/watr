@@ -20,7 +20,7 @@ use sp_runtime::Perbill;
 mod impl_on_charge_evm_transaction;
 pub mod xcm_config;
 
-use frame_support::weights::{constants::WEIGHT_REF_TIME_PER_SECOND, Weight};
+use frame_support::weights::{constants::WEIGHT_REF_TIME_PER_SECOND };
 
 pub use parachains_common::{xcm_config as xcm_config_parachains, BlockNumber, *};
 

@@ -70,17 +70,6 @@ impl<
 	}
 }
 
-//- From PR https://github.com/paritytech/cumulus/pull/936
-fn matches_prefix(prefix: &MultiLocation, loc: &MultiLocation) -> bool {
-	prefix.parent_count() == loc.parent_count() &&
-		loc.len() >= prefix.len() &&
-		prefix
-			.interior()
-			.iter()
-			.zip(loc.interior().iter())
-			.all(|(prefix_junction, junction)| prefix_junction == junction)
-}
-
 /// Accepts an asset if it is a native asset from a particular `MultiLocation`.
 pub struct ConcreteNativeAssetFrom<Location>(PhantomData<Location>);
 impl<Location: Get<MultiLocation>> ContainsPair<MultiAsset, MultiLocation>
@@ -168,7 +157,7 @@ impl<
 								// max_assets: 1,
 								beneficiary: MultiLocation {
 									parents: 0,
-									interior: X1(AccountId32 { network: Any, id: _ })
+									interior: X1(AccountId32 { network: _, id: _ })
 								}
 							}
 						);
