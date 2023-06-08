@@ -20,7 +20,7 @@
 
 use pallet_evm::{
 	AddressMapping, ExitRevert, IsPrecompileResult, Precompile, PrecompileFailure,
-	PrecompileHandle, PrecompileResult, PrecompileSet
+	PrecompileHandle, PrecompileResult, PrecompileSet,
 };
 use pallet_evm_precompile_assets_erc20::{AddressToAssetId, Erc20AssetsPrecompileSet};
 use pallet_evm_precompile_blake2::Blake2F;

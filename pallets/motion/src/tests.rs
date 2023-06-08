@@ -44,10 +44,8 @@ enum MotionType {
 // sets up collective proposal with `threshold` and `motion_type`.
 fn setup_proposal(threshold: u32, motion_type: MotionType) -> Proposal {
 	//Inner call (requires sudo). Will be wrapped by pallet_motion.
-	let inner_call = RuntimeCall::Balances(pallet_balances::Call::force_set_balance {
-		who: 5,
-		new_free: 5,
-	});
+	let inner_call =
+		RuntimeCall::Balances(pallet_balances::Call::force_set_balance { who: 5, new_free: 5 });
 
 	// Setup motion with specified origin type
 	let motion = match motion_type {

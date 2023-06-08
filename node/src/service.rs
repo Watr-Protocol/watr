@@ -373,7 +373,9 @@ where
 		&mut task_manager,
 		collator_options.clone(),
 		hwbench.clone(),
-	).await.map_err(|e| sc_service::Error::Application(Box::new(e) as Box<_>))?;
+	)
+	.await
+	.map_err(|e| sc_service::Error::Application(Box::new(e) as Box<_>))?;
 
 	let block_announce_validator = BlockAnnounceValidator::new(relay_chain_interface.clone(), id);
 
@@ -548,7 +550,7 @@ where
 			collator_key: collator_key.expect("Command line arguments do not allow this. qed"),
 			relay_chain_slot_duration,
 			recovery_handle: Box::new(overseer_handle),
-			sync_service
+			sync_service,
 		};
 
 		start_collator(params).await?;
@@ -562,7 +564,7 @@ where
 			relay_chain_slot_duration,
 			import_queue,
 			recovery_handle: Box::new(overseer_handle),
-			sync_service
+			sync_service,
 		};
 
 		start_full_node(params)?;

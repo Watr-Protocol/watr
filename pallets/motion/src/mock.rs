@@ -18,7 +18,8 @@ use super::*;
 pub(crate) use crate as pallet_motion;
 use frame_support::{
 	parameter_types,
-	traits::{ConstU16, ConstU64}, weights::Weight,
+	traits::{ConstU16, ConstU64},
+	weights::Weight,
 };
 use frame_system::EnsureRoot;
 use sp_core::H256;
