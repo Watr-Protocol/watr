@@ -11,12 +11,12 @@ settings:
       wsPort: 9820
   variables:
     common:
-      require_weight_at_most: &weight_at_most 100000000000
+      require_weight_at_most: &weight_at_most {refTime: 100000000000, proofSize: 200000}
     chains:
       watr_parachain:
         signer: &watr_signer //Bob
         destinations:
-          stmt: &watr->stmt_dest { v2: { parents: 1, interior: { X1: { Parachain: *stmt_id }}}}
+          stmt: &watr->stmt_dest { v3: { parents: 1, interior: { X1: { Parachain: *stmt_id }}}}
   decodedCalls:
     system_remark:
       chain: *relay_chain
@@ -39,7 +39,7 @@ tests:
                   args: [
                     *watr->stmt_dest, # destination
                     {
-                      v2: [ #message
+                      v3: [ #message
                         {
                           Transact: {
                             originType: Native,

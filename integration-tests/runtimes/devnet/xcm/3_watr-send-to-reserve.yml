@@ -11,7 +11,8 @@ settings:
       wsPort: 9820
   variables:
     common:
-      require_weight_at_most: &weight_at_most 100000000000
+      require_weight_at_most: &weight_at_most {refTime: 100000000000, proofSize: 200000}
+      weight_threshold:  &weight_threshold { refTime: [10, 10], proofSize: [10, 10] }
     chains:
       statemint_parachain:
         asset_receiver:
@@ -87,7 +88,7 @@ tests:
                     args: [
                       # message: XcmVersionedXcm
                       {
-                        V2: [
+                        v3: [
                           {
                             WithdrawAsset: [
                               {
@@ -144,7 +145,7 @@ tests:
                       - name: xcmpQueue.XcmpMessageSent
                       - name: polkadotXcm.Attempted
                         attributes:
-                        - type: XcmV2TraitsOutcome
+                        - type: XcmV3TraitsOutcome
                           xcmOutcome: Complete
                           value: 2,000,000,000
                       - name: assets.Burned
@@ -183,7 +184,7 @@ tests:
                     args: [
                       # message: XcmVersionedXcm
                       {
-                        V2: [
+                        v3: [
                           {
                             WithdrawAsset: [
                               {
@@ -247,7 +248,7 @@ tests:
                     args: [
                       # message: XcmVersionedXcm
                       {
-                        V2: [
+                        v3: [
                           {
                             WithdrawAsset: [
                               {
@@ -311,7 +312,7 @@ tests:
                     args: [
                       # message: XcmVersionedXcm
                       {
-                        V2: [
+                        v3: [
                           {
                             WithdrawAsset: [
                               {
@@ -375,7 +376,7 @@ tests:
                     args: [
                       # message: XcmVersionedXcm
                       {
-                        V2: [
+                        v3: [
                           {
                             WithdrawAsset: [
                               {
@@ -442,7 +443,7 @@ tests:
                     args: [
                       # message: XcmVersionedXcm
                       {
-                        V2: [
+                        v3: [
                           {
                             WithdrawAsset: [
                               {
@@ -506,7 +507,7 @@ tests:
                     args: [
                       # message: XcmVersionedXcm
                       {
-                        V2: [
+                        v3: [
                           {
                             WithdrawAsset: [
                               {
@@ -573,7 +574,7 @@ tests:
                     args: [
                       # message: XcmVersionedXcm
                       {
-                        V2: [
+                        v3: [
                           {
                             WithdrawAsset: [
                               {
@@ -637,7 +638,7 @@ tests:
                     args: [
                       # message: XcmVersionedXcm
                       {
-                        V2: [
+                        v3: [
                           {
                             WithdrawAsset: [
                               {
@@ -670,7 +671,7 @@ tests:
                     args: [
                       # message: XcmVersionedXcm
                       {
-                        V2: [
+                        v3: [
                           {
                             InitiateReserveWithdraw: {
                               assets: { Wild: All },
