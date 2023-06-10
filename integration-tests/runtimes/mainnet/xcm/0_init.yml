@@ -13,13 +13,13 @@ settings:
   variables:
     common:
       xcm_version: &xcm_version '2'
-      require_weight_at_most: &weight_at_most 1000000000
+      require_weight_at_most: &weight_at_most {refTime: 1000000000, proofSize: 200000}
     chains:
       relay_chain:
         sudo:
           signer: &rc_sudo_signer //Alice
         destinations:
-          statemint: &rc->stmt_dest { v2: { 0, interior: { x1: { parachain: *stmt_id }}}}
+          statemint: &rc->stmt_dest { v3: { 0, interior: { x1: { parachain: *stmt_id }}}}
       watr_parachain:
         sudo:
           signer: &watr_sudo_signer //Alice
@@ -102,7 +102,7 @@ tests:
               args: [
                 *rc->stmt_dest, # destination
                 {
-                  v2: [ #message
+                  v3: [ #message
                     {
                       Transact: {
                         originType: Superuser,

@@ -13,7 +13,8 @@ settings:
   variables:
     common:
       amount: &amount 2000000000000
-      require_weight_at_most: &weight_at_most 1000000000
+      require_weight_at_most: &weight_at_most {refTime: 1000000000, proofSize: 200000}
+      weight_threshold:  &weight_threshold { refTime: [10, 10], proofSize: [10, 10] }
       hrmp_channels:
         proposed_max_capacity: &max_capacity 8
         proposed_max_message_size: &max_message_size 8192
@@ -32,19 +33,19 @@ settings:
         sudo:
           signer: &rc_sudo_signer //Alice
         destinations:
-          statemint: &rc->stmt_dest { v2: { 0, interior: { x1: { parachain: *stmt_id }}}}
+          statemint: &rc->stmt_dest { v3: { 0, interior: { x1: { parachain: *stmt_id }}}}
         dot: &rc_dot { concrete: { 0, interior: { here: true }}}
         dot_fungible: &rc_dot_fungible { id: *rc_dot, fun: { fungible: *amount }}
       statemint_parachain:
         sovereign_account: &stmt_sovereign 5Ec4AhPZk8STuex8Wsi9TwDtJQxKqzPJRCH7348Xtcs9vZLJ
         destinations:
-          relay_chain: &stmt->rc_dest { v2: { parents: 1, interior: { here: true }}}
+          relay_chain: &stmt->rc_dest { v3: { parents: 1, interior: { here: true }}}
       watr_parachain:
         sudo:
           signer: &watr_sudo_signer //Alice
         sovereign_account: &watr_sovereign 5Ec4AhNoGMRn8j7rpcumbokVMzWeTNdqw42r7pcH8dtqH29G
         destinations:
-          relay_chain: &watr->rc_dest { v2: { parents: 1, interior: { here: true }}}
+          relay_chain: &watr->rc_dest { v3: { parents: 1, interior: { here: true }}}
   decodedCalls:
     init_open_channel_with_stmt:
       chain: *relay_chain
@@ -85,7 +86,7 @@ settings:
       args: [
         *stmt->rc_dest, # destination
         {
-          v2: [ #message
+          v3: [ #message
             {
               WithdrawAsset: [*rc_dot_fungible]
             },
@@ -112,7 +113,7 @@ settings:
       args: [
         *stmt->rc_dest, # destination
         {
-          v2: [ #message
+          v3: [ #message
             {
               WithdrawAsset: [*rc_dot_fungible]
             },
@@ -177,7 +178,7 @@ tests:
                   args: [
                     *watr->rc_dest, # destination
                     {
-                      v2: [ #message
+                      v3: [ #message
                         {
                           WithdrawAsset: [*rc_dot_fungible]
                         },
@@ -206,11 +207,11 @@ tests:
                     - name: ump.ExecutedUpward
                       chain: *relay_chain
                       attributes:
-                        - type: XcmV2TraitsOutcome
+                        - type: XcmV3TraitsOutcome
                           xcmOutcome: Complete
                           # value: 4,000,000,000
-                          threshold: [10, 10]
-                          value: 1,160,892,000
+                          threshold: *weight_threshold
+                          value: { "refTime": '1,160,892,000', "proofSize": '200,000'}
                     - name: hrmp.OpenChannelRequested
                       chain: *relay_chain
               - queries:
@@ -244,7 +245,12 @@ tests:
                   args: [
                     *rc->stmt_dest, # destination
                     {
-                      v2: [ #message
+                      v3: [ #message
+                        {
+                            UnpaidExecution: {
+                              weightLimit: Unlimited
+                            }
+                        },
                         {
                           Transact: {
                             originType: Superuser,
@@ -264,20 +270,20 @@ tests:
                     - name: dmpQueue.ExecutedDownward
                       chain: *stmt_parachain
                       attributes:
-                        - type: XcmV2TraitsOutcome
+                        - type: XcmV3TraitsOutcome
                           xcmOutcome: Complete
-                          threshold: [10, 10]
-                          value: 1,020,807,000
+                          threshold: *weight_threshold
+                          value: { "refTime": '1,020,807,000', "proofSize": 65536 }
                     - name: polkadotXcm.Sent
                       chain: *stmt_parachain
                     - name: ump.ExecutedUpward
                       timeout: 40000
                       attributes:
-                        - type: XcmV2TraitsOutcome
+                        - type: XcmV3TraitsOutcome
                           xcmOutcome: Complete
                           # value: 4,000,000,000
-                          threshold: [10, 10]
-                          value: 1,160,892,000
+                          threshold: *weight_threshold
+                          value: { "refTime": 1,160,892,000, "proofSize": 65536 }
                     - name: hrmp.OpenChannelAccepted
                       timeout: 40000
               - queries:
@@ -312,7 +318,7 @@ tests:
                   args: [
                     *rc->stmt_dest, # destination
                     {
-                      v2: [ #message
+                      v3: [ #message
                         {
                           Transact: {
                             originType: Superuser,
@@ -332,19 +338,19 @@ tests:
                     - name: dmpQueue.ExecutedDownward
                       chain: *stmt_parachain
                       attributes:
-                        - type: XcmV2TraitsOutcome
+                        - type: XcmV3TraitsOutcome
                           xcmOutcome: Complete
-                          threshold: [10, 10]
+                          threshold: *weight_threshold
                           value: 1,020,807,000
                     - name: polkadotXcm.Sent
                       chain: *stmt_parachain
                     - name: ump.ExecutedUpward
                       timeout: 40000
                       attributes:
-                        - type: XcmV2TraitsOutcome
+                        - type: XcmV3TraitsOutcome
                           xcmOutcome: Complete
                           # value: 4,000,000,000
-                          threshold: [10, 10]
+                          threshold: *weight_threshold
                           value: 1,160,892,000
                     - name: hrmp.OpenChannelRequested
                       timeout: 40000
@@ -379,7 +385,7 @@ tests:
                   args: [
                     *watr->rc_dest, # destination
                     {
-                      v2: [ #message
+                      v3: [ #message
                         {
                           WithdrawAsset: [*rc_dot_fungible]
                         },
@@ -408,10 +414,10 @@ tests:
                     - name: ump.ExecutedUpward
                       chain: *relay_chain
                       attributes:
-                        - type: XcmV2TraitsOutcome
+                        - type: XcmV3TraitsOutcome
                           xcmOutcome: Complete
                           # value: 4,000,000,000
-                          threshold: [10, 10]
+                          threshold: *weight_threshold
                           value: 1,160,892,000
                     - name: hrmp.OpenChannelAccepted
                       chain: *relay_chain
