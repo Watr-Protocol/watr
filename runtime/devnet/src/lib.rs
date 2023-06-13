@@ -89,6 +89,9 @@ use pallet_evm::{
 	FeeCalculator, HashedAddressMapping, OnChargeEVMTransaction as OnChargeEVMTransactionT, Runner,
 };
 
+use xcm_primitives::AssetLocationIdConverter;
+
+
 #[cfg(any(feature = "std", test))]
 pub use sp_runtime::BuildStorage;
 mod precompiles;
@@ -98,6 +101,8 @@ use precompiles::{FrontierPrecompiles, ASSET_PRECOMPILE_ADDRESS_PREFIX};
 use polkadot_runtime_common::{BlockHashCount, SlowAdjustingFeeUpdate};
 
 use weights::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight};
+
+pub type WatrAssetLocationIdConverter = AssetLocationIdConverter<AssetId, XcAssetConfig>;
 
 /// The address format for describing accounts.
 pub type Address = MultiAddress<AccountId, ()>;
@@ -891,6 +896,7 @@ construct_runtime!(
 		CumulusXcm: cumulus_pallet_xcm::{Pallet, Event<T>, Origin} = 32,
 		DmpQueue: cumulus_pallet_dmp_queue::{Pallet, Call, Storage, Event<T>} = 33,
 		XcAssetConfig: pallet_xc_asset_config::{Pallet, Call, Storage, Event<T>} = 34,
+		Xtokens: orml_xtokens = 55,
 
 		Multisig: pallet_multisig::{Pallet, Call, Storage, Event<T>} = 41,
 		Identity: pallet_identity::{Pallet, Call, Storage, Event<T>} = 42,

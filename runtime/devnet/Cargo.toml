@@ -1,6 +1,6 @@
 [package]
 name = "watr-devnet-runtime"
-version = "1.22.0"
+version = "1.23.0"
 authors = ["Parity Technologies <admin@parity.io>"]
 description = "Watr Devnet Runtime"
 license = "GPL-3.0-only"
@@ -103,6 +103,13 @@ pallet-evm-precompile-dispatch = { git = 'https://github.com/paritytech/frontier
 pallet-evm-precompile-assets-erc20 = { git = "https://github.com/Watr-Protocol/astar-frame.git", branch = "polkadot-v0.9.30", default-features = false }
 pallet-xc-asset-config = { git = "https://github.com/Watr-Protocol/astar-frame.git", branch = "polkadot-v0.9.30", default-features = false }
 precompile-utils = { git = "https://github.com/Watr-Protocol/astar-frame.git", branch = "polkadot-v0.9.30", default-features = false }
+xcm-primitives = { git = "https://github.com/Watr-Protocol/astar-frame.git", branch = "polkadot-v0.9.30", default-features = false }
+
+# ORML
+# (wasm)
+orml-xtokens = { git = "https://github.com/open-web3-stack/open-runtime-module-library", branch = "polkadot-v0.9.30", default-features = false }
+orml-traits = { git = "https://github.com/open-web3-stack/open-runtime-module-library", branch = "polkadot-v0.9.30", default-features = false }
+orml-xcm-support = { git = "https://github.com/open-web3-stack/open-runtime-module-library", branch = "polkadot-v0.9.30", default-features = false }
 
 pallet-multisig = {git = "https://github.com/paritytech/substrate", package = "pallet-multisig", default-features = false, branch = "polkadot-v0.9.30" }
 pallet-identity = {git = "https://github.com/paritytech/substrate", package = "pallet-identity", default-features = false, branch = "polkadot-v0.9.30" }
@@ -133,6 +140,9 @@ std = [
 	"frame-support/std",
 	"frame-system-rpc-runtime-api/std",
 	"frame-system/std",
+	"orml-xtokens/std",
+	"orml-traits/std",
+	"orml-xcm-support/std",
 	"pallet-assets/std",
 	"pallet-aura/std",
 	"pallet-authorship/std",
@@ -194,6 +204,7 @@ runtime-benchmarks = [
 	"frame-support/runtime-benchmarks",
 	"frame-system-benchmarking/runtime-benchmarks",
 	"frame-system/runtime-benchmarks",
+	"orml-xtokens/runtime-benchmarks",
 	"pallet-assets/runtime-benchmarks",
 	"pallet-balances/runtime-benchmarks",
 	"pallet-collective/runtime-benchmarks",
@@ -218,6 +229,7 @@ try-runtime = [
 	"frame-executive/try-runtime",
 	"frame-try-runtime",
 	"pallet-xc-asset-config/try-runtime",
+	"orml-xtokens/try-runtime",
 ]
 # Set timing constants (e.g. session period) to faster versions to speed up testing.
 fast-runtime = []

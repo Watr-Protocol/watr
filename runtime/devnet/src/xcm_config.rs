@@ -40,7 +40,18 @@ use xcm_builder::{
 	SiblingParachainAsNative, SiblingParachainConvertsVia, SignedAccountId32AsNative,
 	SignedToAccountId32, SovereignSignedViaLocation, TakeWeightCredit, UsingComponents,
 };
-use xcm_executor::{traits::JustTry, XcmExecutor};
+
+use sp_runtime::traits::{Convert, Get};
+use sp_std::marker::PhantomData;
+
+use xcm_executor::{
+    traits::{Convert as XcmConvert, JustTry},
+    XcmExecutor,
+};
+
+// ORML imports
+use orml_traits::location::{RelativeReserveProvider, Reserve};
+use orml_xcm_support::DisabledParachainFee;
 
 use cumulus_primitives_utility::{ParentAsUmp, XcmFeesTo32ByteAccount};
 
@@ -49,6 +60,8 @@ use watr_common::{
 	xcm_config::{AllowOnlySendToReservePerAsset, AsForeignToLocal, ReserveAssetsFrom},
 	xcm_config_parachains::{DenyReserveTransferToRelayChain, DenyThenTry},
 };
+
+use crate::WatrAssetLocationIdConverter;
 
 use frame_system::EnsureRoot;
 
@@ -69,6 +82,7 @@ parameter_types! {
 		default_fee_per_second() * 10
 	);
 	pub XcmAssetFeesReceiver: Option<AccountId> = Authorship::author();
+	pub const WatrLocation: MultiLocation = Here.into();
 }
 
 pub fn base_tx_fee() -> Balance {
@@ -79,6 +93,22 @@ pub fn default_fee_per_second() -> u128 {
 	let base_weight = Balance::from(ExtrinsicBaseWeight::get().ref_time());
 	let base_tx_per_second = (WEIGHT_PER_SECOND.ref_time() as u128) / base_weight;
 	base_tx_per_second * base_tx_fee()
+}
+
+pub type Weigher = FixedWeightBounds<UnitWeightCost, RuntimeCall, MaxInstructions>;
+
+
+parameter_types! {
+    /// The absolute location in perspective of the whole network.
+    pub WatrLocationAbsolute: MultiLocation = MultiLocation {
+        parents: 1,
+        interior: X1(
+            Parachain(ParachainInfo::parachain_id().into())
+        )
+    };
+    /// Max asset types for one cross-chain transfer. `2` covers all current use cases.
+    /// Can be updated with extra test cases in the future if needed.
+    pub const MaxAssetsForTransfer: usize = 2;
 }
 
 /// Type for specifying how a `MultiLocation` can be converted into an `AccountId`. This is used
@@ -184,6 +214,40 @@ pub type Barrier = DenyThenTry<
 	),
 >;
 
+pub struct AssetIdConvert;
+impl Convert<AssetId, Option<MultiLocation>> for AssetIdConvert {
+    fn convert(asset_id: AssetId) -> Option<MultiLocation> {
+        WatrAssetLocationIdConverter::reverse_ref(&asset_id).ok()
+	}
+}
+
+/// Convert `AccountId` to `MultiLocation`.
+pub struct AccountIdToMultiLocation;
+impl Convert<AccountId, MultiLocation> for AccountIdToMultiLocation {
+    fn convert(account: AccountId) -> MultiLocation {
+        X1(AccountId32 {
+            network: Any,
+            id: account.into(),
+        })
+        .into()
+    }
+}
+
+pub struct AbsoluteAndRelativeReserveProvider<AbsoluteLocation>(PhantomData<AbsoluteLocation>);
+impl<AbsoluteLocation: Get<MultiLocation>> Reserve
+    for AbsoluteAndRelativeReserveProvider<AbsoluteLocation>
+{
+    fn reserve(asset: &MultiAsset) -> Option<MultiLocation> {
+        RelativeReserveProvider::reserve(asset).map(|reserve_location| {
+			if reserve_location == AbsoluteLocation::get() {
+                MultiLocation::here()
+            } else {
+                reserve_location
+            }
+        })
+    }
+}
+
 pub type Reserves = (NativeAsset, ReserveAssetsFrom<StatemintLocation>);
 
 pub struct XcmConfig;
@@ -197,7 +261,7 @@ impl xcm_executor::Config for XcmConfig {
 	type IsTeleporter = (); // Teleporting is disabled.
 	type LocationInverter = LocationInverter<Ancestry>;
 	type Barrier = Barrier;
-	type Weigher = FixedWeightBounds<UnitWeightCost, RuntimeCall, MaxInstructions>;
+	type Weigher = Weigher;
 	type Trader = (
 		FixedRateOfFungible<
 			USDTperSecond,
@@ -239,7 +303,7 @@ impl pallet_xcm::Config for Runtime {
 	type XcmExecutor = XcmExecutor<XcmConfig>;
 	type XcmTeleportFilter = Nothing;
 	type XcmReserveTransferFilter = Nothing;
-	type Weigher = FixedWeightBounds<UnitWeightCost, RuntimeCall, MaxInstructions>;
+	type Weigher = Weigher;
 	type LocationInverter = LocationInverter<Ancestry>;
 	type RuntimeOrigin = RuntimeOrigin;
 	type RuntimeCall = RuntimeCall;
@@ -269,4 +333,22 @@ impl cumulus_pallet_dmp_queue::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type XcmExecutor = XcmExecutor<XcmConfig>;
 	type ExecuteOverweightOrigin = EnsureRoot<AccountId>;
+}
+
+impl orml_xtokens::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Balance = Balance;
+    type CurrencyId = AssetId;
+    type CurrencyIdConvert = AssetIdConvert;
+    type AccountIdToMultiLocation = AccountIdToMultiLocation;
+    type SelfLocation = WatrLocation;
+    type XcmExecutor = XcmExecutor<XcmConfig>;
+    type Weigher = Weigher;
+    type BaseXcmWeight = UnitWeightCost;
+    type MaxAssetsForTransfer = MaxAssetsForTransfer;
+    // Default impl. Refer to `orml-xtokens` docs for more details.
+    type MinXcmFee = DisabledParachainFee;
+	type MultiLocationsFilter = Everything;
+	type LocationInverter = LocationInverter<Ancestry>;
+    type ReserveProvider = AbsoluteAndRelativeReserveProvider<WatrLocationAbsolute>;
 }
