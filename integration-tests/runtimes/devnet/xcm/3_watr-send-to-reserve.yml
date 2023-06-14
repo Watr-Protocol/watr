@@ -11,7 +11,7 @@ settings:
       wsPort: 9820
   variables:
     common:
-      require_weight_at_most: &weight_at_most {refTime: 100000000000, proofSize: 200000}
+      require_weight_at_most: &weight_at_most {refTime: 100000000000, proofSize: 2000000}
       weight_threshold:  &weight_threshold { refTime: [10, 10], proofSize: [10, 10] }
     chains:
       statemint_parachain:
@@ -118,11 +118,10 @@ tests:
                                 {
                                   DepositAsset: {
                                     assets: { Wild: All },
-                                    maxAssets: 1,
                                     beneficiary: {
                                       parents: 0,
                                       interior: {
-                                        X1: { AccountId32: { network: Any, id: *stmt_asset_receiver_acc } }
+                                        X1: { AccountId32: { network: , id: *stmt_asset_receiver_acc } }
                                       }
                                     }
                                   }
@@ -133,7 +132,7 @@ tests:
                         ]
                       },
                       # maxWeight: Weight
-                      { refTime: *weight_at_most }
+                      { maxWeight: *weight_at_most }
                     ]
                     events:
                       - name: assets.Burned
@@ -147,7 +146,7 @@ tests:
                         attributes:
                         - type: XcmV3TraitsOutcome
                           xcmOutcome: Complete
-                          value: 2,000,000,000
+                          value: [{ Complete: { refTime: '679,150,000', proofSize: '6,196' }}]
                       - name: assets.Burned
                         chain: *stmt_parachain
                         result: {
@@ -164,7 +163,7 @@ tests:
                             value: *stmt_asset_receiver_wallet
                           - key: totalSupply
                             value: *watr_asset_amount_to_send
-                            threshold: [ 10, 0 ] # amount minus fees
+                            threshold: *weight_threshold # amount minus fees
                       - name: assets.Issued
                         chain: *stmt_parachain
                         attributes:
@@ -218,7 +217,7 @@ tests:
                                     beneficiary: {
                                       parents: 0,
                                       interior: {
-                                        X1: { AccountId32: { network: Any, id: *stmt_asset_receiver_acc } }
+                                        X1: { AccountId32: { network: , id: *stmt_asset_receiver_acc } }
                                       }
                                     }
                                   }
@@ -229,7 +228,7 @@ tests:
                         ]
                       },
                       # maxWeight: Weight
-                      { refTime: *weight_at_most }
+                      { maxWeight: *weight_at_most }
                     ]
                     events:
                       - name: system.ExtrinsicFailed
@@ -282,7 +281,7 @@ tests:
                                     beneficiary: {
                                       parents: 0,
                                       interior: {
-                                        X1: { AccountId32: { network: Any, id: *stmt_asset_receiver_acc } }
+                                        X1: { AccountId32: { network: , id: *stmt_asset_receiver_acc } }
                                       }
                                     }
                                   }
@@ -293,7 +292,7 @@ tests:
                         ]
                       },
                       # maxWeight: Weight
-                      { refTime: *weight_at_most }
+                      { maxWeight: *weight_at_most }
                     ]
                     events:
                       - name: system.ExtrinsicFailed
@@ -346,7 +345,7 @@ tests:
                                     beneficiary: {
                                       parents: 0,
                                       interior: {
-                                        X1: { AccountId32: { network: Any, id: *stmt_asset_receiver_acc } }
+                                        X1: { AccountId32: { network: , id: *stmt_asset_receiver_acc } }
                                       }
                                     }
                                   }
@@ -357,7 +356,7 @@ tests:
                         ]
                       },
                       # maxWeight: Weight
-                      { refTime: *weight_at_most }
+                      { maxWeight: *weight_at_most }
                     ]
                     events:
                       - name: system.ExtrinsicFailed
@@ -413,7 +412,7 @@ tests:
                                     beneficiary: {
                                       parents: 0,
                                       interior: {
-                                        X1: { AccountId32: { network: Any, id: *stmt_asset_receiver_acc } }
+                                        X1: { AccountId32: { network: , id: *stmt_asset_receiver_acc } }
                                       }
                                     }
                                   }
@@ -424,7 +423,7 @@ tests:
                         ]
                       },
                       # maxWeight: Weight
-                      { refTime: *weight_at_most }
+                      { maxWeight: *weight_at_most }
                     ]
                     events:
                       - name: system.ExtrinsicFailed
@@ -477,7 +476,7 @@ tests:
                                     beneficiary: {
                                       parents: 0,
                                       interior: {
-                                        X1: { AccountId32: { network: Any, id: *stmt_asset_receiver_acc } }
+                                        X1: { AccountId32: { network: , id: *stmt_asset_receiver_acc } }
                                       }
                                     }
                                   }
@@ -488,7 +487,7 @@ tests:
                         ]
                       },
                       # maxWeight: Weight
-                      { refTime: *weight_at_most }
+                      { maxWeight: *weight_at_most }
                     ]
                     events:
                       - name: system.ExtrinsicFailed
@@ -544,7 +543,7 @@ tests:
                                     beneficiary: {
                                       parents: 0,
                                       interior: {
-                                        X1: { AccountId32: { network: Any, id: *stmt_asset_receiver_acc } }
+                                        X1: { AccountId32: { network: , id: *stmt_asset_receiver_acc } }
                                       }
                                     }
                                   }
@@ -555,7 +554,7 @@ tests:
                         ]
                       },
                       # maxWeight: Weight
-                      { refTime: *weight_at_most }
+                      { maxWeight: *weight_at_most }
                     ]
                     events:
                       - name: system.ExtrinsicFailed
@@ -608,7 +607,7 @@ tests:
                                     beneficiary: {
                                       parents: 1, # wrong beneficiary
                                       interior: {
-                                        X1: { AccountId32: { network: Any, id: *stmt_asset_receiver_acc } }
+                                        X1: { AccountId32: { network: , id: *stmt_asset_receiver_acc } }
                                       }
                                     }
                                   }
@@ -619,7 +618,7 @@ tests:
                         ]
                       },
                       # maxWeight: Weight
-                      { refTime: *weight_at_most }
+                      { maxWeight: *weight_at_most }
                     ]
                     events:
                       - name: system.ExtrinsicFailed
@@ -652,7 +651,7 @@ tests:
                         ]
                       },
                       # maxWeight: Weight
-                      { refTime: *weight_at_most }
+                      { maxWeight: *weight_at_most }
                     ]
                     events:
                       - name: system.ExtrinsicFailed
@@ -695,7 +694,7 @@ tests:
                                     beneficiary: {
                                       parents: 1, # wrong beneficiary
                                       interior: {
-                                        X1: { AccountId32: { network: Any, id: *stmt_asset_receiver_acc } }
+                                        X1: { AccountId32: { network: , id: *stmt_asset_receiver_acc } }
                                       }
                                     }
                                   }
@@ -706,7 +705,7 @@ tests:
                         ]
                       },
                       # maxWeight: Weight
-                      { refTime: *weight_at_most }
+                      { maxWeight: *weight_at_most }
                     ]
                     events:
                       - name: system.ExtrinsicFailed

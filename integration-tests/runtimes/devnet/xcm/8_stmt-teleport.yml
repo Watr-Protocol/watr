@@ -19,7 +19,7 @@ settings:
         native_fungible: &stmt_native_fungible { id: *stmt_native, fun: { fungible: 1000000000 }}
       watr_parachain:
         account: &watr_acc '0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48' # Bob
-        beneficiary: &watr_benef {v3: { parents: 0, interior: { x1: { accountId32: { network: { any: true }, id: *watr_acc }}}}}
+        beneficiary: &watr_benef {v3: { parents: 0, interior: { x1: { accountId32: { network: , id: *watr_acc }}}}}
 
 tests:
   - name: STATEMINE | PALLET XCM - TELEPORT
@@ -48,5 +48,5 @@ tests:
                     - name: xcmpQueue.Fail
                       chain: *watr_parachain
                       attributes:
-                        - type: XcmV2TraitsError
+                        - type: XcmV3TraitsError
                           value: UntrustedTeleportLocation

@@ -96,60 +96,98 @@ tests:
           - name: DEPENDANCY | An Asset should exist in the Statemine Parachain
             actions:
               - extrinsics:
-                - chain: *relay_chain
-                  signer: *rc_sudo_signer
-                  sudo: true
-                  pallet: xcmPallet
-                  call: send
-                  args: [
-                    *rc->stmt_dest, # destination
-                    {
-                      v3: [ #message
-                        {
-                          Transact: {
-                            originType: Superuser,
-                            requireWeightAtMost: *weight_at_most,
-                            call: $force_create_asset
+                  - chain: *relay_chain
+                    signer: *rc_sudo_signer
+                    sudo: true
+                    pallet: xcmPallet
+                    call: send
+                    args: [
+                      *rc->stmt_dest, # destination
+                      {
+                        v3: [ #message
+                          {
+                            UnpaidExecution: {
+                              weightLimit: Unlimited
+                            }
+                          },
+                          {
+                            SetTopic: '0x0123456789012345678901234567891201234567890123456789012345678912'
+                          },
+                          {
+                            Transact: {
+                              originKind: Superuser,
+                              requireWeightAtMost: *weight_at_most,
+                              call: $force_create_asset
+                            }
                           }
+                        ]
+                      }
+                    ]
+                    events:
+                      - name: xcmPallet.Sent
+                      - name: dmpQueue.ExecutedDownward
+                        chain: *stmt_parachain
+                        threshold: *weight_threshold
+                        result: {
+                          outcome: { Complete: { refTime: '1,022,394,000', proofSize: '200,000' }}
                         }
-                      ]
-                    }
-                  ]
-                  events:
-                    - name: xcmPallet.Sent
-                    - name: dmpQueue.ExecutedDownward
-                      chain: *stmt_parachain
-                    - name: assets.ForceCreated
-                      chain: *stmt_parachain
+              - queries:
+                  forced_created_asset:
+                    chain: *stmt_parachain
+                    pallet: assets
+                    call: asset
+                    args: [ *stmt_asset_id ]
+              - asserts:
+                  isSome:
+                    args: [ $forced_created_asset ]
 
           - name: DEPENDANCY | A wrong Asset should exist in the Statemine Parachain
             actions:
               - extrinsics:
-                - chain: *relay_chain
-                  signer: *rc_sudo_signer
-                  sudo: true
-                  pallet: xcmPallet
-                  call: send
-                  args: [
-                    *rc->stmt_dest, # destination
-                    {
-                      v3: [ #message
-                        {
-                          Transact: {
-                            originType: Superuser,
-                            requireWeightAtMost: *weight_at_most,
-                            call: $force_create_wrong_asset
+                  - chain: *relay_chain
+                    signer: *rc_sudo_signer
+                    sudo: true
+                    pallet: xcmPallet
+                    call: send
+                    args: [
+                      *rc->stmt_dest, # destination
+                      {
+                        v3: [ #message
+                          {
+                            UnpaidExecution: {
+                              weightLimit: Unlimited
+                            }
+                          },
+                          {
+                            SetTopic: '0x0123456789012345678901234567891201234567890123456789012345678912'
+                          },
+                          {
+                            Transact: {
+                              originKind: Superuser,
+                              requireWeightAtMost: *weight_at_most,
+                              call: $force_create_wrong_asset
+                            }
                           }
+                        ]
+                      }
+                    ]
+                    events:
+                      - name: xcmPallet.Sent
+                      - name: dmpQueue.ExecutedDownward
+                        chain: *stmt_parachain
+                        threshold: *weight_threshold
+                        result: {
+                          outcome: { Complete: { refTime: '1,022,394,000', proofSize: '200,000' }}
                         }
-                      ]
-                    }
-                  ]
-                  events:
-                    - name: xcmPallet.Sent
-                    - name: dmpQueue.ExecutedDownward
-                      chain: *stmt_parachain
-                    - name: assets.ForceCreated
-                      chain: *stmt_parachain
+              - queries:
+                  forced_created_wrong_asset:
+                    chain: *stmt_parachain
+                    pallet: assets
+                    call: asset
+                    args: [ *stmt_wrong_asset_id ]
+              - asserts:
+                  isSome:
+                    args: [ $forced_created_wrong_asset ]
 
           - name: DEPENDANCY | Set metadata
             actions:
@@ -213,7 +251,6 @@ tests:
                         interior: {
                           X1: {
                             AccountId32: {
-                              network: Any,
                               id: *watr_asset_receiver_acc
                             }
                           }
@@ -241,7 +278,7 @@ tests:
                         - type: XcmV3TraitsOutcome
                           xcmOutcome: Complete
                           threshold: *weight_threshold
-                          value: 654,404,000
+                          value: [{ Complete: { refTime: '679,150,000', proofSize: '6,196' }}]
                     - name: assets.Transferred
                       result: {
                           assetId:  *stmt_asset_id,
@@ -251,23 +288,6 @@ tests:
                         }
                     - name: xcmpQueue.Success
                       chain: *watr_parachain
-                    - name: assets.Issued
-                      chain: *watr_parachain
-                      attributes:
-                        - key: assetId
-                          value: *watr_asset_id
-                        - key: owner
-                          value: *watr_asset_receiver_wallet
-                        - key: totalSupply
-                          value: *stmt_asset_amount_to_send
-                          threshold: [ 10, 0 ] # less fees
-                    - name: assets.Issued
-                      chain: *watr_parachain
-                      attributes:
-                        - key: assetId
-                          value: *watr_asset_id
-                        - key: totalSupply
-                          value: *watr_expected_fees # fees
 
           - name: Watr Parachain should reject an unknown Asset sent from Statemine
             actions:
@@ -284,7 +304,7 @@ tests:
                         interior: {
                           X1: {
                             AccountId32: {
-                              network: Any,
+                              network:  ,
                               id: *watr_asset_receiver_acc
                             }
                           }
@@ -312,7 +332,7 @@ tests:
                         - type: XcmV3TraitsOutcome
                           xcmOutcome: Complete
                           threshold: *weight_threshold
-                          value: 654,404,000
+                          value: [{ Complete: { refTime: '679,150,000', proofSize: '6,196' }}]
                     - name: assets.Transferred
                       result: {
                           assetId:  *stmt_wrong_asset_id,
@@ -323,5 +343,5 @@ tests:
                     - name: xcmpQueue.Fail
                       chain: *watr_parachain
                       attributes:
-                        - type: XcmV2TraitsError
-                          value: TooExpensive
+                        - type: XcmV3TraitsError
+                          value: UntrustedReserveLocation
