@@ -121,7 +121,7 @@ tests:
                                     beneficiary: {
                                       parents: 0,
                                       interior: {
-                                        X1: { AccountId32: { network: Any, id: *stmt_asset_receiver_acc } }
+                                        X1: { AccountId32: { network:  , id: *stmt_asset_receiver_acc } }
                                       }
                                     }
                                   }
@@ -217,7 +217,7 @@ tests:
                                     beneficiary: {
                                       parents: 0,
                                       interior: {
-                                        X1: { AccountId32: { network: Any, id: *stmt_asset_receiver_acc } }
+                                        X1: { AccountId32: { network:  , id: *stmt_asset_receiver_acc } }
                                       }
                                     }
                                   }
@@ -281,7 +281,7 @@ tests:
                                     beneficiary: {
                                       parents: 0,
                                       interior: {
-                                        X1: { AccountId32: { network: Any, id: *stmt_asset_receiver_acc } }
+                                        X1: { AccountId32: { network:  , id: *stmt_asset_receiver_acc } }
                                       }
                                     }
                                   }
@@ -345,7 +345,7 @@ tests:
                                     beneficiary: {
                                       parents: 0,
                                       interior: {
-                                        X1: { AccountId32: { network: Any, id: *stmt_asset_receiver_acc } }
+                                        X1: { AccountId32: { network:  , id: *stmt_asset_receiver_acc } }
                                       }
                                     }
                                   }
@@ -412,7 +412,7 @@ tests:
                                     beneficiary: {
                                       parents: 0,
                                       interior: {
-                                        X1: { AccountId32: { network: Any, id: *stmt_asset_receiver_acc } }
+                                        X1: { AccountId32: { network:  , id: *stmt_asset_receiver_acc } }
                                       }
                                     }
                                   }
@@ -476,7 +476,7 @@ tests:
                                     beneficiary: {
                                       parents: 0,
                                       interior: {
-                                        X1: { AccountId32: { network: Any, id: *stmt_asset_receiver_acc } }
+                                        X1: { AccountId32: { network:  , id: *stmt_asset_receiver_acc } }
                                       }
                                     }
                                   }
@@ -543,7 +543,7 @@ tests:
                                     beneficiary: {
                                       parents: 0,
                                       interior: {
-                                        X1: { AccountId32: { network: Any, id: *stmt_asset_receiver_acc } }
+                                        X1: { AccountId32: { network:  , id: *stmt_asset_receiver_acc } }
                                       }
                                     }
                                   }
@@ -607,7 +607,7 @@ tests:
                                     beneficiary: {
                                       parents: 1, # wrong beneficiary
                                       interior: {
-                                        X1: { AccountId32: { network: Any, id: *stmt_asset_receiver_acc } }
+                                        X1: { AccountId32: { network:  , id: *stmt_asset_receiver_acc } }
                                       }
                                     }
                                   }
@@ -694,7 +694,7 @@ tests:
                                     beneficiary: {
                                       parents: 1, # wrong beneficiary
                                       interior: {
-                                        X1: { AccountId32: { network: Any, id: *stmt_asset_receiver_acc } }
+                                        X1: { AccountId32: { network:  , id: *stmt_asset_receiver_acc } }
                                       }
                                     }
                                   }

@@ -212,7 +212,7 @@ tests:
                         interior: {
                           X1: {
                             AccountId32: {
-                              network: Any,
+                              network:  ,
                               id: *watr_asset_receiver_acc
                             }
                           }
@@ -283,7 +283,7 @@ tests:
                         interior: {
                           X1: {
                             AccountId32: {
-                              network: Any,
+                              network:  ,
                               id: *watr_asset_receiver_acc
                             }
                           }
@@ -322,5 +322,5 @@ tests:
                     - name: xcmpQueue.Fail
                       chain: *watr_parachain
                       attributes:
-                        - type: XcmV2TraitsError
+                        - type: XcmV3TraitsError
                           value: TooExpensive
