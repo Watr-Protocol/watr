@@ -106,7 +106,7 @@ where
 					let owner = pallet_assets::Pallet::<R>::issuer(asset_id);
 					let origin = R::AddressMapping::into_account_id(handle.context().caller);
 
-					if Some(origin.clone()) != owner.clone() {
+					if Some(origin) != owner {
 						return Some(Err(error("bad origin for tusd precompile")))
 					}
 				}

@@ -6,5 +6,7 @@ members = [
 	"node",
 	"runtime/mainnet",
 	"runtime/devnet",
-	"pallets/motion"
+	"pallets/motion",
+	"pallets/collator-selection",
+	"pallets/did"
 ]

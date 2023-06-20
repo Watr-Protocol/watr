@@ -433,10 +433,7 @@ fn devnet_testnet_genesis(
 		aura: Default::default(),
 		aura_ext: Default::default(),
 		assets: devnet::AssetsConfig {
-			assets: vec![
-				(1984, root_key.clone(), true, 10_000),
-				(2018, root_key.clone(), true, 10_000),
-			],
+			assets: vec![(1984, root_key.clone(), true, 10_000), (2018, root_key, true, 10_000)],
 			metadata: vec![
 				(1984, b"Tether USD".to_vec(), b"USDt".to_vec(), 6),
 				(2018, b"Native TUSD".to_vec(), b"NTUSD".to_vec(), 18),

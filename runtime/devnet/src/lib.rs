@@ -421,6 +421,7 @@ impl pallet_aura::Config for Runtime {
 // PotId -> Watr Address -> 2wS2DpdLUh45fLicxABP8biegPz4vc6BnVA3RH9CWAi1bmky
 parameter_types! {
 	pub const PotId: PalletId = PalletId(*b"PotStake");
+	pub const RewardId: PalletId = PalletId(*b"Collator");
 	pub const MaxCandidates: u32 = 1000;
 	pub const MinCandidates: u32 = 5;
 	pub const MaxInvulnerables: u32 = 100;
@@ -434,6 +435,7 @@ impl pallet_collator_selection::Config for Runtime {
 	type Currency = Balances;
 	type UpdateOrigin = CollatorSelectionUpdateOrigin;
 	type PotId = PotId;
+	// type RewardId = RewardId;
 	type MaxCandidates = MaxCandidates;
 	type MinCandidates = MinCandidates;
 	type MaxInvulnerables = MaxInvulnerables;
