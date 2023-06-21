@@ -23,7 +23,6 @@ pub mod extrinsic_weights;
 pub mod frame_system;
 pub mod pallet_assets;
 pub mod pallet_balances;
-pub mod pallet_collator_selection;
 pub mod pallet_collective;
 pub mod pallet_did;
 pub mod pallet_identity;
@@ -37,6 +36,7 @@ pub mod pallet_treasury;
 pub mod pallet_utility;
 pub mod paritydb_weights;
 pub mod rocksdb_weights;
+pub mod watr_collator_selection;
 
 pub use block_weights::constants::BlockExecutionWeight;
 pub use extrinsic_weights::constants::ExtrinsicBaseWeight;

@@ -29,6 +29,7 @@ use frame_support::{
 	weights::constants::WEIGHT_PER_SECOND,
 };
 
+use crate::DealWithFees;
 use pallet_xcm::XcmPassthrough;
 use polkadot_parachain::primitives::Sibling;
 use xcm::latest::prelude::*;
@@ -45,7 +46,6 @@ use xcm_executor::{traits::JustTry, XcmExecutor};
 use cumulus_primitives_utility::{ParentAsUmp, XcmFeesTo32ByteAccount};
 
 use watr_common::{
-	impls::DealWithFees,
 	xcm_config::{AllowOnlySendToReservePerAsset, AsForeignToLocal, ReserveAssetsFrom},
 	xcm_config_parachains::{DenyReserveTransferToRelayChain, DenyThenTry},
 };

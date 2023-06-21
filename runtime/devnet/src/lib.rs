@@ -30,8 +30,7 @@ mod weights;
 pub mod xcm_config;
 
 pub use watr_common::{
-	impls::{AccountIdOf, DealWithFees, ToStakingPot},
-	AccountId, AuraId, Balance, BlockNumber, DidIdentifier, Hash, Index, Signature,
+	AccountId, AccountIdOf, AuraId, Balance, BlockNumber, DidIdentifier, Hash, Index, Signature,
 	AVERAGE_ON_INITIALIZE_RATIO, DAYS, HOURS, MAXIMUM_BLOCK_WEIGHT, MINUTES, NORMAL_DISPATCH_RATIO,
 	SLOT_DURATION, WEIGHT_PER_GAS,
 };
@@ -167,6 +166,38 @@ impl WeightToFeePolynomial for WeightToFee {
 			coeff_frac: Perbill::from_rational(p % q, q),
 			coeff_integer: p / q,
 		}]
+	}
+}
+
+pub struct ToStakingPot<R>(PhantomData<R>);
+impl<R> OnUnbalanced<NegativeImbalance<R>> for ToStakingPot<R>
+where
+	R: pallet_balances::Config + watr_collator_selection::Config,
+	AccountIdOf<R>:
+		From<polkadot_primitives::v2::AccountId> + Into<polkadot_primitives::v2::AccountId>,
+	<R as frame_system::Config>::RuntimeEvent: From<pallet_balances::Event<R>>,
+{
+	fn on_nonzero_unbalanced(amount: NegativeImbalance<R>) {
+		let staking_pot = <watr_collator_selection::Pallet<R>>::account_id();
+		<pallet_balances::Pallet<R>>::resolve_creating(&staking_pot, amount);
+	}
+}
+
+pub struct DealWithFees<R>(PhantomData<R>);
+impl<R> OnUnbalanced<NegativeImbalance<R>> for DealWithFees<R>
+where
+	R: pallet_balances::Config + watr_collator_selection::Config,
+	AccountIdOf<R>:
+		From<polkadot_primitives::v2::AccountId> + Into<polkadot_primitives::v2::AccountId>,
+	<R as frame_system::Config>::RuntimeEvent: From<pallet_balances::Event<R>>,
+{
+	fn on_unbalanceds<B>(mut fees_then_tips: impl Iterator<Item = NegativeImbalance<R>>) {
+		if let Some(mut fees) = fees_then_tips.next() {
+			if let Some(tips) = fees_then_tips.next() {
+				tips.merge_into(&mut fees);
+			}
+			<ToStakingPot<R> as OnUnbalanced<_>>::on_unbalanced(fees);
+		}
 	}
 }
 
@@ -402,7 +433,7 @@ impl pallet_session::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type ValidatorId = <Self as frame_system::Config>::AccountId;
 	// we don't have stash and controller, thus we don't need the convert as well.
-	type ValidatorIdOf = pallet_collator_selection::IdentityCollator;
+	type ValidatorIdOf = watr_collator_selection::IdentityCollator;
 	type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
 	type NextSessionRotation = pallet_session::PeriodicSessions<Period, Offset>;
 	type SessionManager = CollatorSelection;
@@ -430,21 +461,21 @@ parameter_types! {
 // We allow root only to execute privileged collator selection operations.
 pub type CollatorSelectionUpdateOrigin = EnsureRoot<AccountId>;
 
-impl pallet_collator_selection::Config for Runtime {
+impl watr_collator_selection::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type Currency = Balances;
 	type UpdateOrigin = CollatorSelectionUpdateOrigin;
 	type PotId = PotId;
-	// type RewardId = RewardId;
+	type RewardId = RewardId;
 	type MaxCandidates = MaxCandidates;
 	type MinCandidates = MinCandidates;
 	type MaxInvulnerables = MaxInvulnerables;
 	// should be a multiple of session or things will get inconsistent
 	type KickThreshold = Period;
 	type ValidatorId = <Self as frame_system::Config>::AccountId;
-	type ValidatorIdOf = pallet_collator_selection::IdentityCollator;
+	type ValidatorIdOf = watr_collator_selection::IdentityCollator;
 	type ValidatorRegistration = Session;
-	type WeightInfo = weights::pallet_collator_selection::WeightInfo<Runtime>;
+	type WeightInfo = weights::watr_collator_selection::WeightInfo<Runtime>;
 }
 
 parameter_types! {
@@ -786,7 +817,7 @@ impl<F: FindAuthor<u32>> FindAuthor<H160> for FindAuthorTruncated<F> {
 pub struct EVMDealWithFees<R>(sp_std::marker::PhantomData<R>);
 impl<R> OnUnbalanced<NegativeImbalance<R>> for EVMDealWithFees<R>
 where
-	R: pallet_balances::Config + pallet_collator_selection::Config + core::fmt::Debug,
+	R: pallet_balances::Config + watr_collator_selection::Config + core::fmt::Debug,
 	AccountIdOf<R>:
 		From<polkadot_primitives::v2::AccountId> + Into<polkadot_primitives::v2::AccountId>,
 	<R as frame_system::Config>::RuntimeEvent: From<pallet_balances::Event<R>>,
@@ -795,7 +826,7 @@ where
 	// (technically, it calls on_unbalanced, which calls this when non-zero)
 	fn on_nonzero_unbalanced(amount: NegativeImbalance<R>) {
 		// deposit the fee into the collator_selection reward pot
-		let staking_pot = <pallet_collator_selection::Pallet<R>>::account_id();
+		let staking_pot = <watr_collator_selection::Pallet<R>>::account_id();
 		<pallet_balances::Pallet<R>>::resolve_creating(&staking_pot, amount);
 	}
 }
@@ -882,7 +913,7 @@ construct_runtime!(
 
 		// Collator support. The order of these 4 are important and shall not change.
 		Authorship: pallet_authorship::{Pallet, Call, Storage} = 20,
-		CollatorSelection: pallet_collator_selection::{Pallet, Call, Storage, Event<T>, Config<T>} = 21,
+		CollatorSelection: watr_collator_selection::{Pallet, Call, Storage, Event<T>, Config<T>} = 21,
 		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>} = 22,
 		Aura: pallet_aura::{Pallet, Storage, Config<T>} = 23,
 		AuraExt: cumulus_pallet_aura_ext::{Pallet, Storage, Config} = 24,
@@ -991,7 +1022,7 @@ mod benches {
 		[pallet_session, SessionBench::<Runtime>]
 		[pallet_utility, Utility]
 		[pallet_timestamp, Timestamp]
-		[pallet_collator_selection, CollatorSelection]
+		[watr_collator_selection, CollatorSelection]
 		[cumulus_pallet_xcmp_queue, XcmpQueue]
 		[pallet_collective, Council]
 		[pallet_identity, Identity]

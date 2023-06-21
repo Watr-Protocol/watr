@@ -111,6 +111,7 @@ pallet-identity = {git = "https://github.com/paritytech/substrate", package = "p
 watr-common = {path = "../common", default-features = false }
 pallet-motion = { default-features = false, path = "../../pallets/motion" }
 pallet-did = { default-features = false, path = "../../pallets/did" }
+watr-collator-selection = { default-features = false, path = "../../pallets/collator-selection" }
 
 [features]
 default = [
@@ -187,6 +188,7 @@ std = [
 	"pallet-evm-precompile-blake2/std",
 	"pallet-evm-precompile-bn128/std",
 	"pallet-xc-asset-config/std",
+	"watr-collator-selection/std"
 ]
 runtime-benchmarks = [
 	"hex-literal",
@@ -198,6 +200,7 @@ runtime-benchmarks = [
 	"pallet-balances/runtime-benchmarks",
 	"pallet-collective/runtime-benchmarks",
 	"pallet-collator-selection/runtime-benchmarks",
+	"watr-collator-selection/runtime-benchmarks",
 	"pallet-membership/runtime-benchmarks",
 	"pallet-preimage/runtime-benchmarks",
 	"pallet-scheduler/runtime-benchmarks",

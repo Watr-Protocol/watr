@@ -22,7 +22,11 @@ pub mod xcm_config;
 
 use frame_support::weights::{constants::WEIGHT_PER_SECOND, Weight};
 
-pub use parachains_common::{xcm_config as xcm_config_parachains, BlockNumber, *};
+pub use parachains_common::{
+	impls::{AccountIdOf, NegativeImbalance},
+	xcm_config as xcm_config_parachains, AccountId, AuraId, Balance, Block, BlockNumber, Hash,
+	Index, Signature,
+};
 
 /// A Watr DID subject identifier.
 pub type DidIdentifier = AccountId;

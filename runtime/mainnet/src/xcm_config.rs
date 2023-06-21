@@ -30,6 +30,7 @@ use frame_support::{
 };
 
 use pallet_xcm::XcmPassthrough;
+use parachains_common::impls::DealWithFees;
 use polkadot_parachain::primitives::Sibling;
 use xcm::latest::prelude::*;
 use xcm_builder::{
@@ -45,7 +46,6 @@ use xcm_executor::{traits::JustTry, XcmExecutor};
 use cumulus_primitives_utility::{ParentAsUmp, XcmFeesTo32ByteAccount};
 
 use watr_common::{
-	impls::DealWithFees,
 	xcm_config::{AllowOnlySendToReservePerAsset, AsForeignToLocal, ReserveAssetsFrom},
 	xcm_config_parachains::{DenyReserveTransferToRelayChain, DenyThenTry},
 };

@@ -29,6 +29,7 @@ pub trait WeightInfo {
 	fn set_invulnerables(_b: u32) -> Weight;
 	fn set_desired_candidates() -> Weight;
 	fn set_candidacy_bond() -> Weight;
+	fn set_collator_reward() -> Weight;
 	fn register_as_candidate(_c: u32) -> Weight;
 	fn leave_intent(_c: u32) -> Weight;
 	fn note_author() -> Weight;
@@ -50,6 +51,11 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 	fn set_candidacy_bond() -> Weight {
 		Weight::from_ref_time(16_840_000 as u64).saturating_add(T::DbWeight::get().writes(1 as u64))
 	}
+
+	fn set_collator_reward() -> Weight {
+		Weight::from_ref_time(16_840_000 as u64).saturating_add(T::DbWeight::get().writes(1 as u64))
+	}
+
 	fn register_as_candidate(c: u32) -> Weight {
 		Weight::from_ref_time(71_196_000 as u64)
 			// Standard Error: 0
@@ -98,6 +104,10 @@ impl WeightInfo for () {
 		Weight::from_ref_time(16_840_000 as u64)
 			.saturating_add(RocksDbWeight::get().writes(1 as u64))
 	}
+	fn set_collator_reward() -> Weight {
+		Weight::from_ref_time(16_840_000 as u64)
+			.saturating_add(RocksDbWeight::get().writes(1 as u64))
+	}
 	fn register_as_candidate(c: u32) -> Weight {
 		Weight::from_ref_time(71_196_000 as u64)
 			// Standard Error: 0
@@ -114,7 +124,7 @@ impl WeightInfo for () {
 	}
 	fn note_author() -> Weight {
 		Weight::from_ref_time(71_461_000 as u64)
-			.saturating_add(RocksDbWeight::get().reads(3 as u64))
+			.saturating_add(RocksDbWeight::get().reads(5 as u64))
 			.saturating_add(RocksDbWeight::get().writes(4 as u64))
 	}
 	fn new_session(r: u32, c: u32) -> Weight {

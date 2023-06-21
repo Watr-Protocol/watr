@@ -261,6 +261,7 @@ pub mod pallet {
 		NewInvulnerables { invulnerables: Vec<T::AccountId> },
 		NewDesiredCandidates { desired_candidates: u32 },
 		NewCandidacyBond { bond_amount: BalanceOf<T> },
+		NewCollatorReward { collator_reward: BalanceOf<T> },
 		CandidateAdded { account_id: T::AccountId, deposit: BalanceOf<T> },
 		CandidateRemoved { account_id: T::AccountId },
 	}
@@ -349,6 +350,18 @@ pub mod pallet {
 			T::UpdateOrigin::ensure_origin(origin)?;
 			<CandidacyBond<T>>::put(&bond);
 			Self::deposit_event(Event::NewCandidacyBond { bond_amount: bond });
+			Ok(().into())
+		}
+
+		/// Set the collator reward amount.
+		#[pallet::weight(T::WeightInfo::set_collator_reward())]
+		pub fn set_collator_reward(
+			origin: OriginFor<T>,
+			reward: BalanceOf<T>,
+		) -> DispatchResultWithPostInfo {
+			T::UpdateOrigin::ensure_origin(origin)?;
+			<CollatorReward<T>>::put(&reward);
+			Self::deposit_event(Event::NewCollatorReward { collator_reward: reward });
 			Ok(().into())
 		}
 
@@ -505,7 +518,7 @@ pub mod pallet {
 			{
 				Some(_) =>
 					T::Currency::transfer(&collator_pot, &author, collator_reward, KeepAlive),
-				None => Ok(()),
+				None => T::Currency::transfer(&collator_pot, &author, Zero::zero(), KeepAlive),
 			};
 
 			debug_assert!(_success.is_ok());

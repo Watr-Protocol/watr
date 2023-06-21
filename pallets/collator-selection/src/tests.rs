@@ -101,6 +101,27 @@ fn set_candidacy_bond() {
 }
 
 #[test]
+fn set_collator_reward() {
+	new_test_ext().execute_with(|| {
+		// given
+		assert_eq!(CollatorSelection::collator_reward(), 10);
+
+		// can set
+		assert_ok!(CollatorSelection::set_collator_reward(
+			RuntimeOrigin::signed(RootAccount::get()),
+			7
+		));
+		assert_eq!(CollatorSelection::collator_reward(), 7);
+
+		// rejects bad origin.
+		assert_noop!(
+			CollatorSelection::set_collator_reward(RuntimeOrigin::signed(1), 8),
+			BadOrigin
+		);
+	});
+}
+
+#[test]
 fn cannot_register_candidate_if_too_many() {
 	new_test_ext().execute_with(|| {
 		// reset desired candidates:

@@ -104,6 +104,10 @@ fn register_candidates<T: Config>(count: u32) {
 	}
 }
 
+fn fund_collator_pot<T: Config>() {
+	T::Currency::make_free_balance_be(&<CollatorSelection<T>>::reward_id(), 100_000u64);
+}
+
 benchmarks! {
 	where_clause { where T: pallet_authorship::Config + session::Config }
 
@@ -142,6 +146,18 @@ benchmarks! {
 	}
 	verify {
 		assert_last_event::<T>(Event::NewCandidacyBond{bond_amount}.into());
+	}
+
+	set_collator_reward {
+		let collator_reward: BalanceOf<T> = 10u32.into();
+		let origin = T::UpdateOrigin::successful_origin();
+	}: {
+		assert_ok!(
+			<CollatorSelection<T>>::set_collator_reward(origin, collator_reward.clone())
+		);
+	}
+	verify {
+		assert_last_event::<T>(Event::NewCollatorReward{ collator_reward }.into());
 	}
 
 	// worse case is when we have all the max-candidate slots filled except one, and we fill that
@@ -192,6 +208,10 @@ benchmarks! {
 		T::Currency::make_free_balance_be(
 			&<CollatorSelection<T>>::account_id(),
 			T::Currency::minimum_balance() * 4u32.into(),
+		);
+		T::Currency::make_free_balance_be(
+			&<CollatorSelection<T>>::reward_id(),
+			T::Currency::minimum_balance() * 100_000u32.into(),
 		);
 		let author = account("author", 0, SEED);
 		let new_block: T::BlockNumber = 10u32.into();
