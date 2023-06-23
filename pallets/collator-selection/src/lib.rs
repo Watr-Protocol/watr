@@ -122,7 +122,7 @@ pub mod pallet {
 		/// Account Identifier from which the internal Pot is generated.
 		type PotId: Get<PalletId>;
 
-		/// Acount Identifier for Collator Rewards Account
+		/// Account Identifier for Collator Rewards Account
 		type RewardId: Get<PalletId>;
 
 		/// Maximum number of candidates that we should have. This is enforced in code.
