@@ -11,60 +11,82 @@ settings:
       wsPort: 9820
   variables:
     common:
-      require_weight_at_most: &weight_at_most {refTime: 100000000000, proofSize: 2000000}
-      weight_threshold:  &weight_threshold { refTime: [10, 10], proofSize: [10, 10] }
+      require_weight_at_most:
+        &weight_at_most { refTime: 100000000000, proofSize: 2000000 }
+      weight_threshold:
+        &weight_threshold { refTime: [10, 10], proofSize: [10, 10] }
     chains:
       statemint_parachain:
         asset_receiver:
-          account: &stmt_asset_receiver_acc '0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48' # Bob
+          account: &stmt_asset_receiver_acc "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48" # Bob
           wallet: &stmt_asset_receiver_wallet FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP # Bob Statemine
         asset:
           id: &stmt_asset_id 1984
           pallet_id: &stmt_assets_pallet_id 50
-          local_locations: &stmt_local_asset_location {
-            parents: 0,
-            interior: {
-              X2: [
-                {  PalletInstance: *stmt_assets_pallet_id },
-                { GeneralIndex: *stmt_asset_id }
-              ]
+          local_locations:
+            &stmt_local_asset_location {
+              parents: 0,
+              interior:
+                {
+                  X2:
+                    [
+                      { PalletInstance: *stmt_assets_pallet_id },
+                      { GeneralIndex: *stmt_asset_id },
+                    ],
+                },
             }
-          }
-          wrong_local_locations: &wrong_local_asset_location {
-            parents: 0,
-            interior: {
-              X2: [
-                {  PalletInstance: *stmt_assets_pallet_id },
-                { GeneralIndex: 1985 }
-              ]
+          wrong_local_locations:
+            &wrong_local_asset_location {
+              parents: 0,
+              interior:
+                {
+                  X2:
+                    [
+                      { PalletInstance: *stmt_assets_pallet_id },
+                      { GeneralIndex: 1985 },
+                    ],
+                },
             }
-          }
-          remote_locations: &stmt_remote_asset_location {
-            parents: 1,
-            interior: {
-              X3: [
-                { Parachain: *stmt_id },
-                { PalletInstance: *stmt_assets_pallet_id },
-                { GeneralIndex: *stmt_asset_id }
-              ]
+          remote_locations:
+            &stmt_remote_asset_location {
+              parents: 1,
+              interior:
+                {
+                  X3:
+                    [
+                      { Parachain: *stmt_id },
+                      { PalletInstance: *stmt_assets_pallet_id },
+                      { GeneralIndex: *stmt_asset_id },
+                    ],
+                },
             }
-          }
-          wrong_remote_locations: &wrong_remote_asset_location {
-            parents: 1,
-            interior: {
-              X3: [
-                { Parachain: 3000 },
-                { PalletInstance: *stmt_assets_pallet_id },
-                { GeneralIndex: *stmt_asset_id }
-              ]
+          wrong_remote_locations:
+            &wrong_remote_asset_location {
+              parents: 1,
+              interior:
+                {
+                  X3:
+                    [
+                      { Parachain: 3000 },
+                      { PalletInstance: *stmt_assets_pallet_id },
+                      { GeneralIndex: *stmt_asset_id },
+                    ],
+                },
             }
-          }
         fees: &stmt_expected_fees 1000..10000
       watr_parachain:
         sovereign_account: &watr_sovereign_sibl FBeL7DUySdc1yfT9KfucQTJm4UByTW8T5X2mSQjVA8tstTf # Statemine
         destinations:
-          stmt: &watr->stmt_dest { parents: 1, interior: { X1: { Parachain: *stmt_id } } }
-          wrong: &watr->wrong_dest { parents: 1, interior: { X1: { Parachain: 3000 } } }
+          stmt:
+            &watr->stmt_dest {
+              parents: 1,
+              interior: { X1: { Parachain: *stmt_id } },
+            }
+          wrong:
+            &watr->wrong_dest {
+              parents: 1,
+              interior: { X1: { Parachain: 3000 } },
+            }
         asset_sender:
           signer: &watr_asset_sender_signer //Bob
           wallet: &watr_asset_sender_wallet 2xBchgbq7aQyGjTotgQvP9Uh76uEWfQWYBpAzJgn5dfsfhsW # Bob
@@ -86,74 +108,109 @@ tests:
                     pallet: polkadotXcm
                     call: execute
                     args: [
-                      # message: XcmVersionedXcm
-                      {
-                        v3: [
-                          {
-                            WithdrawAsset: [
+                        # message: XcmVersionedXcm
+                        {
+                          v3:
+                            [
                               {
-                                id: {
-                                  Concrete: *stmt_remote_asset_location
-                                },
-                                fun: { Fungible: *watr_asset_amount_to_send }
-                              }
-                            ]
-                          },
-                          {
-                            InitiateReserveWithdraw: {
-                              assets: { Wild: All },
-                              reserve: *watr->stmt_dest,
-                              xcm: [
-                                {
-                                  BuyExecution: {
-                                    fees: {
-                                      id: {
-                                        Concrete: *stmt_local_asset_location
-                                      },
-                                      fun: { Fungible: *watr_buy_execution_amount }
+                                WithdrawAsset:
+                                  [
+                                    {
+                                      id:
+                                        {
+                                          Concrete: *stmt_remote_asset_location,
+                                        },
+                                      fun:
+                                        {
+                                          Fungible: *watr_asset_amount_to_send,
+                                        },
                                     },
-                                    weightLimit: Unlimited
-                                  }
-                                },
-                                {
-                                  DepositAsset: {
+                                  ],
+                              },
+                              {
+                                InitiateReserveWithdraw:
+                                  {
                                     assets: { Wild: All },
-                                    beneficiary: {
-                                      parents: 0,
-                                      interior: {
-                                        X1: { AccountId32: { network: , id: *stmt_asset_receiver_acc } }
-                                      }
-                                    }
-                                  }
-                                }
-                              ]
-                            }
-                          }
-                        ]
-                      },
-                      # maxWeight: Weight
-                      { maxWeight: *weight_at_most }
-                    ]
+                                    reserve: *watr->stmt_dest,
+                                    xcm:
+                                      [
+                                        {
+                                          BuyExecution:
+                                            {
+                                              fees:
+                                                {
+                                                  id:
+                                                    {
+                                                      Concrete: *stmt_local_asset_location,
+                                                    },
+                                                  fun:
+                                                    {
+                                                      Fungible: *watr_buy_execution_amount,
+                                                    },
+                                                },
+                                              weightLimit: Unlimited,
+                                            },
+                                        },
+                                        {
+                                          DepositAsset:
+                                            {
+                                              assets: { Wild: All },
+                                              beneficiary:
+                                                {
+                                                  parents: 0,
+                                                  interior:
+                                                    {
+                                                      X1:
+                                                        {
+                                                          AccountId32:
+                                                            {
+                                                              network,
+                                                              id: *stmt_asset_receiver_acc,
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                      ],
+                                  },
+                              },
+                            ],
+                        },
+                        # maxWeight: Weight
+                        { maxWeight: *weight_at_most },
+                      ]
                     events:
                       - name: assets.Burned
-                        result: {
-                          assetId: *watr_asset_id,
-                          owner: *watr_asset_sender_wallet,
-                          balance: *watr_asset_amount_to_send
-                        }
+                        result:
+                          {
+                            assetId: *watr_asset_id,
+                            owner: *watr_asset_sender_wallet,
+                            balance: *watr_asset_amount_to_send,
+                          }
                       - name: xcmpQueue.XcmpMessageSent
                       - name: polkadotXcm.Attempted
                         attributes:
-                        - type: XcmV3TraitsOutcome
-                          xcmOutcome: Complete
-                          value: [{ Complete: { refTime: '679,150,000', proofSize: '6,196' }}]
+                          - type: XcmV3TraitsOutcome
+                            xcmOutcome: Complete
+                            value:
+                              [
+                                {
+                                  Complete:
+                                    {
+                                      refTime: "679,150,000",
+                                      proofSize: "6,196",
+                                    },
+                                },
+                              ]
                       - name: assets.Burned
                         chain: *stmt_parachain
-                        result: {
-                          assetId: *stmt_asset_id,
-                          owner: *watr_sovereign_sibl,
-                          balance: *watr_asset_amount_to_send
-                        }
+                        result:
+                          {
+                            assetId: *stmt_asset_id,
+                            owner: *watr_sovereign_sibl,
+                            balance: *watr_asset_amount_to_send,
+                          }
                       - name: assets.Issued
                         chain: *stmt_parachain
                         attributes:
@@ -181,61 +238,21 @@ tests:
                     pallet: polkadotXcm
                     call: execute
                     args: [
-                      # message: XcmVersionedXcm
-                      {
-                        v3: [
-                          {
-                            WithdrawAsset: [
-                              {
-                                id: {
-                                  Concrete: *wrong_remote_asset_location # wrong asset
-                                },
-                                fun: { Fungible: *watr_asset_amount_to_send }
-                              }
-                            ]
-                          },
-                          {
-                            InitiateReserveWithdraw: {
-                              assets: { Wild: All },
-                              reserve: *watr->stmt_dest,
-                              xcm: [
-                                {
-                                  BuyExecution: {
-                                    fees: {
-                                      id: {
-                                        Concrete: *stmt_local_asset_location
-                                      },
-                                      fun: { Fungible: *watr_buy_execution_amount }
-                                    },
-                                    weightLimit: Unlimited
-                                  }
-                                },
-                                {
-                                  DepositAsset: {
-                                    assets: { Wild: All },
-                                    maxAssets: 1,
-                                    beneficiary: {
-                                      parents: 0,
-                                      interior: {
-                                        X1: { AccountId32: { network: , id: *stmt_asset_receiver_acc } }
-                                      }
-                                    }
-                                  }
-                                }
-                              ]
-                            }
-                          }
-                        ]
-                      },
-                      # maxWeight: Weight
-                      { maxWeight: *weight_at_most }
-                    ]
+                        # message: XcmVersionedXcm
+                        { v3: [{ WithdrawAsset: [{ id: {
+                                          Concrete: *wrong_remote_asset_location, # wrong asset
+                                        }, fun: { Fungible: *watr_asset_amount_to_send } }] }, { InitiateReserveWithdraw: { assets: { Wild: All }, reserve: *watr->stmt_dest, xcm: [{ BuyExecution: { fees: { id: { Concrete: *stmt_local_asset_location }, fun: { Fungible: *watr_buy_execution_amount } }, weightLimit: Unlimited } }, { DepositAsset: { assets: { Wild: All }, maxAssets: 1, beneficiary: { parents: 0, interior: { X1: { AccountId32: { network, id: *stmt_asset_receiver_acc } } } } } }] } }] },
+                        # maxWeight: Weight
+                        { maxWeight: *weight_at_most },
+                      ]
                     events:
                       - name: system.ExtrinsicFailed
                         attributes:
                           - type: SpRuntimeDispatchError
                             key: dispatchError
-                            value: { Module: { index: 31, error: '0x02000000' }} # polkadotXcm.Filtered
+                            value: {
+                                Module: { index: 31, error: "0x02000000" },
+                              } # polkadotXcm.Filtered
 
           - name: Execution filter should fail if  WithdrawAsset amount is smaller than BuyExecution amount
             actions:
@@ -245,61 +262,81 @@ tests:
                     pallet: polkadotXcm
                     call: execute
                     args: [
-                      # message: XcmVersionedXcm
-                      {
-                        v3: [
-                          {
-                            WithdrawAsset: [
+                        # message: XcmVersionedXcm
+                        {
+                          v3:
+                            [
                               {
-                                id: {
-                                  Concrete: *stmt_remote_asset_location
-                                },
-                                fun: { Fungible: 1000000 } # too small amount
-                              }
-                            ]
-                          },
-                          {
-                            InitiateReserveWithdraw: {
-                              assets: { Wild: All },
-                              reserve: *watr->stmt_dest,
-                              xcm: [
-                                {
-                                  BuyExecution: {
-                                    fees: {
-                                      id: {
-                                        Concrete: *stmt_local_asset_location
-                                      },
-                                      fun: { Fungible: 2000000 }
+                                WithdrawAsset:
+                                  [
+                                    {
+                                      id:
+                                        {
+                                          Concrete: *stmt_remote_asset_location,
+                                        },
+                                      fun: { Fungible: 1000000 }, # too small amount
                                     },
-                                    weightLimit: Unlimited
-                                  }
-                                },
-                                {
-                                  DepositAsset: {
+                                  ],
+                              },
+                              {
+                                InitiateReserveWithdraw:
+                                  {
                                     assets: { Wild: All },
-                                    maxAssets: 1,
-                                    beneficiary: {
-                                      parents: 0,
-                                      interior: {
-                                        X1: { AccountId32: { network: , id: *stmt_asset_receiver_acc } }
-                                      }
-                                    }
-                                  }
-                                }
-                              ]
-                            }
-                          }
-                        ]
-                      },
-                      # maxWeight: Weight
-                      { maxWeight: *weight_at_most }
-                    ]
+                                    reserve: *watr->stmt_dest,
+                                    xcm:
+                                      [
+                                        {
+                                          BuyExecution:
+                                            {
+                                              fees:
+                                                {
+                                                  id:
+                                                    {
+                                                      Concrete: *stmt_local_asset_location,
+                                                    },
+                                                  fun: { Fungible: 2000000 },
+                                                },
+                                              weightLimit: Unlimited,
+                                            },
+                                        },
+                                        {
+                                          DepositAsset:
+                                            {
+                                              assets: { Wild: All },
+                                              maxAssets: 1,
+                                              beneficiary:
+                                                {
+                                                  parents: 0,
+                                                  interior:
+                                                    {
+                                                      X1:
+                                                        {
+                                                          AccountId32:
+                                                            {
+                                                              network,
+                                                              id: *stmt_asset_receiver_acc,
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                      ],
+                                  },
+                              },
+                            ],
+                        },
+                        # maxWeight: Weight
+                        { maxWeight: *weight_at_most },
+                      ]
                     events:
                       - name: system.ExtrinsicFailed
                         attributes:
                           - type: SpRuntimeDispatchError
                             key: dispatchError
-                            value: { Module: { index: 31, error: '0x02000000' }} # polkadotXcm.Filtered
+                            value: {
+                                Module: { index: 31, error: "0x02000000" },
+                              } # polkadotXcm.Filtered
 
           - name: Execution filter should fail if InitiateReserveWithdraw to a wrong Reserve
             actions:
@@ -309,61 +346,84 @@ tests:
                     pallet: polkadotXcm
                     call: execute
                     args: [
-                      # message: XcmVersionedXcm
-                      {
-                        v3: [
-                          {
-                            WithdrawAsset: [
+                        # message: XcmVersionedXcm
+                        {
+                          v3:
+                            [
                               {
-                                id: {
-                                  Concrete: *stmt_remote_asset_location
-                                },
-                                fun: { Fungible: *watr_asset_amount_to_send }
-                              }
-                            ]
-                          },
-                          {
-                            InitiateReserveWithdraw: {
-                              assets: { Wild: All },
-                              reserve: *watr->wrong_dest, # wrong reserve
-                              xcm: [
-                                {
-                                  BuyExecution: {
-                                    fees: {
-                                      id: {
-                                        Concrete: *stmt_local_asset_location
-                                      },
-                                      fun: { Fungible: *watr_buy_execution_amount }
+                                WithdrawAsset:
+                                  [
+                                    {
+                                      id:
+                                        {
+                                          Concrete: *stmt_remote_asset_location,
+                                        },
+                                      fun:
+                                        {
+                                          Fungible: *watr_asset_amount_to_send,
+                                        },
                                     },
-                                    weightLimit: Unlimited
-                                  }
-                                },
-                                {
-                                  DepositAsset: {
+                                  ],
+                              },
+                              { InitiateReserveWithdraw: {
                                     assets: { Wild: All },
-                                    maxAssets: 1,
-                                    beneficiary: {
-                                      parents: 0,
-                                      interior: {
-                                        X1: { AccountId32: { network: , id: *stmt_asset_receiver_acc } }
-                                      }
-                                    }
-                                  }
-                                }
-                              ]
-                            }
-                          }
-                        ]
-                      },
-                      # maxWeight: Weight
-                      { maxWeight: *weight_at_most }
-                    ]
+                                    reserve: *watr->wrong_dest, # wrong reserve
+                                    xcm:
+                                      [
+                                        {
+                                          BuyExecution:
+                                            {
+                                              fees:
+                                                {
+                                                  id:
+                                                    {
+                                                      Concrete: *stmt_local_asset_location,
+                                                    },
+                                                  fun:
+                                                    {
+                                                      Fungible: *watr_buy_execution_amount,
+                                                    },
+                                                },
+                                              weightLimit: Unlimited,
+                                            },
+                                        },
+                                        {
+                                          DepositAsset:
+                                            {
+                                              assets: { Wild: All },
+                                              maxAssets: 1,
+                                              beneficiary:
+                                                {
+                                                  parents: 0,
+                                                  interior:
+                                                    {
+                                                      X1:
+                                                        {
+                                                          AccountId32:
+                                                            {
+                                                              network,
+                                                              id: *stmt_asset_receiver_acc,
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                      ],
+                                  } },
+                            ],
+                        },
+                        # maxWeight: Weight
+                        { maxWeight: *weight_at_most },
+                      ]
                     events:
                       - name: system.ExtrinsicFailed
                         attributes:
                           - type: SpRuntimeDispatchError
                             key: dispatchError
-                            value: { Module: { index: 31, error: '0x02000000' }} # polkadotXcm.Filtered
+                            value: {
+                                Module: { index: 31, error: "0x02000000" },
+                              } # polkadotXcm.Filtered
 
           - name: Execution filter should fail if InitiateReserveWithdraw wrong Asset
             actions:
@@ -373,64 +433,100 @@ tests:
                     pallet: polkadotXcm
                     call: execute
                     args: [
-                      # message: XcmVersionedXcm
-                      {
-                        v3: [
-                          {
-                            WithdrawAsset: [
+                        # message: XcmVersionedXcm
+                        { v3: [
                               {
-                                id: {
-                                  Concrete: *stmt_remote_asset_location
-                                },
-                                fun: { Fungible: *watr_asset_amount_to_send }
-                              }
-                            ]
-                          },
-                          {
-                            InitiateReserveWithdraw: {
-                              assets: { Wild: { AllOf: {
-                                id: { Concrete: *stmt_local_asset_location },
-                                fun:  { Fungible: *watr_buy_execution_amount }
-                              }}}, # wrong asset
-                              reserve: *watr->stmt_dest,
-                              xcm: [
-                                {
-                                  BuyExecution: {
-                                    fees: {
-                                      id: {
-                                        Concrete: *stmt_local_asset_location
-                                      },
-                                      fun: { Fungible: *watr_buy_execution_amount }
+                                WithdrawAsset:
+                                  [
+                                    {
+                                      id:
+                                        {
+                                          Concrete: *stmt_remote_asset_location,
+                                        },
+                                      fun:
+                                        {
+                                          Fungible: *watr_asset_amount_to_send,
+                                        },
                                     },
-                                    weightLimit: Unlimited
-                                  }
-                                },
-                                {
-                                  DepositAsset: {
-                                    assets: { Wild: All },
-                                    maxAssets: 1,
-                                    beneficiary: {
-                                      parents: 0,
-                                      interior: {
-                                        X1: { AccountId32: { network: , id: *stmt_asset_receiver_acc } }
-                                      }
-                                    }
-                                  }
-                                }
-                              ]
-                            }
-                          }
-                        ]
-                      },
-                      # maxWeight: Weight
-                      { maxWeight: *weight_at_most }
-                    ]
+                                  ],
+                              },
+                              {
+                                InitiateReserveWithdraw:
+                                  {
+                                    assets:
+                                      {
+                                        Wild:
+                                          {
+                                            AllOf:
+                                              {
+                                                id:
+                                                  {
+                                                    Concrete: *stmt_local_asset_location,
+                                                  },
+                                                fun:
+                                                  {
+                                                    Fungible: *watr_buy_execution_amount,
+                                                  },
+                                              },
+                                          },
+                                      },
+                                    reserve: *watr->stmt_dest,
+                                    xcm:
+                                      [
+                                        {
+                                          BuyExecution:
+                                            {
+                                              fees:
+                                                {
+                                                  id:
+                                                    {
+                                                      Concrete: *stmt_local_asset_location,
+                                                    },
+                                                  fun:
+                                                    {
+                                                      Fungible: *watr_buy_execution_amount,
+                                                    },
+                                                },
+                                              weightLimit: Unlimited,
+                                            },
+                                        },
+                                        {
+                                          DepositAsset:
+                                            {
+                                              assets: { Wild: All },
+                                              maxAssets: 1,
+                                              beneficiary:
+                                                {
+                                                  parents: 0,
+                                                  interior:
+                                                    {
+                                                      X1:
+                                                        {
+                                                          AccountId32:
+                                                            {
+                                                              network,
+                                                              id: *stmt_asset_receiver_acc,
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                      ],
+                                  },
+                              }, # wrong asset
+                            ] },
+                        # maxWeight: Weight
+                        { maxWeight: *weight_at_most },
+                      ]
                     events:
                       - name: system.ExtrinsicFailed
                         attributes:
                           - type: SpRuntimeDispatchError
                             key: dispatchError
-                            value: { Module: { index: 31, error: '0x02000000' }} # polkadotXcm.Filtered
+                            value: {
+                                Module: { index: 31, error: "0x02000000" },
+                              } # polkadotXcm.Filtered
 
           - name: Execution filter should fail if BuyExecution of a wrong Asset
             actions:
@@ -440,61 +536,48 @@ tests:
                     pallet: polkadotXcm
                     call: execute
                     args: [
-                      # message: XcmVersionedXcm
-                      {
-                        v3: [
-                          {
-                            WithdrawAsset: [
+                        # message: XcmVersionedXcm
+                        {
+                          v3:
+                            [
                               {
-                                id: {
-                                  Concrete: *stmt_remote_asset_location
-                                },
-                                fun: { Fungible: *watr_asset_amount_to_send }
-                              }
-                            ]
-                          },
-                          {
-                            InitiateReserveWithdraw: {
-                              assets: { Wild: All },
-                              reserve: *watr->stmt_dest,
-                              xcm: [
-                                {
-                                  BuyExecution: {
-                                    fees: {
-                                      id: {
-                                        Concrete: *wrong_local_asset_location # wrong asset
-                                      },
-                                      fun: { Fungible: *watr_buy_execution_amount }
+                                WithdrawAsset:
+                                  [
+                                    {
+                                      id:
+                                        {
+                                          Concrete: *stmt_remote_asset_location,
+                                        },
+                                      fun:
+                                        {
+                                          Fungible: *watr_asset_amount_to_send,
+                                        },
                                     },
-                                    weightLimit: Unlimited
-                                  }
-                                },
-                                {
-                                  DepositAsset: {
+                                  ],
+                              },
+                              {
+                                InitiateReserveWithdraw:
+                                  {
                                     assets: { Wild: All },
-                                    maxAssets: 1,
-                                    beneficiary: {
-                                      parents: 0,
-                                      interior: {
-                                        X1: { AccountId32: { network: , id: *stmt_asset_receiver_acc } }
-                                      }
-                                    }
-                                  }
-                                }
-                              ]
-                            }
-                          }
-                        ]
-                      },
-                      # maxWeight: Weight
-                      { maxWeight: *weight_at_most }
-                    ]
+                                    reserve: *watr->stmt_dest,
+                                    xcm: [{ BuyExecution: { fees: { id: {
+                                                      Concrete: *wrong_local_asset_location, # wrong asset
+                                                    }, fun: { Fungible: *watr_buy_execution_amount } }, weightLimit: Unlimited } }, { DepositAsset: { assets: { Wild: All }, maxAssets: 1, beneficiary: { parents: 0, interior: { X1: { AccountId32: { network, id: *stmt_asset_receiver_acc } } } } } }],
+                                  },
+                              },
+                            ],
+                        },
+                        # maxWeight: Weight
+                        { maxWeight: *weight_at_most },
+                      ]
                     events:
                       - name: system.ExtrinsicFailed
                         attributes:
                           - type: SpRuntimeDispatchError
                             key: dispatchError
-                            value: { Module: { index: 31, error: '0x02000000' }} # polkadotXcm.Filtered
+                            value: {
+                                Module: { index: 31, error: "0x02000000" },
+                              } # polkadotXcm.Filtered
 
           - name: Execution filter should fail if DepositAsset of a wrong Asset
             actions:
@@ -504,64 +587,102 @@ tests:
                     pallet: polkadotXcm
                     call: execute
                     args: [
-                      # message: XcmVersionedXcm
-                      {
-                        v3: [
-                          {
-                            WithdrawAsset: [
+                        # message: XcmVersionedXcm
+                        {
+                          v3:
+                            [
                               {
-                                id: {
-                                  Concrete: *stmt_remote_asset_location
-                                },
-                                fun: { Fungible: *watr_asset_amount_to_send }
-                              }
-                            ]
-                          },
-                          {
-                            InitiateReserveWithdraw: {
-                              assets: { Wild: All },
-                              reserve: *watr->stmt_dest,
-                              xcm: [
-                                {
-                                  BuyExecution: {
-                                    fees: {
-                                      id: {
-                                        Concrete: *stmt_local_asset_location
-                                      },
-                                      fun: { Fungible: *watr_buy_execution_amount }
+                                WithdrawAsset:
+                                  [
+                                    {
+                                      id:
+                                        {
+                                          Concrete: *stmt_remote_asset_location,
+                                        },
+                                      fun:
+                                        {
+                                          Fungible: *watr_asset_amount_to_send,
+                                        },
                                     },
-                                    weightLimit: Unlimited
-                                  }
-                                },
-                                {
-                                  DepositAsset: {
-                                    assets: { Wild: { AllOf: {
-                                      id: { Concrete: *stmt_local_asset_location },
-                                      fun:  { Fungible: *watr_buy_execution_amount }
-                                    }}}, # wrong asset
-                                    maxAssets: 1,
-                                    beneficiary: {
-                                      parents: 0,
-                                      interior: {
-                                        X1: { AccountId32: { network: , id: *stmt_asset_receiver_acc } }
-                                      }
-                                    }
-                                  }
-                                }
-                              ]
-                            }
-                          }
-                        ]
-                      },
-                      # maxWeight: Weight
-                      { maxWeight: *weight_at_most }
-                    ]
+                                  ],
+                              },
+                              {
+                                InitiateReserveWithdraw:
+                                  {
+                                    assets: { Wild: All },
+                                    reserve: *watr->stmt_dest,
+                                    xcm: [
+                                        {
+                                          BuyExecution:
+                                            {
+                                              fees:
+                                                {
+                                                  id:
+                                                    {
+                                                      Concrete: *stmt_local_asset_location,
+                                                    },
+                                                  fun:
+                                                    {
+                                                      Fungible: *watr_buy_execution_amount,
+                                                    },
+                                                },
+                                              weightLimit: Unlimited,
+                                            },
+                                        },
+                                        {
+                                          DepositAsset:
+                                            {
+                                              assets:
+                                                {
+                                                  Wild:
+                                                    {
+                                                      AllOf:
+                                                        {
+                                                          id:
+                                                            {
+                                                              Concrete: *stmt_local_asset_location,
+                                                            },
+                                                          fun:
+                                                            {
+                                                              Fungible: *watr_buy_execution_amount,
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                              maxAssets: 1,
+                                              beneficiary:
+                                                {
+                                                  parents: 0,
+                                                  interior:
+                                                    {
+                                                      X1:
+                                                        {
+                                                          AccountId32:
+                                                            {
+                                                              network,
+                                                              id: *stmt_asset_receiver_acc,
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        }, # wrong asset
+                                      ],
+                                  },
+                              },
+                            ],
+                        },
+                        # maxWeight: Weight
+                        { maxWeight: *weight_at_most },
+                      ]
                     events:
                       - name: system.ExtrinsicFailed
                         attributes:
                           - type: SpRuntimeDispatchError
                             key: dispatchError
-                            value: { Module: { index: 31, error: '0x02000000' }} # polkadotXcm.Filtered
+                            value: {
+                                Module: { index: 31, error: "0x02000000" },
+                              } # polkadotXcm.Filtered
 
           - name: Execution filter should fail if DepositAsset to a wrong beneficiary
             actions:
@@ -571,61 +692,86 @@ tests:
                     pallet: polkadotXcm
                     call: execute
                     args: [
-                      # message: XcmVersionedXcm
-                      {
-                        v3: [
-                          {
-                            WithdrawAsset: [
+                        # message: XcmVersionedXcm
+                        {
+                          v3:
+                            [
                               {
-                                id: {
-                                  Concrete: *stmt_remote_asset_location
-                                },
-                                fun: { Fungible: *watr_asset_amount_to_send }
-                              }
-                            ]
-                          },
-                          {
-                            InitiateReserveWithdraw: {
-                              assets: { Wild: All },
-                              reserve: *watr->stmt_dest,
-                              xcm: [
-                                {
-                                  BuyExecution: {
-                                    fees: {
-                                      id: {
-                                        Concrete: *stmt_local_asset_location
-                                      },
-                                      fun: { Fungible: *watr_buy_execution_amount }
+                                WithdrawAsset:
+                                  [
+                                    {
+                                      id:
+                                        {
+                                          Concrete: *stmt_remote_asset_location,
+                                        },
+                                      fun:
+                                        {
+                                          Fungible: *watr_asset_amount_to_send,
+                                        },
                                     },
-                                    weightLimit: Unlimited
-                                  }
-                                },
-                                {
-                                  DepositAsset: {
+                                  ],
+                              },
+                              {
+                                InitiateReserveWithdraw:
+                                  {
                                     assets: { Wild: All },
-                                    maxAssets: 1,
-                                    beneficiary: {
-                                      parents: 1, # wrong beneficiary
-                                      interior: {
-                                        X1: { AccountId32: { network: , id: *stmt_asset_receiver_acc } }
-                                      }
-                                    }
-                                  }
-                                }
-                              ]
-                            }
-                          }
-                        ]
-                      },
-                      # maxWeight: Weight
-                      { maxWeight: *weight_at_most }
-                    ]
+                                    reserve: *watr->stmt_dest,
+                                    xcm:
+                                      [
+                                        {
+                                          BuyExecution:
+                                            {
+                                              fees:
+                                                {
+                                                  id:
+                                                    {
+                                                      Concrete: *stmt_local_asset_location,
+                                                    },
+                                                  fun:
+                                                    {
+                                                      Fungible: *watr_buy_execution_amount,
+                                                    },
+                                                },
+                                              weightLimit: Unlimited,
+                                            },
+                                        },
+                                        {
+                                          DepositAsset:
+                                            {
+                                              assets: { Wild: All },
+                                              maxAssets: 1,
+                                              beneficiary: {
+                                                  parents: 1, # wrong beneficiary
+                                                  interior:
+                                                    {
+                                                      X1:
+                                                        {
+                                                          AccountId32:
+                                                            {
+                                                              network,
+                                                              id: *stmt_asset_receiver_acc,
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                      ],
+                                  },
+                              },
+                            ],
+                        },
+                        # maxWeight: Weight
+                        { maxWeight: *weight_at_most },
+                      ]
                     events:
                       - name: system.ExtrinsicFailed
                         attributes:
                           - type: SpRuntimeDispatchError
                             key: dispatchError
-                            value: { Module: { index: 31, error: '0x02000000' }} # polkadotXcm.Filtered
+                            value: {
+                                Module: { index: 31, error: "0x02000000" },
+                              } # polkadotXcm.Filtered
 
           - name: Execution filter should fail if only WithdrawAsset
             actions:
@@ -635,30 +781,38 @@ tests:
                     pallet: polkadotXcm
                     call: execute
                     args: [
-                      # message: XcmVersionedXcm
-                      {
-                        v3: [
-                          {
-                            WithdrawAsset: [
+                        # message: XcmVersionedXcm
+                        {
+                          v3:
+                            [
                               {
-                                id: {
-                                  Concrete: *stmt_remote_asset_location
-                                },
-                                fun: { Fungible: *watr_asset_amount_to_send }
-                              }
-                            ]
-                          },
-                        ]
-                      },
-                      # maxWeight: Weight
-                      { maxWeight: *weight_at_most }
-                    ]
+                                WithdrawAsset:
+                                  [
+                                    {
+                                      id:
+                                        {
+                                          Concrete: *stmt_remote_asset_location,
+                                        },
+                                      fun:
+                                        {
+                                          Fungible: *watr_asset_amount_to_send,
+                                        },
+                                    },
+                                  ],
+                              },
+                            ],
+                        },
+                        # maxWeight: Weight
+                        { maxWeight: *weight_at_most },
+                      ]
                     events:
                       - name: system.ExtrinsicFailed
                         attributes:
                           - type: SpRuntimeDispatchError
                             key: dispatchError
-                            value: { Module: { index: 31, error: '0x02000000' }} # polkadotXcm.Filtered
+                            value: {
+                                Module: { index: 31, error: "0x02000000" },
+                              } # polkadotXcm.Filtered
 
           - name: Execution filter should fail if only InitiateReserveWithdraw
             actions:
@@ -668,48 +822,68 @@ tests:
                     pallet: polkadotXcm
                     call: execute
                     args: [
-                      # message: XcmVersionedXcm
-                      {
-                        v3: [
-                          {
-                            InitiateReserveWithdraw: {
-                              assets: { Wild: All },
-                              reserve: *watr->stmt_dest,
-                              xcm: [
-                                {
-                                  BuyExecution: {
-                                    fees: {
-                                      id: {
-                                        Concrete: *stmt_local_asset_location
-                                      },
-                                      fun: { Fungible: *watr_buy_execution_amount }
-                                    },
-                                    weightLimit: Unlimited
-                                  }
-                                },
-                                {
-                                  DepositAsset: {
+                        # message: XcmVersionedXcm
+                        {
+                          v3:
+                            [
+                              {
+                                InitiateReserveWithdraw:
+                                  {
                                     assets: { Wild: All },
-                                    maxAssets: 1,
-                                    beneficiary: {
-                                      parents: 1, # wrong beneficiary
-                                      interior: {
-                                        X1: { AccountId32: { network: , id: *stmt_asset_receiver_acc } }
-                                      }
-                                    }
-                                  }
-                                }
-                              ]
-                            }
-                          }
-                        ]
-                      },
-                      # maxWeight: Weight
-                      { maxWeight: *weight_at_most }
-                    ]
+                                    reserve: *watr->stmt_dest,
+                                    xcm:
+                                      [
+                                        {
+                                          BuyExecution:
+                                            {
+                                              fees:
+                                                {
+                                                  id:
+                                                    {
+                                                      Concrete: *stmt_local_asset_location,
+                                                    },
+                                                  fun:
+                                                    {
+                                                      Fungible: *watr_buy_execution_amount,
+                                                    },
+                                                },
+                                              weightLimit: Unlimited,
+                                            },
+                                        },
+                                        {
+                                          DepositAsset:
+                                            {
+                                              assets: { Wild: All },
+                                              maxAssets: 1,
+                                              beneficiary: {
+                                                  parents: 1, # wrong beneficiary
+                                                  interior:
+                                                    {
+                                                      X1:
+                                                        {
+                                                          AccountId32:
+                                                            {
+                                                              network,
+                                                              id: *stmt_asset_receiver_acc,
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                      ],
+                                  },
+                              },
+                            ],
+                        },
+                        # maxWeight: Weight
+                        { maxWeight: *weight_at_most },
+                      ]
                     events:
                       - name: system.ExtrinsicFailed
                         attributes:
                           - type: SpRuntimeDispatchError
                             key: dispatchError
-                            value: { Module: { index: 31, error: '0x02000000' }} # polkadotXcm.Filtered
+                            value: {
+                                Module: { index: 31, error: "0x02000000" },
+                              } # polkadotXcm.Filtered

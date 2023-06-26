@@ -12,13 +12,19 @@ settings:
       paraId: &watr_id 2058
   variables:
     common:
-      require_weight_at_most: &weight_at_most {refTime: 1000000000, proofSize: 200000}
+      require_weight_at_most:
+        &weight_at_most { refTime: 1000000000, proofSize: 200000 }
+      weight_threshold:
+        &weight_threshold { refTime: [10, 10], proofSize: [10, 10] }
     chains:
       relay_chain:
         sudo:
           signer: &rc_sudo_signer //Alice
         destinations:
-          statemint: &rc->stmt_dest { v3: { 0, interior: { x1: { parachain: *stmt_id }}}}
+          statemint:
+            &rc->stmt_dest {
+              v3: { 0, interior: { x1: { parachain: *stmt_id } } },
+            }
       statemint_parachain:
         asset_ower:
           signer: &stmt_asset_owner_signer //Alice
@@ -37,30 +43,39 @@ settings:
           pallet_id: &stmt_assets_pallet_id 50
           total_issuance: &stmt_asset_total_issuance 1000000000000000
           amount_to_send: &stmt_asset_amount_to_send 500000000000000 # half of total issuance
-          local_locations: &stmt_local_asset_location {
-            parents: 0,
-            interior: {
-              X2: [
-                {  PalletInstance: *stmt_assets_pallet_id },
-                { GeneralIndex: *stmt_asset_id }
-              ]
+          local_locations:
+            &stmt_local_asset_location {
+              parents: 0,
+              interior:
+                {
+                  X2:
+                    [
+                      { PalletInstance: *stmt_assets_pallet_id },
+                      { GeneralIndex: *stmt_asset_id },
+                    ],
+                },
             }
-          }
-          wrong_local_locations: &stmt_wrong_local_asset_location {
-            parents: 0,
-            interior: {
-              X2: [
-                {  PalletInstance: *stmt_assets_pallet_id },
-                { GeneralIndex: *stmt_wrong_asset_id }
-              ]
+          wrong_local_locations:
+            &stmt_wrong_local_asset_location {
+              parents: 0,
+              interior:
+                {
+                  X2:
+                    [
+                      { PalletInstance: *stmt_assets_pallet_id },
+                      { GeneralIndex: *stmt_wrong_asset_id },
+                    ],
+                },
             }
-          }
         destinations:
-          watr: &stmt->watr_dest { v3: { parents: 1, interior: { x1: { parachain: *watr_id } }}}
+          watr:
+            &stmt->watr_dest {
+              v3: { parents: 1, interior: { x1: { parachain: *watr_id } } },
+            }
       watr_parachain:
         sovereign_account: &watr_sovereign_sibl 13cKp88gCrt9hrrXLFurrbvTU6Bbs6F65CQmY588ZSwvK7Q8 # Statemint
         asset_receiver:
-          account: &watr_asset_receiver_acc '0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48' # Bob
+          account: &watr_asset_receiver_acc "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48" # Bob
           wallet: &watr_asset_receiver_wallet 2xBchgbq7aQyGjTotgQvP9Uh76uEWfQWYBpAzJgn5dfsfhsW # Bob
         asset:
           id: &watr_asset_id 1984 # Tether USD
@@ -71,21 +86,21 @@ settings:
       pallet: assets
       call: forceCreate
       args: [
-        *stmt_asset_id,
-        { Id: *stmt_asset_owner_wallet }, # owner
-        *stmt_asset_is_sufficient, # isSufficient
-        *stmt_asset_ed # minBalance
-      ]
+          *stmt_asset_id,
+          { Id: *stmt_asset_owner_wallet }, # owner
+          *stmt_asset_is_sufficient, # isSufficient
+          *stmt_asset_ed, # minBalance
+        ]
     force_create_wrong_asset:
       chain: *stmt_parachain
       pallet: assets
       call: forceCreate
       args: [
-        *stmt_wrong_asset_id,
-        { Id: *stmt_asset_owner_wallet }, # owner
-        *stmt_asset_is_sufficient, # isSufficient
-        *stmt_asset_ed # minBalance
-      ]
+          *stmt_wrong_asset_id,
+          { Id: *stmt_asset_owner_wallet }, # owner
+          *stmt_asset_is_sufficient, # isSufficient
+          *stmt_asset_ed, # minBalance
+        ]
 
 tests:
   - name: RESERVE TRANSFER
@@ -95,232 +110,289 @@ tests:
           - name: DEPENDANCY | An Asset should exist in the Statemint Parachain
             actions:
               - extrinsics:
-                - chain: *relay_chain
-                  signer: *rc_sudo_signer
-                  sudo: true
-                  pallet: xcmPallet
-                  call: send
-                  args: [
-                    *rc->stmt_dest, # destination
-                    {
-                      v3: [ #message
-                        {
-                          Transact: {
-                            originType: Superuser,
-                            requireWeightAtMost: *weight_at_most,
-                            call: $force_create_asset
-                          }
-                        }
+                  - chain: *relay_chain
+                    signer: *rc_sudo_signer
+                    sudo: true
+                    pallet: xcmPallet
+                    call: send
+                    args: [
+                        *rc->stmt_dest, # destination
+                        { ? v3 #message
+                          : [
+                              { UnpaidExecution: { weightLimit: Unlimited } },
+                              {
+                                SetTopic: "0x0123456789012345678901234567891201234567890123456789012345678912",
+                              },
+                              {
+                                Transact:
+                                  {
+                                    originKind: Superuser,
+                                    requireWeightAtMost: *weight_at_most,
+                                    call: $force_create_asset,
+                                  },
+                              },
+                            ] },
                       ]
-                    }
-                  ]
-                  events:
-                    - name: xcmPallet.Sent
-                    - name: dmpQueue.ExecutedDownward
-                      chain: *stmt_parachain
-                    - name: assets.ForceCreated
-                      chain: *stmt_parachain
+                    events:
+                      - name: xcmPallet.Sent
+                      - name: dmpQueue.ExecutedDownward
+                        chain: *stmt_parachain
+                        threshold: *weight_threshold
+                        result:
+                          {
+                            outcome:
+                              {
+                                Complete:
+                                  {
+                                    refTime: "1,022,394,000",
+                                    proofSize: "200,000",
+                                  },
+                              },
+                          }
+              - queries:
+                  forced_created_asset:
+                    chain: *stmt_parachain
+                    pallet: assets
+                    call: asset
+                    args: [*stmt_asset_id]
+              - asserts:
+                  isSome:
+                    args: [$forced_created_asset]
 
           - name: DEPENDANCY | A wrong Asset should exist in the Statemint Parachain
             actions:
               - extrinsics:
-                - chain: *relay_chain
-                  signer: *rc_sudo_signer
-                  sudo: true
-                  pallet: xcmPallet
-                  call: send
-                  args: [
-                    *rc->stmt_dest, # destination
-                    {
-                      v3: [ #message
-                        {
-                          Transact: {
-                            originType: Superuser,
-                            requireWeightAtMost: *weight_at_most,
-                            call: $force_create_wrong_asset
-                          }
-                        }
+                  - chain: *relay_chain
+                    signer: *rc_sudo_signer
+                    sudo: true
+                    pallet: xcmPallet
+                    call: send
+                    args: [
+                        *rc->stmt_dest, # destination
+                        { ? v3 #message
+                          : [
+                              { UnpaidExecution: { weightLimit: Unlimited } },
+                              {
+                                SetTopic: "0x0123456789012345678901234567891201234567890123456789012345678912",
+                              },
+                              {
+                                Transact:
+                                  {
+                                    originKind: Superuser,
+                                    requireWeightAtMost: *weight_at_most,
+                                    call: $force_create_wrong_asset,
+                                  },
+                              },
+                            ] },
                       ]
-                    }
-                  ]
-                  events:
-                    - name: xcmPallet.Sent
-                    - name: dmpQueue.ExecutedDownward
-                      chain: *stmt_parachain
-                    - name: assets.ForceCreated
-                      chain: *stmt_parachain
+                    events:
+                      - name: xcmPallet.Sent
+                      - name: dmpQueue.ExecutedDownward
+                        chain: *stmt_parachain
+                        threshold: *weight_threshold
+                        result:
+                          {
+                            outcome:
+                              {
+                                Complete:
+                                  {
+                                    refTime: "1,022,394,000",
+                                    proofSize: "200,000",
+                                  },
+                              },
+                          }
+              - queries:
+                  forced_created_wrong_asset:
+                    chain: *stmt_parachain
+                    pallet: assets
+                    call: asset
+                    args: [*stmt_wrong_asset_id]
+              - asserts:
+                  isSome:
+                    args: [$forced_created_wrong_asset]
 
           - name: DEPENDANCY | Set metadata
             actions:
               - extrinsics:
-                - chain: *stmt_parachain
-                  signer: *stmt_asset_owner_signer
-                  pallet: assets
-                  call: setMetadata
-                  args: [
-                    *stmt_asset_id, # id
-                    *stmt_asset_name, # name
-                    *stmt_asset_symbol, # symbol
-                    *stmt_asset_decimals # decimals
-                  ]
-                  events:
-                    - name: assets.MetadataSet
+                  - chain: *stmt_parachain
+                    signer: *stmt_asset_owner_signer
+                    pallet: assets
+                    call: setMetadata
+                    args: [
+                        *stmt_asset_id, # id
+                        *stmt_asset_name, # name
+                        *stmt_asset_symbol, # symbol
+                        *stmt_asset_decimals, # decimals
+                      ]
+                    events:
+                      - name: assets.MetadataSet
 
           - name: DEPENDANCY | Some Assets should be minted for the sender
             actions:
               - extrinsics:
-                - chain: *stmt_parachain
-                  signer: *stmt_asset_owner_signer
-                  pallet: assets
-                  call: mint
-                  args: [
-                    *stmt_asset_id,
-                    *stmt_asset_sender_wallet,
-                    *stmt_asset_total_issuance
-                  ]
-                  events:
-                    - name: assets.Issued
+                  - chain: *stmt_parachain
+                    signer: *stmt_asset_owner_signer
+                    pallet: assets
+                    call: mint
+                    args:
+                      [
+                        *stmt_asset_id,
+                        *stmt_asset_sender_wallet,
+                        *stmt_asset_total_issuance,
+                      ]
+                    events:
+                      - name: assets.Issued
 
           - name: DEPENDANCY | Some wrong Assets should be minted for the sender
             actions:
               - extrinsics:
-                - chain: *stmt_parachain
-                  signer: *stmt_asset_owner_signer
-                  pallet: assets
-                  call: mint
-                  args: [
-                    *stmt_wrong_asset_id,
-                    *stmt_asset_sender_wallet,
-                    *stmt_asset_total_issuance
-                  ]
-                  events:
-                    - name: assets.Issued
+                  - chain: *stmt_parachain
+                    signer: *stmt_asset_owner_signer
+                    pallet: assets
+                    call: mint
+                    args:
+                      [
+                        *stmt_wrong_asset_id,
+                        *stmt_asset_sender_wallet,
+                        *stmt_asset_total_issuance,
+                      ]
+                    events:
+                      - name: assets.Issued
 
         its:
           - name: Statemint Parachain account should be able to reserve transfer Asset to another account in Watr Parachain
             actions:
               - extrinsics:
-                - chain: *stmt_parachain
-                  signer: *stmt_asset_sender_signer
-                  pallet: polkadotXcm
-                  call: limitedReserveTransferAssets
-                  args: [
-                    *stmt->watr_dest, # destination
-                    { # beneficiary
-                      v3: {
-                        parents: 0,
-                        interior: {
-                          X1: {
-                            AccountId32: {
-                              network:  ,
-                              id: *watr_asset_receiver_acc
-                            }
-                          }
-                        }
-                      }
-                    },
-                    { # assets
-                      v3: [
+                  - chain: *stmt_parachain
+                    signer: *stmt_asset_sender_signer
+                    pallet: polkadotXcm
+                    call: limitedReserveTransferAssets
+                    args: [
+                        *stmt->watr_dest, # destination
                         {
-                          id: {
-                            Concrete: *stmt_local_asset_location
-                          },
-                          fun: {
-                            Fungible: *stmt_asset_amount_to_send
-                          }
-                        }
+                          # beneficiary
+                          v3:
+                            {
+                              parents: 0,
+                              interior:
+                                {
+                                  X1:
+                                    {
+                                      AccountId32:
+                                        { id: *watr_asset_receiver_acc },
+                                    },
+                                },
+                            },
+                        },
+                        {
+                          # assets
+                          v3:
+                            [
+                              {
+                                id: { Concrete: *stmt_local_asset_location },
+                                fun: { Fungible: *stmt_asset_amount_to_send },
+                              },
+                            ],
+                        },
+                        0, # feeAssetItem
+                        Unlimited, # weightLimit
                       ]
-                    },
-                    0, # feeAssetItem
-                    Unlimited # weightLimit
-                  ]
-                  events:
-                    - name: polkadotXcm.Attempted
-                      attributes:
-                        - type: XcmV3TraitsOutcome
-                          xcmOutcome: Complete
-                          threshold: *weight_threshold
-                          value: 654,404,000
-                    - name: assets.Transferred
-                      result: {
-                          assetId:  *stmt_asset_id,
-                          from: *stmt_asset_sender_wallet,
-                          to: *watr_sovereign_sibl,
-                          amount: *stmt_asset_amount_to_send
-                        }
-                    - name: xcmpQueue.Success
-                      chain: *watr_parachain
-                    - name: assets.Issued
-                      chain: *watr_parachain
-                      attributes:
-                        - key: assetId
-                          value: *watr_asset_id
-                        - key: owner
-                          value: *watr_asset_receiver_wallet
-                        - key: totalSupply
-                          value: *stmt_asset_amount_to_send
-                          threshold: [ 10, 0 ] # less fees
-                    - name: assets.Issued
-                      chain: *watr_parachain
-                      attributes:
-                        - key: assetId
-                          value: *watr_asset_id
-                        - key: totalSupply
-                          value: *watr_expected_fees # fees
+                    events:
+                      - name: polkadotXcm.Attempted
+                        attributes:
+                          - type: XcmV3TraitsOutcome
+                            xcmOutcome: Complete
+                            threshold: *weight_threshold
+                            value:
+                              [
+                                {
+                                  Complete:
+                                    {
+                                      refTime: "679,150,000",
+                                      proofSize: "6,196",
+                                    },
+                                },
+                              ]
+                      - name: assets.Transferred
+                        result:
+                          {
+                            assetId: *stmt_asset_id,
+                            from: *stmt_asset_sender_wallet,
+                            to: *watr_sovereign_sibl,
+                            amount: *stmt_asset_amount_to_send,
+                          }
+                      - name: xcmpQueue.Success
+                        chain: *watr_parachain
 
           - name: Watr Parachain should reject an unknown Asset sent from Statemint
             actions:
               - extrinsics:
-                - chain: *stmt_parachain
-                  signer: *stmt_asset_sender_signer
-                  pallet: polkadotXcm
-                  call: limitedReserveTransferAssets
-                  args: [
-                    *stmt->watr_dest, # destination
-                    { # beneficiary
-                      v3: {
-                        parents: 0,
-                        interior: {
-                          X1: {
-                            AccountId32: {
-                              network:  ,
-                              id: *watr_asset_receiver_acc
-                            }
-                          }
-                        }
-                      }
-                    },
-                    { # assets
-                      v3: [
+                  - chain: *stmt_parachain
+                    signer: *stmt_asset_sender_signer
+                    pallet: polkadotXcm
+                    call: limitedReserveTransferAssets
+                    args: [
+                        *stmt->watr_dest, # destination
                         {
-                          id: {
-                            Concrete: *stmt_wrong_local_asset_location
-                          },
-                          fun: {
-                            Fungible: *stmt_asset_amount_to_send
-                          }
-                        }
+                          # beneficiary
+                          v3:
+                            {
+                              parents: 0,
+                              interior:
+                                {
+                                  X1:
+                                    {
+                                      AccountId32:
+                                        {
+                                          network,
+                                          id: *watr_asset_receiver_acc,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        {
+                          # assets
+                          v3:
+                            [
+                              {
+                                id:
+                                  {
+                                    Concrete: *stmt_wrong_local_asset_location,
+                                  },
+                                fun: { Fungible: *stmt_asset_amount_to_send },
+                              },
+                            ],
+                        },
+                        0, # feeAssetItem
+                        Unlimited, # weightLimit
                       ]
-                    },
-                    0, # feeAssetItem
-                    Unlimited # weightLimit
-                  ]
-                  events:
-                    - name: polkadotXcm.Attempted
-                      attributes:
-                        - type: XcmV3TraitsOutcome
-                          xcmOutcome: Complete
-                          threshold: *weight_threshold
-                          value: 654,404,000
-                    - name: assets.Transferred
-                      result: {
-                          assetId:  *stmt_wrong_asset_id,
-                          from: *stmt_asset_sender_wallet,
-                          to: *watr_sovereign_sibl,
-                          amount: *stmt_asset_amount_to_send
-                        }
-                    - name: xcmpQueue.Fail
-                      chain: *watr_parachain
-                      attributes:
-                        - type: XcmV3TraitsError
-                          value: TooExpensive
+                    events:
+                      - name: polkadotXcm.Attempted
+                        attributes:
+                          - type: XcmV3TraitsOutcome
+                            xcmOutcome: Complete
+                            threshold: *weight_threshold
+                            value:
+                              [
+                                {
+                                  Complete:
+                                    {
+                                      refTime: "679,150,000",
+                                      proofSize: "6,196",
+                                    },
+                                },
+                              ]
+                      - name: assets.Transferred
+                        result:
+                          {
+                            assetId: *stmt_wrong_asset_id,
+                            from: *stmt_asset_sender_wallet,
+                            to: *watr_sovereign_sibl,
+                            amount: *stmt_asset_amount_to_send,
+                          }
+                      - name: xcmpQueue.Fail
+                        chain: *watr_parachain
+                        attributes:
+                          - type: XcmV3TraitsError
+                            value: UntrustedReserveLocation
