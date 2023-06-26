@@ -13667,7 +13667,7 @@ dependencies = [
 
 [[package]]
 name = "watr-node"
-version = "0.9.300"
+version = "0.9.420"
 dependencies = [
  "async-trait",
  "clap",

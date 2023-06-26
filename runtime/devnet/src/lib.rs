@@ -80,7 +80,7 @@ use frame_system::{
 	EnsureRoot, EnsureSigned,
 };
 use pallet_balances::NegativeImbalance;
-pub use sp_runtime::{MultiAddress, Perbill, Permill};
+pub use sp_runtime::{MultiAddress, Perbill, Permill, SaturatedConversion};
 
 use pallet_ethereum::{Call::transact, PostLogContent, Transaction as EthereumTransaction};
 use pallet_evm::{
@@ -144,30 +144,76 @@ pub type Executive = frame_executive::Executive<
 	AllPalletsWithSystem,
 >;
 
-/// Handles converting a weight scalar to a fee value, based on the scale and granularity of the
-/// node's balance type.
-///
-/// This should typically create a mapping between the following ranges:
-///   - `[0, MAXIMUM_BLOCK_WEIGHT]`
-///   - `[Balance::min, Balance::max]`
-///
-/// Yet, it can be used for any other sort of change to weight-fee. Some examples being:
-///   - Setting it to `0` will essentially disable the weight fee.
-///   - Setting it to `1` will cause the literal `#[weight = x]` values to be charged.
-pub struct WeightToFee;
-impl WeightToFeePolynomial for WeightToFee {
-	type Balance = Balance;
-	fn polynomial() -> WeightToFeeCoefficients<Self::Balance> {
-		let p = CENTI_WATRD;
-		let q = 100 * Balance::from(ExtrinsicBaseWeight::get().ref_time());
-		smallvec![WeightToFeeCoefficient {
-			degree: 1,
-			negative: false,
-			coeff_frac: Perbill::from_rational(p % q, q),
-			coeff_integer: p / q,
-		}]
+	/// Handles converting a weight scalar to a fee value, based on the scale and granularity of the
+	/// node's balance type.
+	///
+	/// This should typically create a mapping between the following ranges:
+	///   - `[0, MAXIMUM_BLOCK_WEIGHT]`
+	///   - `[Balance::min, Balance::max]`
+	///
+	/// Yet, it can be used for any other sort of change to weight-fee. Some examples being:
+	///   - Setting it to `0` will essentially disable the weight fee.
+	///   - Setting it to `1` will cause the literal `#[weight = x]` values to be charged.
+	pub struct WeightToFee;
+	impl frame_support::weights::WeightToFee for WeightToFee {
+		type Balance = Balance;
+
+		fn weight_to_fee(weight: &Weight) -> Self::Balance {
+			let ref_time = Balance::saturated_from(weight.ref_time());
+			let proof_size = Balance::saturated_from(weight.proof_size());
+
+			let ref_polynomial = RefTimeToFee::polynomial();
+			let proof_polynomial = ProofSizeToFee::polynomial();
+
+			// Get fee amount from ref_time based on the RefTime polynomial
+			let ref_fee: Balance =
+				ref_polynomial.iter().fold(0, |acc, term| term.saturating_eval(acc, ref_time));
+
+			// Get fee amount from proof_size based on the ProofSize polynomial
+			let proof_fee: Balance = proof_polynomial
+				.iter()
+				.fold(0, |acc, term| term.saturating_eval(acc, proof_size));
+
+			// Take the maximum instead of the sum to charge by the more scarce resource.
+			ref_fee.max(proof_fee)
+		}
 	}
-}
+
+	/// Maps the Ref time component of `Weight` to a fee.
+	pub struct RefTimeToFee;
+	impl WeightToFeePolynomial for RefTimeToFee {
+		type Balance = Balance;
+		fn polynomial() -> WeightToFeeCoefficients<Self::Balance> {
+			// in Rococo, extrinsic base weight (smallest non-zero weight) is mapped to 1 MILLIUNIT:
+			// in our template, we map to 1/10 of that, or 1/10 MILLIUNIT
+			let p = CENTI_WATRD / 10;
+			let q = 100 * Balance::from(ExtrinsicBaseWeight::get().ref_time());
+			smallvec![WeightToFeeCoefficient {
+				degree: 1,
+				negative: false,
+				coeff_frac: Perbill::from_rational(p % q, q),
+				coeff_integer: p / q,
+			}]
+		}
+	}
+
+		/// Maps the proof size component of `Weight` to a fee.
+		pub struct ProofSizeToFee;
+		impl WeightToFeePolynomial for ProofSizeToFee {
+			type Balance = Balance;
+			fn polynomial() -> WeightToFeeCoefficients<Self::Balance> {
+				// Map 10kb proof to 1 CENT.
+				let p = CENTI_WATRD / 10;
+				let q = 10_000;
+
+				smallvec![WeightToFeeCoefficient {
+					degree: 1,
+					negative: false,
+					coeff_frac: Perbill::from_rational(p % q, q),
+					coeff_integer: p / q,
+				}]
+			}
+		}
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
