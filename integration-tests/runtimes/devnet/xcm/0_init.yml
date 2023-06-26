@@ -12,15 +12,20 @@ settings:
       paraId: &watr_id 2058
   variables:
     common:
-      xcm_verison: &xcm_version '3'
-      require_weight_at_most: &weight_at_most {refTime: 1000000000, proofSize: 200000}
-      weight_threshold:  &weight_threshold { refTime: [10, 10], proofSize: [10, 10] }
+      xcm_verison: &xcm_version "3"
+      require_weight_at_most:
+        &weight_at_most { refTime: 1000000000, proofSize: 200000 }
+      weight_threshold:
+        &weight_threshold { refTime: [10, 10], proofSize: [10, 10] }
     chains:
       relay_chain:
         sudo:
           signer: &rc_sudo_signer //Alice
         destinations:
-          statemint: &rc->stmt_dest { v3: { 0, interior: { x1: { parachain: *stmt_id }}}}
+          statemint:
+            &rc->stmt_dest {
+              v3: { 0, interior: { x1: { parachain: *stmt_id } } },
+            }
       watr_parachain:
         sudo:
           signer: &watr_sudo_signer //Alice
@@ -30,12 +35,13 @@ settings:
       pallet: polkadotXcm
       call: forceXcmVersion
       args: [
-        { # location
-          parents: 1,
-          interior: Here
-        },
-        *xcm_version # xcmVersion
-      ]
+          {
+            # location
+            parents: 1,
+            interior: Here,
+          },
+          *xcm_version, # xcmVersion
+        ]
 
 tests:
   - name: Initialize Chains
@@ -43,111 +49,131 @@ tests:
       - name: XCM supported versions between chains
         actions:
           - extrinsics: # Relay Chain sets supported version for Statemint Parachain
-            - chain: *relay_chain
-              sudo: true
-              signer: *rc_sudo_signer
-              pallet: xcmPallet
-              call: forceXcmVersion
-              args: [
-                { # location
-                  parents: 0,
-                  interior: {
-                    X1: {
-                      Parachain: *stmt_id
-                    }
-                  }
-                },
-                *xcm_version # xcmVersion
-              ]
-              events:
-                - name: sudo.Sudid
-                  result: { sudoResult: Ok }
-                - name: xcmPallet.SupportedVersionChanged
-                  result: [{ parents: 0, interior: { X1: { Parachain: *stmt_id }}}, *xcm_version ]
-          - extrinsics: # Relay Chain sets supported version for Watr Parachain
-            - chain: *relay_chain
-              sudo: true
-              signer: *rc_sudo_signer
-              pallet: xcmPallet
-              call: forceXcmVersion
-              args: [
-                { # location
-                  parents: 0,
-                  interior: {
-                    X1: {
-                      Parachain: *watr_id
-                    }
-                  }
-                },
-                *xcm_version # xcmVersion
-              ]
-              events:
-                - name: sudo.Sudid
-                  result: { sudoResult: Ok }
-                - name: xcmPallet.SupportedVersionChanged
-                  result: [{ parents: 0, interior: { X1: { Parachain: *watr_id }}}, *xcm_version ]
-          - extrinsics: # Statemint Parachain sets supported version for Relay Chain through it
-            - chain: *relay_chain
-              signer: *rc_sudo_signer
-              sudo: true
-              pallet: xcmPallet
-              call: send
-              args: [
-                *rc->stmt_dest, # destination
-                {
-                  v3: [ #message
+              - chain: *relay_chain
+                sudo: true
+                signer: *rc_sudo_signer
+                pallet: xcmPallet
+                call: forceXcmVersion
+                args: [
                     {
-                      UnpaidExecution: {
-                          weightLimit: {
-                            limited: {
-                              refTime: 2200000000,
-                              proofSize: 200000
-                            }
-                        }
-                      }
+                      # location
+                      parents: 0,
+                      interior: { X1: { Parachain: *stmt_id } },
                     },
-                    {
-                      Transact: {
-                        originKind: Superuser,
-                        requireWeightAtMost: *weight_at_most,
-                        call: $stmt_force_xcm_version
-                      }
-                    }
+                    *xcm_version, # xcmVersion
                   ]
-                }
-              ]
-              events:
-                - name: sudo.Sudid
-                  result: { sudoResult: Ok }
-                - name: xcmPallet.Sent
-                - name: dmpQueue.ExecutedDownward
-                  chain: *stmt_parachain
-                  threshold: *weight_threshold
-                  result: {
-                    outcome: { Complete: { refTime: '1,019,210,000', proofSize: '200,000' }}
-                  }
-                - name: polkadotXcm.SupportedVersionChanged
-                  chain: *stmt_parachain
-                  result: [{ parents: 1, interior: Here }, *xcm_version ]
+                events:
+                  - name: sudo.Sudid
+                    result: { sudoResult: Ok }
+                  - name: xcmPallet.SupportedVersionChanged
+                    result:
+                      [
+                        {
+                          parents: 0,
+                          interior: { X1: { Parachain: *stmt_id } },
+                        },
+                        *xcm_version,
+                      ]
+          - extrinsics: # Relay Chain sets supported version for Watr Parachain
+              - chain: *relay_chain
+                sudo: true
+                signer: *rc_sudo_signer
+                pallet: xcmPallet
+                call: forceXcmVersion
+                args: [
+                    {
+                      # location
+                      parents: 0,
+                      interior: { X1: { Parachain: *watr_id } },
+                    },
+                    *xcm_version, # xcmVersion
+                  ]
+                events:
+                  - name: sudo.Sudid
+                    result: { sudoResult: Ok }
+                  - name: xcmPallet.SupportedVersionChanged
+                    result:
+                      [
+                        {
+                          parents: 0,
+                          interior: { X1: { Parachain: *watr_id } },
+                        },
+                        *xcm_version,
+                      ]
+          - extrinsics: # Statemint Parachain sets supported version for Relay Chain through it
+              - chain: *relay_chain
+                signer: *rc_sudo_signer
+                sudo: true
+                pallet: xcmPallet
+                call: send
+                args: [
+                    *rc->stmt_dest, # destination
+                    { ? v3 #message
+                      : [
+                          {
+                            UnpaidExecution:
+                              {
+                                weightLimit:
+                                  {
+                                    limited:
+                                      {
+                                        refTime: 2200000000,
+                                        proofSize: 200000,
+                                      },
+                                  },
+                              },
+                          },
+                          {
+                            Transact:
+                              {
+                                originKind: Superuser,
+                                requireWeightAtMost: *weight_at_most,
+                                call: $stmt_force_xcm_version,
+                              },
+                          },
+                        ] },
+                  ]
+                events:
+                  - name: sudo.Sudid
+                    result: { sudoResult: Ok }
+                  - name: xcmPallet.Sent
+                  - name: dmpQueue.ExecutedDownward
+                    chain: *stmt_parachain
+                    threshold: *weight_threshold
+                    result:
+                      {
+                        outcome:
+                          {
+                            Complete:
+                              {
+                                refTime: "1,019,210,000",
+                                proofSize: "200,000",
+                              },
+                          },
+                      }
+                  - name: polkadotXcm.SupportedVersionChanged
+                    chain: *stmt_parachain
+                    result: [{ parents: 1, interior: Here }, *xcm_version]
           - extrinsics: # Watr Parachain sets supported version for Relay Chain
-            - chain: *watr_parachain
-              signer: *watr_sudo_signer
-              sudo: true
-              pallet: polkadotXcm
-              call: forceXcmVersion
-              args: [
-                { # location
-                  parents: 1,
-                  interior: Here
-                },
-                *xcm_version # xcmVersion
-              ]
-              events:
-                - name: sudo.Sudid
-                  attributes:
-                    - type: Result<Null, SpRuntimeDispatchError>
-                      value: Ok
-                - name: polkadotXcm.SupportedVersionChanged
-                  attributes:
-                    - type: u32
-                      value: *xcm_version
+              - chain: *watr_parachain
+                signer: *watr_sudo_signer
+                sudo: true
+                pallet: polkadotXcm
+                call: forceXcmVersion
+                args: [
+                    {
+                      # location
+                      parents: 1,
+                      interior: Here,
+                    },
+                    *xcm_version, # xcmVersion
+                  ]
+                events:
+                  - name: sudo.Sudid
+                    attributes:
+                      - type: Result<Null, SpRuntimeDispatchError>
+                        value: Ok
+                  - name: polkadotXcm.SupportedVersionChanged
+                    attributes:
+                      - type: u32
+                        value: *xcm_version

@@ -13,39 +13,48 @@ settings:
   variables:
     common:
       amount: &amount 2000000000000
-      require_weight_at_most: &weight_at_most {refTime: 1000000000, proofSize: 200000}
-      weight_threshold:  &weight_threshold { refTime: [10, 10], proofSize: [10, 10] }
+      require_weight_at_most:
+        &weight_at_most { refTime: 1000000000, proofSize: 200000 }
+      weight_threshold:
+        &weight_threshold { refTime: [10, 10], proofSize: [10, 10] }
       hrmp_channels:
         proposed_max_capacity: &max_capacity 8
         proposed_max_message_size: &max_message_size 8192
-        channel: &channel {
-          maxCapacity: 8,
-          maxTotalSize: 8192,
-          maxMessageSize: 8192,
-          msgCount: 0,
-          totalSize: 0,
-          mqcHead: null,
-          senderDeposit: 0,
-          recipientDeposit: 0
-        }
+        channel:
+          &channel {
+            maxCapacity: 8,
+            maxTotalSize: 8192,
+            maxMessageSize: 8192,
+            msgCount: 0,
+            totalSize: 0,
+            mqcHead: null,
+            senderDeposit: 0,
+            recipientDeposit: 0,
+          }
     chains:
       relay_chain:
         sudo:
           signer: &rc_sudo_signer //Alice
         destinations:
-          statemint: &rc->stmt_dest { v3: { 0, interior: { x1: { parachain: *stmt_id }}}}
-        dot: &rc_dot { concrete: { 0, interior: { here: true }}}
-        dot_fungible: &rc_dot_fungible { id: *rc_dot, fun: { fungible: *amount }}
+          statemint:
+            &rc->stmt_dest {
+              v3: { 0, interior: { x1: { parachain: *stmt_id } } },
+            }
+        dot: &rc_dot { concrete: { 0, interior: { here: true } } }
+        dot_fungible:
+          &rc_dot_fungible { id: *rc_dot, fun: { fungible: *amount } }
       statemint_parachain:
         sovereign_account: &stmt_sovereign 5Ec4AhPZk8STuex8Wsi9TwDtJQxKqzPJRCH7348Xtcs9vZLJ
         destinations:
-          relay_chain: &stmt->rc_dest { v3: { parents: 1, interior: { here: true }}}
+          relay_chain:
+            &stmt->rc_dest { v3: { parents: 1, interior: { here: true } } }
       watr_parachain:
         sudo:
           signer: &watr_sudo_signer //Alice
         sovereign_account: &watr_sovereign 5Ec4AhNoGMRn8j7rpcumbokVMzWeTNdqw42r7pcH8dtqH29G
         destinations:
-          relay_chain: &watr->rc_dest { v3: { parents: 1, interior: { here: true }}}
+          relay_chain:
+            &watr->rc_dest { v3: { parents: 1, interior: { here: true } } }
 tests:
   - name: HRMP
     beforeEach:
@@ -57,9 +66,9 @@ tests:
                 pallet: balances
                 call: transfer
                 args: [
-                  *watr_sovereign, # destination
-                  *amount, # value
-                ]
+                    *watr_sovereign, # destination
+                    *amount, # value
+                  ]
                 events:
                   - name: balances.Transfer
 
@@ -71,9 +80,9 @@ tests:
                 pallet: balances
                 call: transfer
                 args: [
-                  *stmt_sovereign, # destination
-                  *amount, # value
-                ]
+                    *stmt_sovereign, # destination
+                    *amount, # value
+                  ]
                 events:
                   - name: balances.Transfer
     describes:
@@ -87,12 +96,7 @@ tests:
                     sudo: true
                     pallet: hrmp
                     call: forceOpenHrmpChannel
-                    args: [
-                      *watr_id,
-                      *stmt_id,
-                      *max_capacity,
-                      *max_message_size
-                    ]
+                    args: [*watr_id, *stmt_id, *max_capacity, *max_message_size]
                     events:
                       - name: sudo.Sudid
                         result: { sudoResult: Ok }
@@ -108,12 +112,7 @@ tests:
                     sudo: true
                     pallet: hrmp
                     call: forceOpenHrmpChannel
-                    args: [
-                      *stmt_id,
-                      *watr_id,
-                      *max_capacity,
-                      *max_message_size
-                    ]
+                    args: [*stmt_id, *watr_id, *max_capacity, *max_message_size]
                     events:
                       - name: sudo.Sudid
                         result: { sudoResult: Ok }
@@ -129,7 +128,7 @@ tests:
                     sudo: true
                     pallet: hrmp
                     call: forceProcessHrmpOpen
-                    args: [ 2 ]
+                    args: [2]
                     events:
                       - name: sudo.Sudid
                         result: { sudoResult: Ok }
