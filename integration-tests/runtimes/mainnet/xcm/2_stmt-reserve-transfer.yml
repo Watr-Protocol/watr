@@ -107,7 +107,7 @@ tests:
     describes:
       - name: polkadotXcm.limitedReserveTransferAssets (Asset) | Statemint Parachain -> Watr Parachain
         before:
-          - name: DEPENDANCY | An Asset should exist in the Statemint Parachain
+          - name: DEPENDENCY | An Asset should exist in the Statemint Parachain
             actions:
               - extrinsics:
                   - chain: *relay_chain
@@ -159,7 +159,7 @@ tests:
                   isSome:
                     args: [$forced_created_asset]
 
-          - name: DEPENDANCY | A wrong Asset should exist in the Statemint Parachain
+          - name: DEPENDENCY | A wrong Asset should exist in the Statemint Parachain
             actions:
               - extrinsics:
                   - chain: *relay_chain
@@ -211,7 +211,7 @@ tests:
                   isSome:
                     args: [$forced_created_wrong_asset]
 
-          - name: DEPENDANCY | Set metadata
+          - name: DEPENDENCY | Set metadata
             actions:
               - extrinsics:
                   - chain: *stmt_parachain
@@ -227,7 +227,7 @@ tests:
                     events:
                       - name: assets.MetadataSet
 
-          - name: DEPENDANCY | Some Assets should be minted for the sender
+          - name: DEPENDENCY | Some Assets should be minted for the sender
             actions:
               - extrinsics:
                   - chain: *stmt_parachain
@@ -243,7 +243,7 @@ tests:
                     events:
                       - name: assets.Issued
 
-          - name: DEPENDANCY | Some wrong Assets should be minted for the sender
+          - name: DEPENDENCY | Some wrong Assets should be minted for the sender
             actions:
               - extrinsics:
                   - chain: *stmt_parachain
