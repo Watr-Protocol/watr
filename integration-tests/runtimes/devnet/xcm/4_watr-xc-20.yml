@@ -39,7 +39,7 @@ settings:
 tests:
   - name: TEST XC-20
     before:
-      - name: DEPENDANCY | Fund with some native asset the Ethereum signer account to pay the fees for transfering the Assets
+      - name: DEPENDENCY | Fund with some native asset the Ethereum signer account to pay the fees for transfering the Assets
         actions:
           - extrinsics:
               - chain: *watr_parachain
@@ -50,7 +50,7 @@ tests:
                 events:
                   - name: balances.Transfer
 
-      - name: DEPENDANCY | Fund with some Assets the Substrate account of the Ethereum sender account
+      - name: DEPENDENCY | Fund with some Assets the Substrate account of the Ethereum sender account
         actions:
           - extrinsics:
               - chain: *watr_parachain

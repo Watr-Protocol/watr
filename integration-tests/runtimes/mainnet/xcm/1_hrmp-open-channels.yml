@@ -58,7 +58,7 @@ settings:
 tests:
   - name: HRMP channel (Watr Parachain → Statemint Parachain)
     beforeEach:
-      - name: DEPENDANCY | Watr Parachain Sovereign account in the Relay Chain needs to be funded
+      - name: DEPENDENCY | Watr Parachain Sovereign account in the Relay Chain needs to be funded
         actions:
           - extrinsics:
               - chain: *relay_chain
@@ -72,7 +72,7 @@ tests:
                 events:
                   - name: balances.Transfer
 
-      - name: DEPENDANCY | Statemint Parachain Sovereign account in the Relay Chain needs to be funded
+      - name: DEPENDENCY | Statemint Parachain Sovereign account in the Relay Chain needs to be funded
         actions:
           - extrinsics:
               - chain: *relay_chain
