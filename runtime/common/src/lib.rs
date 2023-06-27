@@ -60,7 +60,7 @@ pub const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
 // );
 
 /// Current approximation of the gas/s consumption considering
-pub const GAS_PER_SECOND: u64 = 160_000_000;
+pub const GAS_PER_SECOND: u64 = 40_000_000;
 
 /// Approximate ratio of the amount of Weight per Gas.
 /// u64 works for approximations because Weight is a very small unit compared to gas.
