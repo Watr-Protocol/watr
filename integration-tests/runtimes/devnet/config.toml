@@ -40,7 +40,7 @@ cumulus_based = true
 
     [[parachains.collators]]
     name = "collator2"
-	args = [ "--state-cache-size=0", "-lxcm::barriers=trace", "-lxcm::execute_xcm_in_credit=trace", "-lxcm::execute_xcm=trace", "-lxcm::weight=trace", "-lxcm::should_execute=trace", "-lxcm::fungibles_adapter=trace", "-lxcm::TransactAsset::withdraw_asset", "-lxcm::matches_fungibles" ]
+	args = [ "--state-cache-size=0", "-lxcm::filter_asset_location", "-lxcm::barriers=trace", "-lxcm::execute_xcm_in_credit=trace", "-lxcm::execute_xcm=trace", "-lxcm::weight=trace", "-lxcm::should_execute=trace", "-lxcm::fungibles_adapter=trace", "-lxcm::TransactAsset::withdraw_asset", "-lxcm::matches_fungibles" ]
     ws_port = 9811
     command = "./bin/polkadot-parachain"
 
@@ -58,7 +58,7 @@ cumulus_based = true
 
     [[parachains.collators]]
     name = "collator4"
-	args = [ "--state-cache-size=0", "-lxcm::barriers=trace", "-lxcm::execute_xcm_in_credit=trace", "-lxcm::execute_xcm=trace", "-lxcm::weight=trace", "-lxcm::should_execute=trace", "-lxcm::fungibles_adapter=trace", "-lxcm::TransactAsset::withdraw_asset", "-lxcm::matches_fungibles" ]
+	args = [ "--state-cache-size=0", "-lxcm::filter_asset_location", "-lxcm::barriers=trace", "-lxcm::execute_xcm_in_credit=trace", "-lxcm::execute_xcm=trace", "-lxcm::weight=trace", "-lxcm::should_execute=trace", "-lxcm::fungibles_adapter=trace", "-lxcm::TransactAsset::withdraw_asset", "-lxcm::matches_fungibles" ]
     ws_port = 9821
 	rpc_port = 8834
     command = "./bin/watr-node"
