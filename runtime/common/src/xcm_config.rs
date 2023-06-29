@@ -70,16 +70,31 @@ impl<
 	}
 }
 
+//- From PR https://github.com/paritytech/cumulus/pull/936
+fn matches_prefix(prefix: &MultiLocation, loc: &MultiLocation) -> bool {
+	prefix.parent_count() == loc.parent_count() &&
+		loc.len() >= prefix.len() &&
+		prefix
+			.interior()
+			.iter()
+			.zip(loc.interior().iter())
+			.all(|(prefix_junction, junction)| prefix_junction == junction)
+}
+
 /// Accepts an asset if it is a native asset from a particular `MultiLocation`.
 pub struct ConcreteNativeAssetFrom<Location>(PhantomData<Location>);
 impl<Location: Get<MultiLocation>> ContainsPair<MultiAsset, MultiLocation>
 	for ConcreteNativeAssetFrom<Location>
 {
 	fn contains(asset: &MultiAsset, origin: &MultiLocation) -> bool {
-		log::trace!(target: "xcm::filter_asset_location",
-			"ConcreteNativeAsset asset: {:?}, origin: {:?}, location: {:?}",
-			asset, origin, Location::get());
-		matches!(asset.id, Concrete(ref id) if id == origin && origin == &Location::get())
+		let prefix = Location::get();
+		log::trace!(target: "xcm::filter_asset_location", "prefix: {:?}, origin: {:?}", prefix, origin);
+		&prefix == origin &&
+			match asset {
+				MultiAsset { id: xcm::latest::AssetId::Concrete(asset_loc), fun: Fungible(_a) } =>
+					matches_prefix(&prefix, asset_loc),
+				_ => false,
+			}
 	}
 }
 

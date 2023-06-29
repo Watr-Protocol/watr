@@ -12,7 +12,7 @@ settings:
   variables:
     common:
       require_weight_at_most:
-        &weight_at_most { refTime: 100000000000, proofSize: 2000000 }
+        &weight_at_most { refTime: 10000000000, proofSize: 2000000 }
       weight_threshold:
         &weight_threshold { refTime: [10, 10], proofSize: [10, 10] }
     chains:
@@ -842,7 +842,7 @@ tests:
                                           DepositAsset:
                                             {
                                               assets: { Wild: All },
-                                              maxAssets: 1,
+                                              # maxAssets: 1,
                                               beneficiary: {
                                                   parents: 1, # wrong beneficiary
                                                   interior:
