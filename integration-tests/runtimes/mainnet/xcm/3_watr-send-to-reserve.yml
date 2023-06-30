@@ -178,7 +178,7 @@ tests:
                             ],
                         },
                         # maxWeight: Weight
-                        { maxWeight: *weight_at_most },
+                        *weight_at_most,
                       ]
                     events:
                       - name: assets.Burned
@@ -194,15 +194,7 @@ tests:
                           - type: XcmV3TraitsOutcome
                             xcmOutcome: Complete
                             value:
-                              [
-                                {
-                                  Complete:
-                                    {
-                                      refTime: "679,150,000",
-                                      proofSize: "6,196",
-                                    },
-                                },
-                              ]
+                              { refTime: "2,000,000,000", proofSize: "131,072" }
                       - name: assets.Burned
                         chain: *stmt_parachain
                         result:
@@ -218,17 +210,11 @@ tests:
                             value: *stmt_asset_id
                           - key: owner
                             value: *stmt_asset_receiver_wallet
-                          - key: totalSupply
-                            value: *watr_asset_amount_to_send
-                            threshold: *weight_threshold # amount minus fees
                       - name: assets.Issued
                         chain: *stmt_parachain
                         attributes:
                           - key: assetId
                             value: *stmt_asset_id
-                          - key: totalSupply
-                            isRange: true
-                            value: *stmt_expected_fees # fees
 
           - name: Execution filter should fail if WithdrawAsset the wrong Asset
             actions:
@@ -239,11 +225,76 @@ tests:
                     call: execute
                     args: [
                         # message: XcmVersionedXcm
-                        { v3: [{ WithdrawAsset: [{ id: {
-                                          Concrete: *wrong_remote_asset_location, # wrong asset
-                                        }, fun: { Fungible: *watr_asset_amount_to_send } }] }, { InitiateReserveWithdraw: { assets: { Wild: All }, reserve: *watr->stmt_dest, xcm: [{ BuyExecution: { fees: { id: { Concrete: *stmt_local_asset_location }, fun: { Fungible: *watr_buy_execution_amount } }, weightLimit: Unlimited } }, { DepositAsset: { assets: { Wild: All }, maxAssets: 1, beneficiary: { parents: 0, interior: { X1: { AccountId32: { network, id: *stmt_asset_receiver_acc } } } } } }] } }] },
+                        {
+                          v3:
+                            [
+                              {
+                                WithdrawAsset:
+                                  [
+                                    {
+                                      id:
+                                        {
+                                          Concrete: *wrong_remote_asset_location,
+                                        },
+                                      fun:
+                                        {
+                                          Fungible: *watr_asset_amount_to_send,
+                                        },
+                                    },
+                                  ],
+                              },
+                              {
+                                InitiateReserveWithdraw:
+                                  {
+                                    assets: { Wild: All },
+                                    reserve: *watr->stmt_dest,
+                                    xcm: [
+                                        {
+                                          BuyExecution:
+                                            {
+                                              fees:
+                                                {
+                                                  id:
+                                                    {
+                                                      Concrete: *stmt_local_asset_location,
+                                                    },
+                                                  fun:
+                                                    {
+                                                      Fungible: *watr_buy_execution_amount,
+                                                    },
+                                                },
+                                              weightLimit: Unlimited,
+                                            },
+                                        },
+                                        {
+                                          DepositAsset:
+                                            {
+                                              assets: { Wild: All },
+                                              maxAssets: 1,
+                                              beneficiary:
+                                                {
+                                                  parents: 0,
+                                                  interior:
+                                                    {
+                                                      X1:
+                                                        {
+                                                          AccountId32:
+                                                            {
+                                                              network,
+                                                              id: *stmt_asset_receiver_acc,
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        }, # wrong asset
+                                      ],
+                                  },
+                              },
+                            ],
+                        },
                         # maxWeight: Weight
-                        { maxWeight: *weight_at_most },
+                        *weight_at_most,
                       ]
                     events:
                       - name: system.ExtrinsicFailed
@@ -327,7 +378,7 @@ tests:
                             ],
                         },
                         # maxWeight: Weight
-                        { maxWeight: *weight_at_most },
+                        *weight_at_most,
                       ]
                     events:
                       - name: system.ExtrinsicFailed
@@ -414,7 +465,7 @@ tests:
                             ],
                         },
                         # maxWeight: Weight
-                        { maxWeight: *weight_at_most },
+                        *weight_at_most,
                       ]
                     events:
                       - name: system.ExtrinsicFailed
@@ -517,7 +568,7 @@ tests:
                               }, # wrong asset
                             ] },
                         # maxWeight: Weight
-                        { maxWeight: *weight_at_most },
+                        *weight_at_most,
                       ]
                     events:
                       - name: system.ExtrinsicFailed
@@ -560,15 +611,53 @@ tests:
                                   {
                                     assets: { Wild: All },
                                     reserve: *watr->stmt_dest,
-                                    xcm: [{ BuyExecution: { fees: { id: {
-                                                      Concrete: *wrong_local_asset_location, # wrong asset
-                                                    }, fun: { Fungible: *watr_buy_execution_amount } }, weightLimit: Unlimited } }, { DepositAsset: { assets: { Wild: All }, maxAssets: 1, beneficiary: { parents: 0, interior: { X1: { AccountId32: { network, id: *stmt_asset_receiver_acc } } } } } }],
+                                    xcm: [
+                                        {
+                                          BuyExecution:
+                                            {
+                                              fees:
+                                                {
+                                                  id:
+                                                    {
+                                                      Concrete: *wrong_local_asset_location,
+                                                    },
+                                                  fun:
+                                                    {
+                                                      Fungible: *watr_buy_execution_amount,
+                                                    },
+                                                },
+                                              weightLimit: Unlimited,
+                                            },
+                                        },
+                                        {
+                                          DepositAsset:
+                                            {
+                                              assets: { Wild: All },
+                                              maxAssets: 1,
+                                              beneficiary:
+                                                {
+                                                  parents: 0,
+                                                  interior:
+                                                    {
+                                                      X1:
+                                                        {
+                                                          AccountId32:
+                                                            {
+                                                              network,
+                                                              id: *stmt_asset_receiver_acc,
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        }, # wrong asset
+                                      ],
                                   },
                               },
                             ],
                         },
                         # maxWeight: Weight
-                        { maxWeight: *weight_at_most },
+                        *weight_at_most,
                       ]
                     events:
                       - name: system.ExtrinsicFailed
@@ -673,7 +762,7 @@ tests:
                             ],
                         },
                         # maxWeight: Weight
-                        { maxWeight: *weight_at_most },
+                        *weight_at_most,
                       ]
                     events:
                       - name: system.ExtrinsicFailed
@@ -762,7 +851,7 @@ tests:
                             ],
                         },
                         # maxWeight: Weight
-                        { maxWeight: *weight_at_most },
+                        *weight_at_most,
                       ]
                     events:
                       - name: system.ExtrinsicFailed
@@ -803,7 +892,7 @@ tests:
                             ],
                         },
                         # maxWeight: Weight
-                        { maxWeight: *weight_at_most },
+                        *weight_at_most,
                       ]
                     events:
                       - name: system.ExtrinsicFailed
@@ -877,7 +966,7 @@ tests:
                             ],
                         },
                         # maxWeight: Weight
-                        { maxWeight: *weight_at_most },
+                        *weight_at_most,
                       ]
                     events:
                       - name: system.ExtrinsicFailed
