@@ -83,23 +83,23 @@ parachains-common = { git = "https://github.com/paritytech/cumulus", branch = "p
 parachain-info = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.42", default-features = false }
 
 # Frontier
-fp-rpc = { git = 'https://github.com/paritytech/frontier', branch = "bar/polkadot-v0.9.42", default-features = false }
-fp-self-contained = { git = 'https://github.com/paritytech/frontier', branch = "bar/polkadot-v0.9.42", default-features = false }
+fp-rpc = { git = 'https://github.com/paritytech/frontier', branch = "polkadot-v0.9.42", default-features = false }
+fp-self-contained = { git = 'https://github.com/paritytech/frontier', branch = "polkadot-v0.9.42", default-features = false }
 
 # Frontier FRAME
-pallet-base-fee = { git = 'https://github.com/paritytech/frontier', branch = "bar/polkadot-v0.9.42", default-features = false }
-pallet-ethereum = { git = 'https://github.com/paritytech/frontier', branch = "bar/polkadot-v0.9.42", default-features = false }
-pallet-evm = { git = 'https://github.com/paritytech/frontier', branch = "bar/polkadot-v0.9.42", default-features = false }
+pallet-base-fee = { git = 'https://github.com/paritytech/frontier', branch = "polkadot-v0.9.42", default-features = false }
+pallet-ethereum = { git = 'https://github.com/paritytech/frontier', branch = "polkadot-v0.9.42", default-features = false }
+pallet-evm = { git = 'https://github.com/paritytech/frontier', branch = "polkadot-v0.9.42", default-features = false }
 
 # Precompiles
 # TODO: update to watr-protocol/astar-frame
 # pallet-evm-precompile-assets-erc20 = { git = "https://github.com/Watr-Protocol/astar-frame.git", branch = "polkadot-v0.9.42", default-features = false }
 pallet-evm-precompile-assets-erc20 = { path = "../../../astar-frame/precompiles/assets-erc20", default-features = false }
-pallet-evm-precompile-modexp = { git = 'https://github.com/paritytech/frontier.git', branch = "bar/polkadot-v0.9.42", default-features = false }
-pallet-evm-precompile-sha3fips = {  git = 'https://github.com/paritytech/frontier.git', branch = "bar/polkadot-v0.9.42", default-features = false }
-pallet-evm-precompile-simple = { git = 'https://github.com/paritytech/frontier.git', branch = "bar/polkadot-v0.9.42", default-features = false }
-pallet-evm-precompile-blake2 = { git = 'https://github.com/paritytech/frontier.git', branch = "bar/polkadot-v0.9.42", default-features = false }
-pallet-evm-precompile-bn128 = { git = 'https://github.com/paritytech/frontier.git', branch = "bar/polkadot-v0.9.42", default-features = false }
+pallet-evm-precompile-modexp = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.42", default-features = false }
+pallet-evm-precompile-sha3fips = {  git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.42", default-features = false }
+pallet-evm-precompile-simple = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.42", default-features = false }
+pallet-evm-precompile-blake2 = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.42", default-features = false }
+pallet-evm-precompile-bn128 = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.42", default-features = false }
 
 pallet-multisig = {git = "https://github.com/paritytech/substrate", package = "pallet-multisig", default-features = false, branch = "polkadot-v0.9.42" }
 pallet-identity = {git = "https://github.com/paritytech/substrate", package = "pallet-identity", default-features = false, branch = "polkadot-v0.9.42" }
