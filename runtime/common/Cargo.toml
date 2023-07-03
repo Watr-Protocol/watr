@@ -1,6 +1,6 @@
 [package]
 name = "watr-common"
-version = "1.21.1"
+version = "1.22.0"
 authors = ["Parity Technologies <admin@parity.io>"]
 description = "Watr Runtime Common"
 license = "GPL-3.0-only"
@@ -38,7 +38,6 @@ parachains-common = { git = "https://github.com/paritytech/cumulus", branch = "p
 
 # Local
 pallet-did = { default-features = false, path = "../../pallets/did" }
-
 
 [features]
 default = [

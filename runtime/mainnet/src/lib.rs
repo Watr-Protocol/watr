@@ -67,7 +67,7 @@ pub use frame_support::{
 	traits::{
 		fungibles::Balanced, AsEnsureOriginWithArg, ConstU32, ConstU8, Currency as CurrencyT,
 		EitherOfDiverse, Everything, FindAuthor, Imbalance, InstanceFilter, KeyOwnerProofSystem,
-		LockIdentifier, OnRuntimeUpgrade, OnUnbalanced, PrivilegeCmp,
+		LockIdentifier, OnFinalize, OnRuntimeUpgrade, OnUnbalanced, PrivilegeCmp,
 	},
 	weights::{
 		constants::WEIGHT_REF_TIME_PER_SECOND, ConstantMultiplier, Weight, WeightToFeeCoefficient,
@@ -243,7 +243,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	spec_name: create_runtime_str!("watr-mainnet"),
 	impl_name: create_runtime_str!("watr-mainnet"),
 	authoring_version: 1,
-	spec_version: 1211,
+	spec_version: 1220,
 	impl_version: 0,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -818,11 +818,20 @@ where
 // Frontier's default OnChargeEVMTransaction burns a portion of the fees.
 watr_common::impl_on_charge_evm_transaction!();
 
+const MAX_POV_SIZE: u64 = 5 * 1024 * 1024;
+
 parameter_types! {
 	pub const ChainId: u64 = 688;
 	pub BlockGasLimit: U256 = U256::from(NORMAL_DISPATCH_RATIO * MAXIMUM_BLOCK_WEIGHT.ref_time() / WEIGHT_PER_GAS);
 	pub PrecompilesValue: FrontierPrecompiles<Runtime> = FrontierPrecompiles::<_>::new();
 	pub WeightPerGas: Weight = Weight::from_parts(WEIGHT_PER_GAS, 0);
+	/// The amount of gas per pov. A ratio of 4 if we convert ref_time to gas and we compare
+	/// it with the pov_size for a block. E.g.
+	/// ceil(
+	///     (max_extrinsic.ref_time() / max_extrinsic.proof_size()) / WEIGHT_PER_GAS
+	/// )
+	/// https://github.com/PureStake/moonbeam/blob/master/runtime/moonbeam/src/lib.rs#L400C2-L400C42
+	pub const GasLimitPovSizeRatio: u64 = 4;
 }
 
 impl pallet_evm::Config for Runtime {
@@ -842,6 +851,7 @@ impl pallet_evm::Config for Runtime {
 	type Runner = pallet_evm::runner::stack::Runner<Self>;
 	type OnChargeTransaction = OnChargeEVMTransaction<EVMDealWithFees<Runtime>>;
 	type FindAuthor = FindAuthorTruncated<Aura>;
+	type GasLimitPovSizeRatio = GasLimitPovSizeRatio;
 	type Timestamp = Timestamp;
 	type OnCreate = ();
 	type WeightInfo = pallet_evm::weights::SubstrateWeight<Runtime>;
@@ -1180,6 +1190,8 @@ impl_runtime_apis! {
 				access_list.unwrap_or_default(),
 				is_transactional,
 				validate,
+				None,
+				None,
 				evm_config,
 			).map_err(|err| err.error.into())
 		}
@@ -1217,6 +1229,8 @@ impl_runtime_apis! {
 				access_list.unwrap_or_default(),
 				is_transactional,
 				validate,
+				None,
+				None,
 				evm_config,
 			).map_err(|err| err.error.into())
 		}
@@ -1259,6 +1273,21 @@ impl_runtime_apis! {
 		}
 
 		fn gas_limit_multiplier_support() {}
+
+		fn pending_block(
+			xts: Vec<<Block as BlockT>::Extrinsic>,
+		) -> (Option<pallet_ethereum::Block>, Option<Vec<TransactionStatus>>) {
+			for ext in xts.into_iter() {
+				let _ = Executive::apply_extrinsic(ext);
+			}
+
+			Ethereum::on_finalize(System::block_number() + 1);
+
+			(
+				pallet_ethereum::CurrentBlock::<Runtime>::get(),
+				pallet_ethereum::CurrentTransactionStatuses::<Runtime>::get()
+			)
+		}
 	}
 
 	impl fp_rpc::ConvertTransactionRuntimeApi<Block> for Runtime {

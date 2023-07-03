@@ -50,7 +50,7 @@ use sp_runtime::traits::{BlakeTwo256, Block as BlockT};
 // Frontier
 use fc_rpc::{
 	EthBlockDataCacheTask, OverrideHandle, RuntimeApiStorageOverride, SchemaV1Override,
-	SchemaV2Override, SchemaV3Override, StorageOverride,
+	SchemaV2Override, SchemaV3Override, StorageOverride, TxPool, TxPoolApiServer
 };
 use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
 use fp_rpc::EthereumRuntimeRPCApi;
@@ -75,7 +75,7 @@ pub struct FullDeps<C, P, A: ChainApi> {
 	/// EthFilterApi pool.
 	pub filter_pool: Option<FilterPool>,
 	/// Backend.
-	pub backend: Arc<fc_db::Backend<Block>>,
+	pub backend: Arc<fc_db::kv::Backend<Block>>,
 	/// Fee history cache.
 	pub fee_history_cache: FeeHistoryCache,
 	/// Maximum fee history cache size.
@@ -120,7 +120,7 @@ where
 pub fn open_frontier_backend<C>(
 	client: Arc<C>,
 	config: &sc_service::Configuration,
-) -> Result<Arc<fc_db::Backend<Block>>, String>
+) -> Result<Arc<fc_db::kv::Backend<Block>>, String>
 where
 	C: sp_blockchain::HeaderBackend<Block>,
 {
@@ -133,9 +133,9 @@ where
 		});
 	let path = config_dir.join("frontier").join("db");
 
-	Ok(Arc::new(fc_db::Backend::<Block>::new(
+	Ok(Arc::new(fc_db::kv::Backend::<Block>::new(
 		client,
-		&fc_db::DatabaseSettings { source: fc_db::DatabaseSource::RocksDb { path, cache_size: 0 } },
+		&fc_db::kv::DatabaseSettings { source: fc_db::DatabaseSource::RocksDb { path, cache_size: 0 } },
 	)?))
 }
 
@@ -202,7 +202,7 @@ where
 		Eth::new(
 			client.clone(),
 			pool.clone(),
-			graph,
+			graph.clone(),
 			no_tx_converter,
 			sync.clone(),
 			signers,
@@ -221,11 +221,13 @@ where
 
 	let max_past_logs: u32 = 10_000;
 	let max_stored_filters: usize = 500;
+	let tx_pool = TxPool::new(client.clone(), graph);
 	if let Some(filter_pool) = filter_pool {
 		io.merge(
 			EthFilter::new(
 				client.clone(),
 				backend,
+				tx_pool.clone(),
 				filter_pool,
 				max_stored_filters, // max stored filters
 				max_past_logs,
@@ -267,6 +269,7 @@ where
 	)?;
 
 	io.merge(Web3::new(client).into_rpc())?;
+	io.merge(tx_pool.into_rpc())?;
 
 	Ok(io)
 }

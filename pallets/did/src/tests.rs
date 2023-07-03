@@ -274,6 +274,44 @@ fn add_did_services_works() {
 }
 
 #[test]
+fn add_did_services_work_when_empty() {
+	new_test_ext().execute_with(|| {
+		let mut old_document = create_default_did(ALICE, ALICE);
+
+		let origin = RuntimeOrigin::signed(ALICE);
+		assert_ok!(DID::remove_did_services(origin.clone(), ALICE, old_document.services.clone()));
+		old_document.services = BoundedVec::default();
+
+		let mut new_services = default_services();
+		new_services[0].service_endpoint = bounded_vec![b's', b'3'];
+		new_services[1].service_endpoint = bounded_vec![b's', b'4'];
+		new_services[2].service_endpoint = bounded_vec![b's', b'5'];
+
+		let mut new_services_keys = hash_services(&new_services);
+		new_services_keys.sort();
+
+		let mut combined_services = old_document.services.clone();
+		new_services_keys.clone().into_iter().for_each(|key| {
+			let _ = combined_services.try_push(key);
+		});
+		combined_services.sort();
+
+		let expected_document = Document { services: combined_services, ..old_document };
+
+		assert_ok!(DID::add_did_services(origin, ALICE, new_services.clone()));
+		assert_eq!(DID::dids(ALICE), Some(expected_document.clone()));
+		// assert services exist and have a consumer count of 1
+		assert_services(new_services.clone(), 1);
+
+		// assert that the default services were removed from storage
+		assert!(events().contains(&Event::<Test>::DidServicesAdded {
+			did: ALICE,
+			new_services: new_services_keys,
+		}));
+	});
+}
+
+#[test]
 fn remove_did_services_works() {
 	new_test_ext().execute_with(|| {
 		let old_document = create_default_did(ALICE, ALICE);
@@ -564,6 +602,12 @@ fn add_issuer_works() {
 		let issuer_info = Issuers::<Test>::get(ACCOUNT_01);
 		assert_eq!(issuer_info, None);
 
+		assert_noop!(
+			DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_01),
+			Error::<Test>::IssuerDoesNotHaveDid
+		);
+
+		let _ = create_default_did(ACCOUNT_01, ACCOUNT_01);
 		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_01));
 
 		let issuer_info = Issuers::<Test>::get(ACCOUNT_01).unwrap();
@@ -584,12 +628,14 @@ fn add_issuer_works() {
 #[test]
 fn revoke_issuer_works() {
 	new_test_ext().execute_with(|| {
+		let _ = create_default_did(ACCOUNT_01, ACCOUNT_01);
 		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_01));
 		assert_ok!(DID::revoke_issuer(RuntimeOrigin::root(), ACCOUNT_01));
 
 		let issuer_info = Issuers::<Test>::get(ACCOUNT_01).unwrap();
 		assert_eq!(issuer_info.status, IssuerStatus::Revoked);
 
+		let _ = create_default_did(ACCOUNT_02, ACCOUNT_02);
 		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_02));
 
 		assert_noop!(DID::revoke_issuer(RuntimeOrigin::signed(1), ACCOUNT_02), BadOrigin);
@@ -614,7 +660,9 @@ fn revoke_issuer_works() {
 #[test]
 fn reactivate_issuer_works() {
 	new_test_ext().execute_with(|| {
+		let _ = create_default_did(ACCOUNT_01, ACCOUNT_01);
 		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_01));
+		let _ = create_default_did(ACCOUNT_02, ACCOUNT_02);
 		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_02));
 		assert_ok!(DID::revoke_issuer(RuntimeOrigin::root(), ACCOUNT_01));
 
@@ -643,25 +691,42 @@ fn reactivate_issuer_works() {
 #[test]
 fn remove_issuer_works() {
 	new_test_ext().execute_with(|| {
+		let _ = create_default_did(ACCOUNT_01, ACCOUNT_01);
+		let _ = create_default_did(ACCOUNT_02, ACCOUNT_02);
+
 		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_01));
 		assert_ok!(DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_02));
 		assert_ok!(DID::revoke_issuer(RuntimeOrigin::root(), ACCOUNT_01));
 
-		assert_noop!(DID::remove_issuer(RuntimeOrigin::signed(1), ACCOUNT_01), BadOrigin);
-
-		assert_ok!(DID::remove_issuer(RuntimeOrigin::root(), ACCOUNT_01));
+		assert_ok!(DID::remove_did(RuntimeOrigin::signed(1), ACCOUNT_01));
 
 		let issuer_info = Issuers::<Test>::get(ACCOUNT_01);
-		assert_eq!(issuer_info, None);
+		assert_eq!(issuer_info, Some(IssuerInfo { status: IssuerStatus::Deleted }));
 
 		assert_noop!(
-			DID::remove_issuer(RuntimeOrigin::root(), ACCOUNT_02),
+			DID::force_remove_did(RuntimeOrigin::root(), ACCOUNT_02),
 			Error::<Test>::IssuerNotRevoked
 		);
 
 		assert_noop!(
-			DID::remove_issuer(RuntimeOrigin::root(), ACCOUNT_03),
-			Error::<Test>::IssuerDoesNotExist
+			DID::add_issuer(RuntimeOrigin::root(), ACCOUNT_01),
+			Error::<Test>::IssuerDoesNotHaveDid
+		);
+
+		assert_noop!(
+			DID::create_did(
+				RuntimeOrigin::signed(1),
+				ACCOUNT_01,
+				H160::from([0u8; 20]),
+				None,
+				BoundedVec::default()
+			),
+			Error::<Test>::IssuerIsDeleted
+		);
+
+		assert_noop!(
+			DID::reactivate_issuer(RuntimeOrigin::root(), ACCOUNT_01),
+			Error::<Test>::IssuerIsDeleted
 		);
 
 		let events = events();
@@ -672,8 +737,8 @@ fn remove_issuer_works() {
 #[test]
 fn add_credentials_type_works() {
 	new_test_ext().execute_with(|| {
-		let creds: Vec<BoundedVec<u8, MaxCredentialTypeLength>> =
-			vec![bounded_vec![0, 0], bounded_vec![0, 1], bounded_vec![0, 2]];
+		let creds: BoundedVec<BoundedVec<u8, MaxCredentialTypeLength>, MaxCredentialsTypes> =
+			bounded_vec![bounded_vec![0, 0], bounded_vec![0, 1], bounded_vec![0, 2]];
 
 		assert_noop!(DID::add_credentials_type(RuntimeOrigin::signed(1), creds.clone()), BadOrigin);
 
@@ -684,10 +749,13 @@ fn add_credentials_type_works() {
 			Error::<Test>::CredentialTypeAlreadyAdded
 		);
 
-		let mut max_creds: Vec<BoundedVec<u8, MaxCredentialTypeLength>> = vec![];
+		let mut max_creds: BoundedVec<
+			BoundedVec<u8, MaxCredentialTypeLength>,
+			MaxCredentialsTypes,
+		> = bounded_vec![];
 		let creds_limit = MaxCredentialsTypes::get();
 		for i in 3..creds_limit {
-			max_creds.push(bounded_vec![0, i]);
+			let _ = max_creds.try_push(bounded_vec![0, i]);
 		}
 
 		assert_ok!(DID::add_credentials_type(RuntimeOrigin::root(), max_creds.clone()));
@@ -695,7 +763,7 @@ fn add_credentials_type_works() {
 		assert_noop!(
 			DID::add_credentials_type(
 				RuntimeOrigin::root(),
-				vec![bounded_vec![0, creds_limit + 1]]
+				bounded_vec![bounded_vec![0, creds_limit + 1]]
 			),
 			Error::<Test>::MaxCredentials
 		);
@@ -708,8 +776,8 @@ fn add_credentials_type_works() {
 #[test]
 fn remove_credentials_type_works() {
 	new_test_ext().execute_with(|| {
-		let cred_x: Vec<BoundedVec<u8, MaxCredentialTypeLength>> =
-			vec![bounded_vec![0, 1], bounded_vec![0, 2]];
+		let cred_x: BoundedVec<BoundedVec<u8, MaxCredentialTypeLength>, MaxCredentialsTypes> =
+			bounded_vec![bounded_vec![0, 1], bounded_vec![0, 2]];
 		assert_ok!(DID::add_credentials_type(RuntimeOrigin::root(), cred_x.clone()));
 
 		assert_noop!(
@@ -722,19 +790,29 @@ fn remove_credentials_type_works() {
 		let events = events();
 		assert!(events.contains(&Event::<Test>::CredentialTypesRemoved { credentials: cred_x }));
 
-		let cred_y: Vec<BoundedVec<u8, MaxCredentialTypeLength>> =
-			vec![bounded_vec![0, 2], bounded_vec![0, 4]];
+		let cred_y: BoundedVec<BoundedVec<u8, MaxCredentialTypeLength>, MaxCredentialsTypes> =
+			bounded_vec![bounded_vec![0, 2], bounded_vec![0, 4]];
 		assert_noop!(
 			DID::remove_credentials_type(RuntimeOrigin::root(), cred_y),
 			Error::<Test>::CredentialTypeDoesNotExist
 		);
 
-		let cred_x: Vec<BoundedVec<u8, MaxCredentialTypeLength>> = vec![bounded_vec![0, 1]];
-		let cred_y: Vec<BoundedVec<u8, MaxCredentialTypeLength>> = vec![bounded_vec![0, 2]];
-		let cred_z: Vec<BoundedVec<u8, MaxCredentialTypeLength>> =
-			vec![bounded_vec![0, 4], bounded_vec![0, 3]];
-		let ordered_creds: Vec<BoundedVec<u8, MaxCredentialTypeLength>> =
-			vec![bounded_vec![0, 1], bounded_vec![0, 2], bounded_vec![0, 3], bounded_vec![0, 4]];
+		let cred_x: BoundedVec<BoundedVec<u8, MaxCredentialTypeLength>, MaxCredentialsTypes> =
+			bounded_vec![bounded_vec![0, 1]];
+		let cred_y: BoundedVec<BoundedVec<u8, MaxCredentialTypeLength>, MaxCredentialsTypes> =
+			bounded_vec![bounded_vec![0, 2]];
+		let cred_z: BoundedVec<BoundedVec<u8, MaxCredentialTypeLength>, MaxCredentialsTypes> =
+			bounded_vec![bounded_vec![0, 4], bounded_vec![0, 3]];
+
+		let ordered_creds: BoundedVec<
+			BoundedVec<u8, MaxCredentialTypeLength>,
+			MaxCredentialsTypes,
+		> = bounded_vec![
+			bounded_vec![0, 1],
+			bounded_vec![0, 2],
+			bounded_vec![0, 3],
+			bounded_vec![0, 4]
+		];
 
 		assert_ok!(DID::add_credentials_type(RuntimeOrigin::root(), cred_z.clone()));
 		assert_ok!(DID::add_credentials_type(RuntimeOrigin::root(), cred_y.clone()));
@@ -753,8 +831,8 @@ fn issue_credentials_works() {
 		create_default_did(ACCOUNT_02, ACCOUNT_02);
 		create_default_did(ACCOUNT_04, ACCOUNT_04);
 
-		let creds: Vec<BoundedVec<u8, MaxCredentialTypeLength>> =
-			vec![bounded_vec![0, 0], bounded_vec![0, 1], bounded_vec![0, 2]];
+		let creds: BoundedVec<BoundedVec<u8, MaxCredentialTypeLength>, MaxCredentialsTypes> =
+			bounded_vec![bounded_vec![0, 0], bounded_vec![0, 1], bounded_vec![0, 2]];
 		let verifiable_credential_hash: HashOf<Test> = bounded_vec![1, 2, 3, 4, 5];
 
 		assert_ok!(DID::add_credentials_type(root.clone(), creds.clone()));
@@ -850,8 +928,8 @@ fn revoke_credentials_works() {
 		create_default_did(ACCOUNT_01, ACCOUNT_01);
 		create_default_did(ACCOUNT_02, ACCOUNT_02);
 
-		let creds: Vec<BoundedVec<u8, MaxCredentialTypeLength>> =
-			vec![bounded_vec![0, 0], bounded_vec![0, 1], bounded_vec![0, 2]];
+		let creds: BoundedVec<BoundedVec<u8, MaxCredentialTypeLength>, MaxCredentialsTypes> =
+			bounded_vec![bounded_vec![0, 0], bounded_vec![0, 1], bounded_vec![0, 2]];
 		let verifiable_credential_hash: HashOf<Test> = bounded_vec![1, 2, 3, 4, 5];
 
 		assert_ok!(DID::add_credentials_type(root.clone(), creds.clone()));
@@ -883,7 +961,7 @@ fn revoke_credentials_works() {
 				issuer_origin.clone(),
 				ACCOUNT_01,
 				ACCOUNT_02,
-				vec![bounded_vec![9, 9]],
+				bounded_vec![bounded_vec![9, 9]],
 			),
 			Error::<Test>::IssuedCredentialDoesNotExist
 		);
@@ -917,8 +995,8 @@ fn force_revoke_credentials_works() {
 		create_default_did(ACCOUNT_01, ACCOUNT_01);
 		create_default_did(ACCOUNT_02, ACCOUNT_02);
 
-		let creds: Vec<BoundedVec<u8, MaxCredentialTypeLength>> =
-			vec![bounded_vec![0, 0], bounded_vec![0, 1], bounded_vec![0, 2]];
+		let creds: BoundedVec<BoundedVec<u8, MaxCredentialTypeLength>, MaxCredentialsTypes> =
+			bounded_vec![bounded_vec![0, 0], bounded_vec![0, 1], bounded_vec![0, 2]];
 		let verifiable_credential_hash: HashOf<Test> = bounded_vec![1, 2, 3, 4, 5];
 
 		assert_ok!(DID::add_credentials_type(root.clone(), creds.clone()));
@@ -946,7 +1024,7 @@ fn force_revoke_credentials_works() {
 				root.clone(),
 				ACCOUNT_01,
 				ACCOUNT_02,
-				vec![bounded_vec![9, 9]],
+				bounded_vec![bounded_vec![9, 9]],
 			),
 			Error::<Test>::IssuedCredentialDoesNotExist
 		);

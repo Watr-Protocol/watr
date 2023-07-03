@@ -56,7 +56,6 @@ pub trait WeightInfo {
 	fn add_issuer() -> Weight;
 	fn revoke_issuer() -> Weight;
 	fn reactivate_issuer() -> Weight;
-	fn remove_issuer() -> Weight;
 	fn add_credentials_type(m: u32, ) -> Weight;
 	fn remove_credentials_type(m: u32, ) -> Weight;
 }
@@ -227,18 +226,6 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 	/// Storage: DID Issuers (r:1 w:1)
 	/// Proof: DID Issuers (max_values: None, max_size: Some(49), added: 2524, mode: MaxEncodedLen)
 	fn reactivate_issuer() -> Weight {
-		// Proof Size summary in bytes:
-		//  Measured:  `117`
-		//  Estimated: `3514`
-		// Minimum execution time: 10_000_000 picoseconds.
-		Weight::from_parts(11_000_000, 0)
-			.saturating_add(Weight::from_parts(0, 3514))
-			.saturating_add(T::DbWeight::get().reads(1))
-			.saturating_add(T::DbWeight::get().writes(1))
-	}
-	/// Storage: DID Issuers (r:1 w:1)
-	/// Proof: DID Issuers (max_values: None, max_size: Some(49), added: 2524, mode: MaxEncodedLen)
-	fn remove_issuer() -> Weight {
 		// Proof Size summary in bytes:
 		//  Measured:  `117`
 		//  Estimated: `3514`
@@ -445,18 +432,6 @@ impl WeightInfo for () {
 	/// Storage: DID Issuers (r:1 w:1)
 	/// Proof: DID Issuers (max_values: None, max_size: Some(49), added: 2524, mode: MaxEncodedLen)
 	fn reactivate_issuer() -> Weight {
-		// Proof Size summary in bytes:
-		//  Measured:  `117`
-		//  Estimated: `3514`
-		// Minimum execution time: 10_000_000 picoseconds.
-		Weight::from_parts(11_000_000, 0)
-			.saturating_add(Weight::from_parts(0, 3514))
-			.saturating_add(RocksDbWeight::get().reads(1))
-			.saturating_add(RocksDbWeight::get().writes(1))
-	}
-	/// Storage: DID Issuers (r:1 w:1)
-	/// Proof: DID Issuers (max_values: None, max_size: Some(49), added: 2524, mode: MaxEncodedLen)
-	fn remove_issuer() -> Weight {
 		// Proof Size summary in bytes:
 		//  Measured:  `117`
 		//  Estimated: `3514`

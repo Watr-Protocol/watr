@@ -89,11 +89,14 @@ fn create_credential<T: Config>(i: u32, seed: u8) -> CredentialOf<T> {
 	credential_type
 }
 
-fn create_credentials<T: Config>(i: u32, seed: u8) -> Vec<CredentialOf<T>> {
-	let mut credentials = Vec::<CredentialOf<T>>::new();
+fn create_credentials<T: Config>(
+	i: u32,
+	seed: u8,
+) -> BoundedVec<CredentialOf<T>, T::MaxCredentialsTypes> {
+	let mut credentials = BoundedVec::<CredentialOf<T>, T::MaxCredentialsTypes>::default();
 	for j in 0..i {
 		let credential = create_credential::<T>(j, seed);
-		let _ = credentials.push(credential);
+		let _ = credentials.try_push(credential);
 	}
 	credentials
 }
@@ -446,7 +449,24 @@ benchmarks! {
 	}
 
 	add_issuer {
-		let issuer = issuer::<T>(1);
+		// Dependancy - Create a DID with its document
+		let controller_id = 1;
+		let authentication_id = 1;
+		let assertion_id = 1;
+		let (existing_services, existing_services_keys) = create_services::<T>(0, 1);
+		let existing_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
+		let did = controller::<T>(controller_id).into();
+		let did_origin = RawOrigin::Signed(did.clone());
+		T::Currency::make_free_balance_be(&did, BalanceOf::<T>::max_value());
+		assert!(DID::create_did(
+			did_origin.into(),
+			existing_document.clone().controller,
+			existing_document.clone().authentication.controller,
+			Some(existing_document.clone().assertion_method.unwrap().controller),
+			existing_services
+		).is_ok());
+
+		let issuer = T::DidIdentifier::from(did);
 		let info = IssuerInfo { status: IssuerStatus::Active };
 	}: _(
 		RawOrigin::Root, issuer.clone()
@@ -457,7 +477,24 @@ benchmarks! {
 	}
 
 	revoke_issuer {
-		let issuer = issuer::<T>(1);
+		// Dependancy - Create a DID with its document
+		let controller_id = 1;
+		let authentication_id = 1;
+		let assertion_id = 1;
+		let (existing_services, existing_services_keys) = create_services::<T>(0, 1);
+		let existing_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
+		let did = controller::<T>(controller_id).into();
+		let did_origin = RawOrigin::Signed(did.clone());
+		T::Currency::make_free_balance_be(&did, BalanceOf::<T>::max_value());
+		assert!(DID::create_did(
+			did_origin.into(),
+			existing_document.clone().controller,
+			existing_document.clone().authentication.controller,
+			Some(existing_document.clone().assertion_method.unwrap().controller),
+			existing_services
+		).is_ok());
+
+		let issuer = T::DidIdentifier::from(did);
 		let info = IssuerInfo { status: IssuerStatus::Revoked };
 		assert_ok!(DID::<T>::add_issuer(RawOrigin::Root.into(), issuer.clone()));
 	}: _(
@@ -469,7 +506,24 @@ benchmarks! {
 	}
 
 	reactivate_issuer {
-		let issuer = issuer::<T>(1);
+		// Dependancy - Create a DID with its document
+		let controller_id = 1;
+		let authentication_id = 1;
+		let assertion_id = 1;
+		let (existing_services, existing_services_keys) = create_services::<T>(0, 1);
+		let existing_document: Document<T> = create_did_document(controller_id, authentication_id, assertion_id, &existing_services_keys);
+		let did = controller::<T>(controller_id).into();
+		let did_origin = RawOrigin::Signed(did.clone());
+		T::Currency::make_free_balance_be(&did, BalanceOf::<T>::max_value());
+		assert!(DID::create_did(
+			did_origin.into(),
+			existing_document.clone().controller,
+			existing_document.clone().authentication.controller,
+			Some(existing_document.clone().assertion_method.unwrap().controller),
+			existing_services
+		).is_ok());
+
+		let issuer = T::DidIdentifier::from(did);
 		let info = IssuerInfo { status: IssuerStatus::Active };
 		assert_ok!(DID::<T>::add_issuer(RawOrigin::Root.into(), issuer.clone()));
 		assert_ok!(DID::<T>::revoke_issuer(RawOrigin::Root.into(), issuer.clone()));
@@ -479,18 +533,6 @@ benchmarks! {
 	verify {
 		assert_eq!(Issuers::<T>::get(issuer.clone()), Some(info));
 		assert_last_event::<T>(Event::IssuerStatusReactived {issuer: issuer}.into());
-	}
-
-	remove_issuer {
-		let issuer = issuer::<T>(1);
-		assert_ok!(DID::<T>::add_issuer(RawOrigin::Root.into(), issuer.clone()));
-		assert_ok!(DID::<T>::revoke_issuer(RawOrigin::Root.into(), issuer.clone()));
-	}: _(
-		RawOrigin::Root, issuer.clone()
-	)
-	verify {
-		assert_eq!(Issuers::<T>::get(issuer.clone()), None);
-		assert_last_event::<T>(Event::IssuerRemoved {issuer: issuer}.into());
 	}
 
 	add_credentials_type {
@@ -510,10 +552,10 @@ benchmarks! {
 
 		assert_ok!(DID::<T>::add_credentials_type(RawOrigin::Root.into(), credentials_types.clone()));
 	}: _(
-		RawOrigin::Root, credentials_types.to_vec().clone()
+		RawOrigin::Root, credentials_types.clone()
 	)
 	verify {
 		assert_eq!(CredentialsTypes::<T>::get(), Vec::default());
-		assert_last_event::<T>(Event::CredentialTypesRemoved {credentials: credentials_types.to_vec()}.into());
+		assert_last_event::<T>(Event::CredentialTypesRemoved {credentials: credentials_types}.into());
 	}
 }

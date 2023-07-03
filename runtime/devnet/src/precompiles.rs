@@ -25,6 +25,7 @@ use pallet_evm::{
 use pallet_evm_precompile_assets_erc20::{AddressToAssetId, Erc20AssetsPrecompileSet};
 use pallet_evm_precompile_blake2::Blake2F;
 use pallet_evm_precompile_bn128::{Bn128Add, Bn128Mul, Bn128Pairing};
+use pallet_evm_precompile_dispatch::Dispatch;
 use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, Identity, Ripemd160, Sha256};
@@ -67,6 +68,7 @@ impl<R> pallet_evm::PrecompileSet for FrontierPrecompiles<R>
 where
 	Erc20AssetsPrecompileSet<R>: PrecompileSet,
 	<R as pallet_assets::Config>::AssetId: From<AssetId>,
+	Dispatch<R>: Precompile,
 	R: pallet_evm::Config
 		+ pallet_assets::Config
 		+ pallet_xcm::Config
@@ -99,6 +101,7 @@ where
 			// Non-Frontier specific nor Ethereum precompiles :
 			// nor Ethereum precompiles :
 			a if a == hash(1024) => Some(Sha3FIPS256::execute(handle)),
+			a if a == hash(1025) => Some(Dispatch::<R>::execute(handle)),
 			// If the address matches asset prefix, the we route through the asset precompile set
 			a if &a.to_fixed_bytes()[0..4] == ASSET_PRECOMPILE_ADDRESS_PREFIX => {
 				// Get asset id to check if it is TUSD
