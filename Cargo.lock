@@ -6442,6 +6442,7 @@ dependencies = [
 [[package]]
 name = "pallet-evm-precompile-assets-erc20"
 version = "0.5.2"
+source = "git+https://github.com/Watr-Protocol/astar-frame.git?branch=polkadot-v0.9.42#8054a17905ac102ec074b6c07bacc22d0a45433b"
 dependencies = [
  "fp-evm",
  "frame-support",
@@ -8749,6 +8750,7 @@ checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
 [[package]]
 name = "precompile-utils"
 version = "0.4.3"
+source = "git+https://github.com/Watr-Protocol/astar-frame.git?branch=polkadot-v0.9.42#8054a17905ac102ec074b6c07bacc22d0a45433b"
 dependencies = [
  "evm 0.37.0",
  "fp-evm",
@@ -8771,6 +8773,7 @@ dependencies = [
 [[package]]
 name = "precompile-utils-macro"
 version = "0.1.0"
+source = "git+https://github.com/Watr-Protocol/astar-frame.git?branch=polkadot-v0.9.42#8054a17905ac102ec074b6c07bacc22d0a45433b"
 dependencies = [
  "num_enum 0.5.11",
  "proc-macro2",
