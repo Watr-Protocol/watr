@@ -52,16 +52,13 @@ pub const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(5);
 /// `Operational` extrinsics.
 pub const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
 
-// TODO: Delete me
-// /// We allow for 0.5 of a second of compute with a 12 second average block time.
-// pub const MAXIMUM_BLOCK_WEIGHT: Weight = Weight::from_parts(
-//     WEIGHT_REF_TIME_PER_SECOND.saturating_div(2),
-//     polkadot_primitives::MAX_POV_SIZE as u64,
-// );
-
 /// Current approximation of the gas/s consumption considering
+/// EVM execution over compiled WASM (on 4.4Ghz CPU).
+/// Given the 500ms Weight, from which 75% only are used for transactions,
+/// the total EVM execution gas limit is: GAS_PER_SECOND * 0.500 * 0.75 ~= 15_000_000.
+/// https://github.com/PureStake/moonbeam/blob/master/runtime/moonbeam/src/lib.rs#L369
 pub const GAS_PER_SECOND: u64 = 40_000_000;
 
 /// Approximate ratio of the amount of Weight per Gas.
 /// u64 works for approximations because Weight is a very small unit compared to gas.
-pub const WEIGHT_PER_GAS: u64 = WEIGHT_REF_TIME_PER_SECOND / GAS_PER_SECOND;
+pub const WEIGHT_REF_TIME_PER_GAS: u64 = WEIGHT_REF_TIME_PER_SECOND / GAS_PER_SECOND;

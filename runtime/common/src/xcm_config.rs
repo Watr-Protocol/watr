@@ -169,10 +169,9 @@ impl<
 							&inner_xcm[1],
 							DepositAsset {
 								assets: Wild(All),
-								// max_assets: 1,
 								beneficiary: MultiLocation {
 									parents: 0,
-									interior: X1(AccountId32 { network: _, id: _ })
+									interior: X1(AccountId32 { .. })
 								}
 							}
 						);

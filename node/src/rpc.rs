@@ -28,7 +28,7 @@
 use jsonrpsee::RpcModule;
 use std::{collections::BTreeMap, sync::Arc};
 
-use watr_runtime::{opaque::Block, AccountId, Balance, Hash, Index as Nonce};
+use watr_common::{opaque::Block, AccountId, Balance, Hash, Index as Nonce};
 
 use sc_client_api::{
 	backend::{AuxStore, Backend, StateBackend, StorageProvider},
@@ -50,7 +50,7 @@ use sp_runtime::traits::{BlakeTwo256, Block as BlockT};
 // Frontier
 use fc_rpc::{
 	EthBlockDataCacheTask, OverrideHandle, RuntimeApiStorageOverride, SchemaV1Override,
-	SchemaV2Override, SchemaV3Override, StorageOverride,
+	SchemaV2Override, SchemaV3Override, TxPool, TxPoolApiServer,
 };
 use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
 use fp_rpc::EthereumRuntimeRPCApi;
@@ -94,23 +94,13 @@ where
 	C: HeaderBackend<B> + StorageProvider<B, BE> + 'static,
 	BE: Backend<B> + 'static,
 {
-	let mut overrides_map = BTreeMap::new();
-	overrides_map.insert(
-		EthereumStorageSchema::V1,
-		Box::new(SchemaV1Override::new(client.clone())) as Box<dyn StorageOverride<_>>,
-	);
-	overrides_map.insert(
-		EthereumStorageSchema::V2,
-		Box::new(SchemaV2Override::new(client.clone())) as Box<dyn StorageOverride<_>>,
-	);
-	overrides_map.insert(
-		EthereumStorageSchema::V3,
-		Box::new(SchemaV3Override::new(client.clone())) as Box<dyn StorageOverride<_>>,
-	);
-
 	Arc::new(OverrideHandle {
-		schemas: overrides_map,
-		fallback: Box::new(RuntimeApiStorageOverride::new(client.clone())),
+		schemas: BTreeMap::from([
+			(EthereumStorageSchema::V1, Box::new(SchemaV1Override::new(client.clone())) as Box<_>),
+			(EthereumStorageSchema::V2, Box::new(SchemaV2Override::new(client.clone())) as Box<_>),
+			(EthereumStorageSchema::V3, Box::new(SchemaV3Override::new(client.clone())) as Box<_>),
+		]),
+		fallback: Box::new(RuntimeApiStorageOverride::new(client)),
 	})
 }
 
@@ -135,7 +125,9 @@ where
 
 	Ok(Arc::new(fc_db::Backend::<Block>::new(
 		client,
-		&fc_db::DatabaseSettings { source: fc_db::DatabaseSource::RocksDb { path, cache_size: 0 } },
+		&fc_db::kv::DatabaseSettings {
+			source: fc_db::DatabaseSource::RocksDb { path, cache_size: 0 },
+		},
 	)?))
 }
 
