@@ -13693,7 +13693,7 @@ dependencies = [
 
 [[package]]
 name = "watr-common"
-version = "1.22.0"
+version = "1.23.0"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -13715,7 +13715,7 @@ dependencies = [
 
 [[package]]
 name = "watr-devnet-runtime"
-version = "1.22.0"
+version = "1.23.0"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",
@@ -13885,7 +13885,7 @@ dependencies = [
 
 [[package]]
 name = "watr-runtime"
-version = "1.22.0"
+version = "1.23.0"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",

@@ -243,7 +243,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	spec_name: create_runtime_str!("watr-mainnet"),
 	impl_name: create_runtime_str!("watr-mainnet"),
 	authoring_version: 1,
-	spec_version: 1220,
+	spec_version: 1230,
 	impl_version: 0,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -817,8 +817,6 @@ where
 
 // Frontier's default OnChargeEVMTransaction burns a portion of the fees.
 watr_common::impl_on_charge_evm_transaction!();
-
-const MAX_POV_SIZE: u64 = 5 * 1024 * 1024;
 
 parameter_types! {
 	pub const ChainId: u64 = 688;
