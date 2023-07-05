@@ -128,7 +128,7 @@ where
 		match Erc20AssetsPrecompileSet::<R>::new().is_precompile(address, gas) {
 			IsPrecompileResult::Answer { is_precompile, extra_cost } =>
 				IsPrecompileResult::Answer {
-					is_precompile: Self::used_addresses().any(|x| x == address) || is_precompile,
+					is_precompile: is_precompile || Self::used_addresses().any(|x| x == address) ,
 					extra_cost,
 				},
 			_ => IsPrecompileResult::Answer { is_precompile: false, extra_cost: 0 },

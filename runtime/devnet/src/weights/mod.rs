@@ -35,6 +35,7 @@ pub mod pallet_session;
 pub mod pallet_timestamp;
 pub mod pallet_treasury;
 pub mod pallet_utility;
+pub mod pallet_xc_asset_config;
 pub mod paritydb_weights;
 pub mod rocksdb_weights;
 

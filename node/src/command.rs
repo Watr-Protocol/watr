@@ -366,27 +366,49 @@ pub fn run() -> Result<()> {
 		},
 		#[cfg(feature = "try-runtime")]
 		Some(Subcommand::TryRuntime(cmd)) => {
-			if cfg!(feature = "try-runtime") {
-				let runner = cli.create_runner(cmd)?;
+			use watr_common::MILLISECS_PER_BLOCK;
+			use sc_executor::{sp_wasm_interface::ExtendedHostFunctions, NativeExecutionDispatch};
+			use try_runtime_cli::block_building_info::timestamp_with_aura_info;
 
-				// grab the task manager.
-				let registry = &runner.config().prometheus_config.as_ref().map(|cfg| &cfg.registry);
-				let task_manager =
-					TaskManager::new(runner.config().tokio_handle.clone(), *registry)
-						.map_err(|e| format!("Error: {:?}", e))?;
+			let runner = cli.create_runner(cmd)?;
 
-				match runner.config().chain_spec.runtime() {
-					Runtime::Devnet | Runtime::Default => runner.async_run(|config| {
-						Ok((cmd.run::<Block, WatrDevnetRuntimeExecutor>(config), task_manager))
+			type HostFunctionsOf<E> = ExtendedHostFunctions<
+				sp_io::SubstrateHostFunctions,
+				<E as NativeExecutionDispatch>::ExtendHostFunctions,
+			>;
+
+			// grab the task manager.
+			let registry = &runner.config().prometheus_config.as_ref().map(|cfg| &cfg.registry);
+			let task_manager =
+				sc_service::TaskManager::new(runner.config().tokio_handle.clone(), *registry)
+					.map_err(|e| format!("Error: {:?}", e))?;
+
+			let info_provider = timestamp_with_aura_info(MILLISECS_PER_BLOCK);
+			match runner.config().chain_spec.runtime() {
+				Runtime::Devnet | Runtime::Default =>
+					runner.async_run(|_| {
+						Ok((
+							cmd.run::<Block, HostFunctionsOf<WatrDevnetRuntimeExecutor>, _>(Some(
+								info_provider,
+							)),
+							task_manager,
+						))
 					}),
-					Runtime::Mainnet => runner.async_run(|config| {
-						Ok((cmd.run::<Block, WatrRuntimeExecutor>(config), task_manager))
+				Runtime::Mainnet =>
+					runner.async_run(|_| {
+						Ok((
+							cmd.run::<Block, HostFunctionsOf<WatrRuntimeExecutor>, _>(Some(
+								info_provider,
+							)),
+							task_manager,
+						))
 					}),
-				}
-			} else {
-				Err("Try-runtime must be enabled by `--features try-runtime`.".into())
 			}
 		},
+		#[cfg(not(feature = "try-runtime"))]
+		Some(Subcommand::TryRuntime) => Err("Try-runtime was not enabled when building the node. \
+			You can enable it with `--features try-runtime`."
+			.into()),
 		Some(Subcommand::Key(cmd)) => cmd.run(&cli),
 		None => {
 			let runner = cli.create_runner(&cli.run.normalize())?;
