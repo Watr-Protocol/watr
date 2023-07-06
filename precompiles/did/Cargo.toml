@@ -1,0 +1,25 @@
+[package]
+name = "did"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+num_enum = { version = "0.5.3", default-features = false }
+
+pallet-evm = { git = 'https://github.com/paritytech/frontier', branch = "polkadot-v0.9.30", default-features = false }
+sp-std = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.30" }
+precompile-utils = { git = "https://github.com/Watr-Protocol/astar-frame.git", branch = "polkadot-v0.9.30", default-features = false }
+frame-system = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.30" }
+frame-support = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.30" }
+
+pallet-did = {path = "../../pallets/did" }
+
+[features]
+default = ["std"]
+std = [
+    "pallet-evm/std",
+    "precompile-utils/std",
+    "sp-std/std",
+]
