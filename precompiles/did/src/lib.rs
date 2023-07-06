@@ -6,28 +6,30 @@ use frame_support::{
 };
 use pallet_did::types::{ServiceInfo, ServiceType::VerifiableCredentialFileStorage};
 use pallet_evm::{AddressMapping, Precompile, PrecompileHandle, PrecompileOutput};
-use precompile_utils::{error, succeed, EvmDataWriter};
+use precompile_utils::{error, succeed, EvmDataWriter, RuntimeHelper};
 use sp_std::marker::PhantomData;
 
 use precompile_utils::{Address, Bytes, EvmResult, PrecompileHandleExt};
 
+#[cfg(test)]
+mod mock;
+
 #[precompile_utils::generate_function_selector]
 #[derive(Debug, PartialEq)]
 pub enum Action {
-	CreateDID = "create_did(address, address, bytes[])",
+	CreateDID = "create_did(address, address, bytes)",
 	CreateDIDOptional = "create_did(address, address, address, bytes)",
 }
 
-pub struct WatrDIDPrecompile<T>(PhantomData<T>);
+pub struct WatrDIDPrecompile<R>(PhantomData<R>);
 
 impl<R> Precompile for WatrDIDPrecompile<R>
 where
-	R: pallet_evm::Config + pallet_did::Config,
+	R: pallet_evm::Config + pallet_did::Config + frame_system::Config,
 	<R as frame_system::pallet::Config>::RuntimeCall:
 		Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
-	<<R as frame_system::pallet::Config>::RuntimeCall as Dispatchable>::RuntimeOrigin:
-		From<Option<R::AccountId>>,
-	<R as frame_system::Config>::RuntimeOrigin: From<<R as frame_system::Config>::AccountId>,
+	<<R as frame_system::Config>::RuntimeCall as Dispatchable>::RuntimeOrigin: From<R::AccountId>,
+	<R as frame_system::Config>::RuntimeCall: From<pallet_did::Call<R>>,
 	<R as pallet_did::Config>::AuthenticationAddress: From<Address>,
 {
 	fn execute(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
@@ -43,9 +45,8 @@ where
 	R: pallet_evm::Config + pallet_did::Config,
 	<R as frame_system::pallet::Config>::RuntimeCall:
 		Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
-	<<R as frame_system::pallet::Config>::RuntimeCall as Dispatchable>::RuntimeOrigin:
-		From<Option<R::AccountId>>,
-	<R as frame_system::Config>::RuntimeOrigin: From<<R as frame_system::Config>::AccountId>,
+	<<R as frame_system::Config>::RuntimeCall as Dispatchable>::RuntimeOrigin: From<R::AccountId>,
+	<R as frame_system::Config>::RuntimeCall: From<pallet_did::Call<R>>,
 	<R as pallet_did::Config>::AuthenticationAddress: From<Address>,
 {
 	fn create_did(
@@ -76,17 +77,20 @@ where
 		}]
 		.try_into()
 		.map_err(|_| error("Too many services"))?;
+
 		let origin = R::AddressMapping::into_account_id(handle.context().caller);
 		let controller = R::AddressMapping::into_account_id(controller_raw.into());
-
-		pallet_did::Pallet::<R>::create_did(
+		RuntimeHelper::<R>::try_dispatch(
+			handle,
 			origin.into(),
-			controller.into(),
-			authentication.into(),
-			attestation_method,
-			services,
-		)
-		.map_err(|_| error("failed to create did"))?;
+			pallet_did::Call::<R>::create_did {
+				controller: controller.into(),
+				authentication: authentication.into(),
+				assertion: attestation_method,
+				services,
+			},
+		)?;
+
 		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 }

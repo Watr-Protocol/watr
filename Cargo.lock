@@ -1961,12 +1961,19 @@ dependencies = [
 name = "did"
 version = "0.1.0"
 dependencies = [
+ "derive_more",
  "frame-support",
  "frame-system",
  "num_enum",
+ "pallet-balances",
  "pallet-did",
  "pallet-evm",
+ "pallet-timestamp",
+ "parity-scale-codec",
  "precompile-utils",
+ "scale-info",
+ "serde",
+ "sp-core",
  "sp-std",
 ]
 
