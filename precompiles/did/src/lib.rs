@@ -13,6 +13,8 @@ use precompile_utils::{Address, Bytes, EvmResult, PrecompileHandleExt};
 
 #[cfg(test)]
 mod mock;
+#[cfg(test)]
+mod tests;
 
 #[precompile_utils::generate_function_selector]
 #[derive(Debug, PartialEq)]
@@ -94,6 +96,3 @@ where
 		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 }
-
-#[cfg(test)]
-mod tests {}
