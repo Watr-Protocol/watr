@@ -104,7 +104,7 @@ impl NativeExecutionDispatch for WatrRuntimeExecutor {
 }
 
 type ParachainExecutor<Executor> = NativeElseWasmExecutor<Executor>;
-type ParachainClient<RuntimeApi, Executor> =
+pub type ParachainClient<RuntimeApi, Executor> =
 	TFullClient<Block, RuntimeApi, ParachainExecutor<Executor>>;
 type ParachainBackend = TFullBackend<Block>;
 type ParachainBlockImport<RuntimeApi, Executor> = TParachainBlockImport<

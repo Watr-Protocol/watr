@@ -34,6 +34,7 @@ use sp_core::hexdisplay::HexDisplay;
 use sp_runtime::traits::{AccountIdConversion, Block as BlockT};
 
 use crate::{
+	benchmarking::{inherent_benchmark_data, RemarkBuilder},
 	chain_spec,
 	cli::{Cli, RelayChainCli, Subcommand},
 	service::{new_partial, Block, WatrDevnetRuntimeExecutor, WatrRuntimeExecutor},
@@ -358,6 +359,19 @@ pub fn run() -> Result<()> {
 				}),
 				BenchmarkCmd::Machine(cmd) =>
 					runner.sync_run(|config| cmd.run(&config, SUBSTRATE_REFERENCE_HARDWARE.clone())),
+				BenchmarkCmd::Overhead(cmd) =>  runner.sync_run(|config| {
+					construct_benchmark_partials!(config, |partial| {
+						let ext_builder = RemarkBuilder::new(partial.client.clone());
+
+						cmd.run(
+							config,
+							partial.client,
+							inherent_benchmark_data()?,
+							Vec::new(),
+							&ext_builder,
+						)
+					})
+				}),
 				// NOTE: this allows the Client to leniently implement
 				// new benchmark commands without requiring a companion MR.
 				#[allow(unreachable_patterns)]
