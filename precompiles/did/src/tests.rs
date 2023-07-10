@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Watr.  If not, see <http://www.gnu.org/licenses/>.
 
-use frame_support::sp_runtime::traits::Hash;
+use frame_support::{assert_ok, sp_runtime::traits::Hash};
 use pallet_did::{
 	types::{AssertionMethod, AuthenticationMethod, Document},
 	ServiceKeysOf,
@@ -73,6 +73,22 @@ fn create_default_did(controller: TestAccount, use_assertion: bool) -> Document<
 	expected_document
 }
 
+fn insert_default_did(controller: TestAccount) {
+	let did = create_default_did(controller.clone(), true);
+	let origin = RuntimeOrigin::signed(controller);
+	let assertion = match did.assertion_method {
+		Some(address) => Some(address.controller),
+		None => None,
+	};
+	assert_ok!(DID::create_did(
+		origin,
+		did.controller,
+		did.authentication.controller,
+		assertion,
+		default_services()
+	));
+}
+
 fn default_services(
 ) -> BoundedVec<ServiceInfo<Test>, <mock::Test as pallet_did::Config>::MaxServices> {
 	bounded_vec![ServiceInfo {
@@ -120,8 +136,7 @@ fn it_creates_did_with_assertion() {
 					.build(),
 			)
 			.execute_returns(EvmDataWriter::new().write(true).build());
-		let events = events();
-		assert!(events.contains(&pallet_did::Event::<Test>::DidCreated {
+		assert!(events().contains(&pallet_did::Event::<Test>::DidCreated {
 			did: TestAccount::Alice,
 			document: expected_document
 		}));
