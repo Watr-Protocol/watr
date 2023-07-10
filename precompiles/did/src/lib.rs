@@ -4,10 +4,15 @@ use frame_support::{
 	dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo},
 	BoundedVec,
 };
-use pallet_did::types::{ServiceInfo, ServiceType::VerifiableCredentialFileStorage};
-use pallet_evm::{AddressMapping, Precompile, PrecompileHandle, PrecompileOutput};
+use pallet_did::types::{
+	Service, ServiceInfo,
+	ServiceType::{self, VerifiableCredentialFileStorage},
+};
+use pallet_evm::{
+	AddressMapping, Precompile, PrecompileFailure, PrecompileHandle, PrecompileOutput,
+};
 use precompile_utils::{error, succeed, EvmDataWriter, RuntimeHelper};
-use sp_std::marker::PhantomData;
+use sp_std::{marker::PhantomData, ops::Deref};
 
 use precompile_utils::{Address, Bytes, EvmResult, PrecompileHandleExt};
 
@@ -19,8 +24,8 @@ mod tests;
 #[precompile_utils::generate_function_selector]
 #[derive(Debug, PartialEq)]
 pub enum Action {
-	CreateDID = "create_did(address, address, bytes)",
-	CreateDIDOptional = "create_did(address, address, address, bytes)",
+	CreateDID = "create_did(address, address, uint8[], bytes[])",
+	CreateDIDOptional = "create_did(address, address, address, uint8[], bytes)",
 	RemoveDID = "remove_did(address)",
 }
 
@@ -58,30 +63,32 @@ where
 		action: Action,
 	) -> EvmResult<PrecompileOutput> {
 		let mut input = handle.read_input()?;
-		let (controller_raw, authentication, attestation_method, services_raw) = match &action {
-			Action::CreateDID => {
-				input.expect_arguments(3)?;
-				(input.read::<Address>()?, input.read::<Address>()?, None, input.read::<Bytes>()?)
-			},
-			Action::CreateDIDOptional => {
-				input.expect_arguments(4)?;
-				(
-					input.read::<Address>()?,
-					input.read::<Address>()?,
-					Some(input.read::<Address>()?.0.into()),
-					input.read::<Bytes>()?,
-				)
-			},
-			_ => unreachable!(),
-		};
-		let endpoint: BoundedVec<u8, R::MaxString> =
-			services_raw.0.try_into().map_err(|_| error("Services string too long"))?;
-		let services: BoundedVec<ServiceInfo<R>, R::MaxServices> = vec![ServiceInfo {
-			type_id: VerifiableCredentialFileStorage,
-			service_endpoint: endpoint,
-		}]
-		.try_into()
-		.map_err(|_| error("Too many services"))?;
+		let (controller_raw, authentication, attestation_method, services_types, services_data) =
+			match &action {
+				Action::CreateDID => {
+					input.expect_arguments(3)?;
+					(
+						input.read::<Address>()?,
+						input.read::<Address>()?,
+						None,
+						input.read::<Vec<u8>>()?,
+						input.read::<Vec<Bytes>>()?,
+					)
+				},
+				Action::CreateDIDOptional => {
+					input.expect_arguments(4)?;
+					(
+						input.read::<Address>()?,
+						input.read::<Address>()?,
+						Some(input.read::<Address>()?.0.into()),
+						input.read::<Vec<u8>>()?,
+						input.read::<Vec<Bytes>>()?,
+					)
+				},
+				_ => unreachable!(),
+			};
+		let services: BoundedVec<ServiceInfo<R>, R::MaxServices> =
+			Self::parse_services(services_types, services_data)?;
 
 		let origin = R::AddressMapping::into_account_id(handle.context().caller);
 		let controller = R::AddressMapping::into_account_id(controller_raw.into());
@@ -130,5 +137,35 @@ where
 
 	fn revoke_credentials(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		todo!()
+	}
+
+	fn parse_services(
+		service_types: Vec<u8>,
+		services_details: Vec<Bytes>,
+	) -> Result<BoundedVec<ServiceInfo<R>, R::MaxServices>, PrecompileFailure> {
+		if &service_types.len() != &services_details.len() {
+			return Err(error("Mismatched service types and descriptions"))
+		}
+		let mut services: BoundedVec<ServiceInfo<R>, R::MaxServices> =
+			BoundedVec::with_bounded_capacity(service_types.len());
+		let mut s = service_types.iter();
+		let mut d = services_details.iter();
+		while let Some(service) = s.next() {
+			if let Some(detail) = d.next() {
+				let service_type: ServiceType = match service {
+					&1u8 => ServiceType::VerifiableCredentialFileStorage,
+					_ => ServiceType::default(),
+				};
+				let endpoint: BoundedVec<u8, R::MaxString> =
+					detail.clone().0.try_into().map_err(|_| error("Services string too long"))?;
+				match services
+					.try_push(ServiceInfo { type_id: service_type, service_endpoint: endpoint })
+				{
+					Ok(_) => {},
+					Err(_) => return Err(error("failed to parse to service")),
+				}
+			}
+		}
+		Ok(services)
 	}
 }

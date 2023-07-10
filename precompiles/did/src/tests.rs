@@ -108,7 +108,8 @@ fn it_creates_did() {
 				EvmDataWriter::new_with_selector(Action::CreateDID)
 					.write(Address(TestAccount::Alice.into()))
 					.write(Address(H160::from([0u8; 20])))
-					.write(Bytes(default_services()[0].service_endpoint.to_vec()))
+					.write(vec![1u8])
+					.write(vec![Bytes(default_services()[0].service_endpoint.to_vec())])
 					.build(),
 			)
 			.execute_returns(EvmDataWriter::new().write(true).build());
@@ -132,7 +133,8 @@ fn it_creates_did_with_assertion() {
 					.write(Address(TestAccount::Alice.into()))
 					.write(Address(H160::from([0u8; 20])))
 					.write(Address(H160::from([0u8; 20])))
-					.write(Bytes(default_services()[0].service_endpoint.to_vec()))
+					.write(vec![1u8])
+					.write(vec![Bytes(default_services()[0].service_endpoint.to_vec())])
 					.build(),
 			)
 			.execute_returns(EvmDataWriter::new().write(true).build());
