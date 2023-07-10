@@ -95,4 +95,28 @@ where
 
 		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
+
+	fn update_did(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
+		todo!()
+	}
+
+	fn remove_did(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
+		todo!()
+	}
+
+	fn add_did_service(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
+		todo!()
+	}
+
+	fn remove_did_service(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
+		todo!()
+	}
+
+	fn issue_credentials(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
+		todo!()
+	}
+
+	fn revoke_credentials(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
+		todo!()
+	}
 }
