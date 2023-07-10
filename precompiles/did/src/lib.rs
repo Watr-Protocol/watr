@@ -11,7 +11,7 @@ use pallet_did::types::{
 use pallet_evm::{
 	AddressMapping, Precompile, PrecompileFailure, PrecompileHandle, PrecompileOutput,
 };
-use precompile_utils::{error, succeed, EvmDataWriter, RuntimeHelper};
+use precompile_utils::{error, succeed, EvmDataWriter, RuntimeHelper, revert};
 use sp_std::{marker::PhantomData, ops::Deref};
 
 use precompile_utils::{Address, Bytes, EvmResult, PrecompileHandleExt};
@@ -144,7 +144,7 @@ where
 		services_details: Vec<Bytes>,
 	) -> Result<BoundedVec<ServiceInfo<R>, R::MaxServices>, PrecompileFailure> {
 		if &service_types.len() != &services_details.len() {
-			return Err(error("Mismatched service types and descriptions"))
+			return Err(revert("Mismatched service types and descriptions"))
 		}
 		let mut services: BoundedVec<ServiceInfo<R>, R::MaxServices> =
 			BoundedVec::with_bounded_capacity(service_types.len());
@@ -157,12 +157,12 @@ where
 					_ => ServiceType::default(),
 				};
 				let endpoint: BoundedVec<u8, R::MaxString> =
-					detail.clone().0.try_into().map_err(|_| error("Services string too long"))?;
+					detail.clone().0.try_into().map_err(|_| revert("Services string too long"))?;
 				match services
 					.try_push(ServiceInfo { type_id: service_type, service_endpoint: endpoint })
 				{
 					Ok(_) => {},
-					Err(_) => return Err(error("failed to parse to service")),
+					Err(_) => return Err(revert("failed to parse to service")),
 				}
 			}
 		}
