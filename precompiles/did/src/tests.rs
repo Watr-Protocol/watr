@@ -142,3 +142,43 @@ fn it_creates_did_with_assertion() {
 		}));
 	});
 }
+
+#[test]
+fn it_removes_a_did() {
+	new_test_ext().execute_with(|| {
+		insert_default_did(TestAccount::Bob);
+		assert!(DID::dids::<TestAccount>(TestAccount::Bob).is_some());
+		precompiles()
+			.prepare_test(
+				TestAccount::Bob,
+				PRECOMPILE_ADDRESS,
+				EvmDataWriter::new_with_selector(Action::RemoveDID)
+					.write(Address(TestAccount::Bob.into()))
+					.build(),
+			)
+			.execute_returns(EvmDataWriter::new().write(true).build());
+		assert!(events().contains(&pallet_did::Event::<Test>::DidRemoved { did: TestAccount::Bob }));
+		assert!(DID::dids::<TestAccount>(TestAccount::Bob).is_none());
+	});
+}
+
+#[test]
+fn reverts_remove_did_if_not_controller() {
+	new_test_ext().execute_with(|| {
+		insert_default_did(TestAccount::Bob);
+		assert!(DID::dids::<TestAccount>(TestAccount::Bob).is_some());
+		precompiles()
+			.prepare_test(
+				TestAccount::Alice,
+				PRECOMPILE_ADDRESS,
+				EvmDataWriter::new_with_selector(Action::RemoveDID)
+					.write(Address(TestAccount::Bob.into()))
+					.build(),
+			)
+			.execute_reverts(|_| {
+				//todo: proper revert check
+				true
+			});
+		assert!(DID::dids::<TestAccount>(TestAccount::Bob).is_some());
+	});
+}

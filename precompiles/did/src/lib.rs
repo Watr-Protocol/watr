@@ -21,6 +21,7 @@ mod tests;
 pub enum Action {
 	CreateDID = "create_did(address, address, bytes)",
 	CreateDIDOptional = "create_did(address, address, address, bytes)",
+	RemoveDID = "remove_did(address)",
 }
 
 pub struct WatrDIDPrecompile<R>(PhantomData<R>);
@@ -38,6 +39,7 @@ where
 		let selector = handle.read_selector()?;
 		match selector {
 			Action::CreateDID | Action::CreateDIDOptional => Self::create_did(handle, selector),
+			Action::RemoveDID => Self::remove_did(handle),
 		}
 	}
 }
@@ -70,6 +72,7 @@ where
 					input.read::<Bytes>()?,
 				)
 			},
+			_ => unreachable!(),
 		};
 		let endpoint: BoundedVec<u8, R::MaxString> =
 			services_raw.0.try_into().map_err(|_| error("Services string too long"))?;
@@ -101,7 +104,16 @@ where
 	}
 
 	fn remove_did(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
-		todo!()
+		let mut input = handle.read_input()?;
+		let origin = R::AddressMapping::into_account_id(handle.context().caller);
+		let address = R::AddressMapping::into_account_id(input.read::<Address>()?.into());
+		RuntimeHelper::<R>::try_dispatch(
+			handle,
+			origin.into(),
+			pallet_did::Call::<R>::remove_did { did: address.into() },
+		)?;
+
+		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 
 	fn add_did_service(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
