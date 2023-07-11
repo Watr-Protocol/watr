@@ -133,7 +133,7 @@ fn it_creates_did_with_assertion() {
 					.write(Address(TestAccount::Alice.into()))
 					.write(Address(H160::from([0u8; 20])))
 					.write(Address(H160::from([0u8; 20])))
-					.write(vec![1u8])
+					.write(vec![0u8])
 					.write(vec![Bytes(default_services()[0].service_endpoint.to_vec())])
 					.build(),
 			)
@@ -148,7 +148,7 @@ fn it_creates_did_with_assertion() {
 #[test]
 fn it_reverts_if_there_is_a_mismatch_between_number_of_service_types_and_service_details() {
 	new_test_ext().execute_with(|| {
-		let expected_document = create_default_did(TestAccount::Alice, true);
+		create_default_did(TestAccount::Alice, true);
 		precompiles()
 			.prepare_test(
 				TestAccount::Alice,
@@ -157,11 +157,11 @@ fn it_reverts_if_there_is_a_mismatch_between_number_of_service_types_and_service
 					.write(Address(TestAccount::Alice.into()))
 					.write(Address(H160::from([0u8; 20])))
 					.write(Address(H160::from([0u8; 20])))
-					.write(vec![1u8, 2u8])
+					.write(vec![0u8, 1u8])
 					.write(vec![Bytes(default_services()[0].service_endpoint.to_vec())])
 					.build(),
 			)
-	        .execute_reverts(|_| {
+			.execute_reverts(|_| {
 				//todo: proper revert check
 				true
 			});

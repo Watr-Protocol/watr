@@ -238,6 +238,7 @@ where
 	<<R as frame_system::Config>::RuntimeCall as Dispatchable>::RuntimeOrigin: From<R::AccountId>,
 	<R as frame_system::Config>::RuntimeCall: From<pallet_did::Call<R>>,
 	<R as pallet_did::Config>::AuthenticationAddress: From<Address>,
+	<R as frame_system::Config>::Hash: From<H256>,
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<PrecompileResult> {
 		match handle.code_address() {
