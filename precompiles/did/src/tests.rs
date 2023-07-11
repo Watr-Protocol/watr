@@ -14,12 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Watr.  If not, see <http://www.gnu.org/licenses/>.
 
+use core::ops::Bound;
+
 use frame_support::{assert_ok, sp_runtime::traits::Hash};
 use pallet_did::{
 	types::{AssertionMethod, AuthenticationMethod, Document},
 	ServiceKeysOf,
 };
 use precompile_utils::testing::PrecompileTesterExt;
+use serde::__private::ser;
 use sp_core::{bounded_vec, H160};
 
 use super::*;
@@ -75,7 +78,7 @@ fn create_default_did(controller: TestAccount, use_assertion: bool) -> Document<
 
 fn insert_default_did(controller: TestAccount) {
 	let did = create_default_did(controller.clone(), true);
-	let origin = RuntimeOrigin::signed(controller);
+	let origin = RuntimeOrigin::signed(controller.clone());
 	let assertion = match did.assertion_method {
 		Some(address) => Some(address.controller),
 		None => None,
@@ -87,6 +90,7 @@ fn insert_default_did(controller: TestAccount) {
 		assertion,
 		default_services()
 	));
+	assert!(DID::dids::<TestAccount>(controller).is_some());
 }
 
 fn default_services(
@@ -206,5 +210,74 @@ fn reverts_remove_did_if_not_controller() {
 				true
 			});
 		assert!(DID::dids::<TestAccount>(TestAccount::Bob).is_some());
+	});
+}
+
+#[test]
+fn can_add_did_services() {
+	new_test_ext().execute_with(|| {
+		let services: BoundedVec<
+			ServiceInfo<Test>,
+			<mock::Test as pallet_did::Config>::MaxServices,
+		> = bounded_vec![
+			ServiceInfo {
+				type_id: pallet_did::types::ServiceType::VerifiableCredentialFileStorage,
+				service_endpoint: bounded_vec![b's', b'1']
+			},
+			ServiceInfo {
+				type_id: pallet_did::types::ServiceType::VerifiableCredentialFileStorage,
+				service_endpoint: bounded_vec![b's', b'2']
+			},
+		];
+		insert_default_did(TestAccount::Alice);
+		let mut service_keys = hash_services(&services);
+		service_keys.sort();
+		let mut service_types: Vec<u8> = Vec::with_capacity(services.len());
+		let mut services_details: Vec<Bytes> = Vec::with_capacity(services.len());
+
+		for service in services.iter() {
+			match service.type_id {
+				ServiceType::VerifiableCredentialFileStorage => service_types.push(0u8),
+			}
+			services_details.push(Bytes(service.service_endpoint.to_vec()))
+		}
+
+		precompiles()
+			.prepare_test(
+				TestAccount::Alice,
+				PRECOMPILE_ADDRESS,
+				EvmDataWriter::new_with_selector(Action::AddDIDServices)
+					.write(Address(TestAccount::Alice.into()))
+					.write::<Vec<u8>>(service_types)
+					.write::<Vec<Bytes>>(services_details)
+					.build(),
+			)
+			.execute_returns(EvmDataWriter::new().write(true).build());
+		assert!(events().contains(&pallet_did::Event::<Test>::DidServicesAdded {
+			did: TestAccount::Alice,
+			new_services: service_keys
+		}));
+	});
+}
+
+#[test]
+fn can_remove_did_services() {
+	new_test_ext().execute_with(|| {
+		insert_default_did(TestAccount::Charlie);
+		let services_keys = hash_services(&default_services());
+		precompiles()
+			.prepare_test(
+				TestAccount::Charlie,
+				PRECOMPILE_ADDRESS,
+				EvmDataWriter::new_with_selector(Action::RemoveDIDServices)
+					.write(Address(TestAccount::Charlie.into()))
+					.write::<Vec<H256>>(services_keys.to_vec())
+					.build(),
+			)
+			.execute_returns(EvmDataWriter::new().write(true).build());
+		assert!(events().contains(&pallet_did::Event::<Test>::DidServicesRemoved {
+			did: TestAccount::Charlie,
+			removed_services: services_keys
+		}));
 	});
 }
