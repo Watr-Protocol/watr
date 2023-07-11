@@ -58,7 +58,7 @@ fn hash_services(
 fn create_default_did(controller: TestAccount, use_assertion: bool) -> Document<Test> {
 	let controller = controller;
 	let authentication: H160 = H160::from([0u8; 20]);
-	let assertion: H160 = H160::from([0u8; 20]);
+	let assertion: H160 = H160::from([1u8; 20]);
 	let services = default_services();
 	let mut services_keys = hash_services(&services);
 	services_keys.sort();
@@ -102,7 +102,7 @@ fn default_services(
 }
 
 #[test]
-fn it_creates_did() {
+fn it_creates_did_without_assertion() {
 	new_test_ext().execute_with(|| {
 		let expected_document = create_default_did(TestAccount::Alice, false);
 		precompiles()
@@ -111,6 +111,7 @@ fn it_creates_did() {
 				PRECOMPILE_ADDRESS,
 				EvmDataWriter::new_with_selector(Action::CreateDID)
 					.write(Address(TestAccount::Alice.into()))
+					.write(Address(H160::from([0u8; 20])))
 					.write(Address(H160::from([0u8; 20])))
 					.write(vec![1u8])
 					.write(vec![Bytes(default_services()[0].service_endpoint.to_vec())])
@@ -133,10 +134,10 @@ fn it_creates_did_with_assertion() {
 			.prepare_test(
 				TestAccount::Alice,
 				PRECOMPILE_ADDRESS,
-				EvmDataWriter::new_with_selector(Action::CreateDIDOptional)
+				EvmDataWriter::new_with_selector(Action::CreateDID)
 					.write(Address(TestAccount::Alice.into()))
 					.write(Address(H160::from([0u8; 20])))
-					.write(Address(H160::from([0u8; 20])))
+					.write(Address(H160::from([1u8; 20])))
 					.write(vec![0u8])
 					.write(vec![Bytes(default_services()[0].service_endpoint.to_vec())])
 					.build(),
@@ -157,7 +158,7 @@ fn it_reverts_if_there_is_a_mismatch_between_number_of_service_types_and_service
 			.prepare_test(
 				TestAccount::Alice,
 				PRECOMPILE_ADDRESS,
-				EvmDataWriter::new_with_selector(Action::CreateDIDOptional)
+				EvmDataWriter::new_with_selector(Action::CreateDID)
 					.write(Address(TestAccount::Alice.into()))
 					.write(Address(H160::from([0u8; 20])))
 					.write(Address(H160::from([0u8; 20])))

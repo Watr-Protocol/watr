@@ -16,6 +16,7 @@ use sp_core::H256;
 use sp_std::marker::PhantomData;
 
 use precompile_utils::{Address, Bytes, EvmResult, PrecompileHandleExt};
+use sp_core::H160;
 
 #[cfg(test)]
 mod mock;
@@ -25,8 +26,7 @@ mod tests;
 #[precompile_utils::generate_function_selector]
 #[derive(Debug, PartialEq)]
 pub enum Action {
-	CreateDID = "createDID(address,address,uint8[],bytes[])",
-	CreateDIDOptional = "createDID(address,address,address,uint8[],bytes)",
+	CreateDID = "createDID(address,address,address,uint8[],bytes[])",
 	RemoveDID = "removeDID(address)",
 	AddDIDServices = "addDidServices(address,uint8[],bytes[])",
 	RemoveDIDServices = "removeDidServices(address,bytes32[])",
@@ -49,7 +49,7 @@ where
 	fn execute(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let selector = handle.read_selector()?;
 		match selector {
-			Action::CreateDID | Action::CreateDIDOptional => Self::create_did(handle, selector),
+			Action::CreateDID => Self::create_did(handle),
 			Action::RemoveDID => Self::remove_did(handle),
 			Action::AddDIDServices => Self::add_did_services(handle),
 			Action::RemoveDIDServices => Self::remove_did_services(handle),
@@ -69,35 +69,21 @@ where
 	<R as pallet_did::Config>::AuthenticationAddress: From<Address>,
 	<R as frame_system::Config>::Hash: From<H256>,
 {
-	fn create_did(
-		handle: &mut impl PrecompileHandle,
-		action: Action,
-	) -> EvmResult<PrecompileOutput> {
+	fn create_did(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = handle.read_input()?;
-		let (controller_raw, authentication, attestation_method, services_types, services_data) =
-			match &action {
-				Action::CreateDID => {
-					input.expect_arguments(3)?;
-					(
-						input.read::<Address>()?,
-						input.read::<Address>()?,
-						None,
-						input.read::<Vec<u8>>()?,
-						input.read::<Vec<Bytes>>()?,
-					)
-				},
-				Action::CreateDIDOptional => {
-					input.expect_arguments(4)?;
-					(
-						input.read::<Address>()?,
-						input.read::<Address>()?,
-						Some(input.read::<Address>()?.0.into()),
-						input.read::<Vec<u8>>()?,
-						input.read::<Vec<Bytes>>()?,
-					)
-				},
-				_ => unreachable!(),
-			};
+		input.expect_arguments(5)?;
+		let (controller_raw, authentication, attestation_method, services_types, services_data) = (
+			input.read::<Address>()?,
+			input.read::<Address>()?,
+			input.read::<Address>()?,
+			input.read::<Vec<u8>>()?,
+			input.read::<Vec<Bytes>>()?,
+		);
+		let attestation_method = if attestation_method.0 != H160::from([0u8; 20]) {
+			Some(attestation_method.0.into())
+		} else {
+			None
+		};
 		let services: BoundedVec<ServiceInfo<R>, R::MaxServices> =
 			Self::parse_services(services_types, services_data)?;
 
