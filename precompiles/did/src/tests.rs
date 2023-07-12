@@ -13,16 +13,12 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Watr.  If not, see <http://www.gnu.org/licenses/>.
-
-use core::ops::Bound;
-
 use frame_support::{assert_ok, sp_runtime::traits::Hash};
 use pallet_did::{
 	types::{AssertionMethod, AuthenticationMethod, Document},
 	ServiceKeysOf,
 };
 use precompile_utils::testing::PrecompileTesterExt;
-use serde::__private::ser;
 use sp_core::{bounded_vec, H160};
 
 use super::*;
@@ -142,6 +138,64 @@ fn it_creates_did_with_assertion() {
 			)
 			.execute_returns(EvmDataWriter::new().write(true).build());
 		assert!(events().contains(&pallet_did::Event::<Test>::DidCreated {
+			did: TestAccount::Alice,
+			document: expected_document,
+		}));
+	});
+}
+
+#[test]
+fn it_updates_nothing_from_did() {
+	new_test_ext().execute_with(|| {
+		let expected_document = create_default_did(TestAccount::Alice, true);
+		insert_default_did(TestAccount::Alice);
+		precompiles()
+			.prepare_test(
+				TestAccount::Alice,
+				PRECOMPILE_ADDRESS,
+				EvmDataWriter::new_with_selector(Action::UpdateDID)
+					.write(Address(TestAccount::Alice.into()))
+					.write((false, Address(TestAccount::Alice.into())))
+					.write((false, Address(H160::from([0u8; 20]))))
+					.write((false, Address(H160::from([0u8; 20]))))
+					.write((
+						false,
+						vec![(0u8, Bytes(default_services()[0].service_endpoint.to_vec()))],
+					))
+					.build(),
+			)
+			.execute_returns(EvmDataWriter::new().write(true).build());
+		assert!(events().contains(&pallet_did::Event::<Test>::DidUpdated {
+			did: TestAccount::Alice,
+			document: expected_document,
+		}));
+	});
+}
+
+#[test]
+fn it_updates_all_from_did() {
+	new_test_ext().execute_with(|| {
+		let expected_document = Document {
+			controller: TestAccount::Bob,
+			authentication: AuthenticationMethod { controller: H160::from([1u8; 20]) },
+			assertion_method: Some(AssertionMethod { controller: H160::from([2u8; 20]) }),
+			services: BoundedVec::default(),
+		};
+		insert_default_did(TestAccount::Alice);
+		precompiles()
+			.prepare_test(
+				TestAccount::Alice,
+				PRECOMPILE_ADDRESS,
+				EvmDataWriter::new_with_selector(Action::UpdateDID)
+					.write(Address(TestAccount::Alice.into()))
+					.write((true, Address(TestAccount::Bob.into())))
+					.write((true, Address(H160::from([1u8; 20]))))
+					.write((true, Address(H160::from([2u8; 20]))))
+					.write((true, vec![] as Vec<(bool, Vec<(u8, Bytes)>)>))
+					.build(),
+			)
+			.execute_returns(EvmDataWriter::new().write(true).build());
+		assert!(events().contains(&pallet_did::Event::<Test>::DidUpdated {
 			did: TestAccount::Alice,
 			document: expected_document,
 		}));

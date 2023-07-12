@@ -27,6 +27,8 @@ mod tests;
 #[derive(Debug, PartialEq)]
 pub enum Action {
 	CreateDID = "createDID(address,address,(bool,address),(uint8,bytes)[])",
+	UpdateDID =
+		"updateDID(address,(bool,address),(bool,address),(bool,address),(bool,(uint8,bytes)[]))",
 	RemoveDID = "removeDID(address)",
 	AddDIDServices = "addDidServices(address,(uint8,bytes)[])",
 	RemoveDIDServices = "removeDidServices(address,bytes32[])",
@@ -50,6 +52,7 @@ where
 		let selector = handle.read_selector()?;
 		match selector {
 			Action::CreateDID => Self::create_did(handle),
+			Action::UpdateDID => Self::update_did(handle),
 			Action::RemoveDID => Self::remove_did(handle),
 			Action::AddDIDServices => Self::add_did_services(handle),
 			Action::RemoveDIDServices => Self::remove_did_services(handle),
@@ -72,14 +75,17 @@ where
 	fn create_did(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = handle.read_input()?;
 		input.expect_arguments(4)?;
-		let (controller_raw, authentication, attestation_method, raw_services) = (
+		let (controller_raw, authentication, optional_attestation_method, raw_services) = (
 			input.read::<Address>()?,
 			input.read::<Address>()?,
 			input.read::<(bool, Address)>()?,
 			input.read::<Vec<(u8, Bytes)>>()?,
 		);
-		let attestation_method =
-			if attestation_method.0 { Some(attestation_method.1 .0.into()) } else { None };
+		let attestation_method = if optional_attestation_method.0 {
+			Some(optional_attestation_method.1 .0.into())
+		} else {
+			None
+		};
 		let services: BoundedVec<ServiceInfo<R>, R::MaxServices> =
 			Self::parse_services(raw_services)?;
 
@@ -100,7 +106,54 @@ where
 	}
 
 	fn update_did(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
-		todo!()
+		let mut input = handle.read_input()?;
+		input.expect_arguments(5)?;
+		let (
+			did_raw,
+			optional_controller_raw,
+			optional_authentication,
+			optional_attestation_method,
+			optional_raw_services,
+		) = (
+			input.read::<Address>()?,
+			input.read::<(bool, Address)>()?,
+			input.read::<(bool, Address)>()?,
+			input.read::<(bool, Address)>()?,
+			input.read::<(bool, Vec<(u8, Bytes)>)>()?,
+		);
+		let controller = if optional_controller_raw.0 {
+			Some(R::AddressMapping::into_account_id(optional_controller_raw.1.into()).into())
+		} else {
+			None
+		};
+		let authentication =
+			if optional_authentication.0 { Some(optional_authentication.1.into()) } else { None };
+		let attestation_method = if optional_attestation_method.0 {
+			Some(optional_attestation_method.1 .0.into())
+		} else {
+			None
+		};
+		let services: Option<BoundedVec<ServiceInfo<R>, R::MaxServices>> =
+			if optional_raw_services.0 {
+				Some(Self::parse_services(optional_raw_services.1)?)
+			} else {
+				None
+			};
+
+		let origin = R::AddressMapping::into_account_id(handle.context().caller);
+		RuntimeHelper::<R>::try_dispatch(
+			handle,
+			origin.into(),
+			pallet_did::Call::<R>::update_did {
+				did: R::AddressMapping::into_account_id(did_raw.into()).into(),
+				controller,
+				authentication,
+				assertion: attestation_method,
+				services,
+			},
+		)?;
+
+		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 
 	fn remove_did(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
