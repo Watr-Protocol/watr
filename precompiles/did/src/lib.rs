@@ -26,9 +26,9 @@ mod tests;
 #[precompile_utils::generate_function_selector]
 #[derive(Debug, PartialEq)]
 pub enum Action {
-	CreateDID = "createDID(address,address,address,uint8[],bytes[])",
+	CreateDID = "createDID(address,address,(bool,address),(uint8,bytes)[])",
 	RemoveDID = "removeDID(address)",
-	AddDIDServices = "addDidServices(address,uint8[],bytes[])",
+	AddDIDServices = "addDidServices(address,(uint8,bytes)[])",
 	RemoveDIDServices = "removeDidServices(address,bytes32[])",
 	IssueCredentials = "issueCredentials(address,address,bytes32,bytes)",
 	RevokeCredentials = "revokeCredentials(address,bytes32)",
@@ -71,21 +71,17 @@ where
 {
 	fn create_did(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = handle.read_input()?;
-		input.expect_arguments(5)?;
-		let (controller_raw, authentication, attestation_method, services_types, services_data) = (
+		input.expect_arguments(4)?;
+		let (controller_raw, authentication, attestation_method, raw_services) = (
 			input.read::<Address>()?,
 			input.read::<Address>()?,
-			input.read::<Address>()?,
-			input.read::<Vec<u8>>()?,
-			input.read::<Vec<Bytes>>()?,
+			input.read::<(bool, Address)>()?,
+			input.read::<Vec<(u8, Bytes)>>()?,
 		);
-		let attestation_method = if attestation_method.0 != H160::from([0u8; 20]) {
-			Some(attestation_method.0.into())
-		} else {
-			None
-		};
+		let attestation_method =
+			if attestation_method.0 { Some(attestation_method.1 .0.into()) } else { None };
 		let services: BoundedVec<ServiceInfo<R>, R::MaxServices> =
-			Self::parse_services(services_types, services_data)?;
+			Self::parse_services(raw_services)?;
 
 		let origin = R::AddressMapping::into_account_id(handle.context().caller);
 		let controller = R::AddressMapping::into_account_id(controller_raw.into());
@@ -124,10 +120,9 @@ where
 		let mut input = handle.read_input()?;
 		let origin = R::AddressMapping::into_account_id(handle.context().caller);
 		let did = R::AddressMapping::into_account_id(input.read::<Address>()?.into());
-		let service_types = input.read::<Vec<u8>>()?;
-		let service_details = input.read::<Vec<Bytes>>()?;
+		let raw_services = input.read::<Vec<(u8, Bytes)>>()?;
 
-		let services = Self::parse_services(service_types, service_details)?;
+		let services = Self::parse_services(raw_services)?;
 		RuntimeHelper::<R>::try_dispatch(
 			handle,
 			origin.into(),
@@ -170,30 +165,23 @@ where
 	}
 
 	fn parse_services(
-		service_types: Vec<u8>,
-		services_details: Vec<Bytes>,
+		raw_services: Vec<(u8, Bytes)>,
 	) -> Result<BoundedVec<ServiceInfo<R>, R::MaxServices>, PrecompileFailure> {
-		if service_types.len() != services_details.len() {
-			return Err(revert("Mismatched service types and descriptions"))
-		}
 		let mut services: BoundedVec<ServiceInfo<R>, R::MaxServices> =
-			BoundedVec::with_bounded_capacity(service_types.len());
-		let s = service_types.iter();
-		let mut d = services_details.iter();
+			BoundedVec::with_bounded_capacity(raw_services.len());
+		let s = raw_services.iter();
 		for service in s {
-			if let Some(detail) = d.next() {
-				let service_type: ServiceType = match service {
-					&0u8 => ServiceType::VerifiableCredentialFileStorage,
-					_ => ServiceType::default(),
-				};
-				let endpoint: BoundedVec<u8, R::MaxString> =
-					detail.clone().0.try_into().map_err(|_| revert("Services string too long"))?;
-				match services
-					.try_push(ServiceInfo { type_id: service_type, service_endpoint: endpoint })
-				{
-					Ok(_) => {},
-					Err(_) => return Err(revert("failed to parse to service")),
-				}
+			let service_type: ServiceType = match service.0 {
+				0u8 => ServiceType::VerifiableCredentialFileStorage,
+				_ => ServiceType::default(),
+			};
+			let endpoint: BoundedVec<u8, R::MaxString> =
+				service.1.clone().0.try_into().map_err(|_| revert("Services string too long"))?;
+			match services
+				.try_push(ServiceInfo { type_id: service_type, service_endpoint: endpoint })
+			{
+				Ok(_) => {},
+				Err(_) => return Err(revert("failed to parse to service")),
 			}
 		}
 		Ok(services)

@@ -112,16 +112,15 @@ fn it_creates_did_without_assertion() {
 				EvmDataWriter::new_with_selector(Action::CreateDID)
 					.write(Address(TestAccount::Alice.into()))
 					.write(Address(H160::from([0u8; 20])))
-					.write(Address(H160::from([0u8; 20])))
-					.write(vec![1u8])
-					.write(vec![Bytes(default_services()[0].service_endpoint.to_vec())])
+					.write((false, Address(H160::from([0u8; 20]))))
+					.write(vec![(1u8, Bytes(default_services()[0].service_endpoint.to_vec()))])
 					.build(),
 			)
 			.execute_returns(EvmDataWriter::new().write(true).build());
 		let events = events();
 		assert!(events.contains(&pallet_did::Event::<Test>::DidCreated {
 			did: TestAccount::Alice,
-			document: expected_document
+			document: expected_document,
 		}));
 	});
 }
@@ -137,40 +136,15 @@ fn it_creates_did_with_assertion() {
 				EvmDataWriter::new_with_selector(Action::CreateDID)
 					.write(Address(TestAccount::Alice.into()))
 					.write(Address(H160::from([0u8; 20])))
-					.write(Address(H160::from([1u8; 20])))
-					.write(vec![0u8])
-					.write(vec![Bytes(default_services()[0].service_endpoint.to_vec())])
+					.write((true, Address(H160::from([1u8; 20]))))
+					.write(vec![(0u8, Bytes(default_services()[0].service_endpoint.to_vec()))])
 					.build(),
 			)
 			.execute_returns(EvmDataWriter::new().write(true).build());
 		assert!(events().contains(&pallet_did::Event::<Test>::DidCreated {
 			did: TestAccount::Alice,
-			document: expected_document
+			document: expected_document,
 		}));
-	});
-}
-
-#[test]
-fn it_reverts_if_there_is_a_mismatch_between_number_of_service_types_and_service_details() {
-	new_test_ext().execute_with(|| {
-		create_default_did(TestAccount::Alice, true);
-		precompiles()
-			.prepare_test(
-				TestAccount::Alice,
-				PRECOMPILE_ADDRESS,
-				EvmDataWriter::new_with_selector(Action::CreateDID)
-					.write(Address(TestAccount::Alice.into()))
-					.write(Address(H160::from([0u8; 20])))
-					.write(Address(H160::from([0u8; 20])))
-					.write(vec![0u8, 1u8])
-					.write(vec![Bytes(default_services()[0].service_endpoint.to_vec())])
-					.build(),
-			)
-			.execute_reverts(|_| {
-				//todo: proper revert check
-				true
-			});
-		assert!(events().is_empty());
 	});
 }
 
@@ -233,14 +207,13 @@ fn can_add_did_services() {
 		insert_default_did(TestAccount::Alice);
 		let mut service_keys = hash_services(&services);
 		service_keys.sort();
-		let mut service_types: Vec<u8> = Vec::with_capacity(services.len());
-		let mut services_details: Vec<Bytes> = Vec::with_capacity(services.len());
+		let mut raw_services: Vec<(u8, Bytes)> = Vec::with_capacity(services.len());
 
 		for service in services.iter() {
 			match service.type_id {
-				ServiceType::VerifiableCredentialFileStorage => service_types.push(0u8),
+				ServiceType::VerifiableCredentialFileStorage =>
+					raw_services.push((0u8, Bytes(service.service_endpoint.to_vec()))),
 			}
-			services_details.push(Bytes(service.service_endpoint.to_vec()))
 		}
 
 		precompiles()
@@ -249,14 +222,13 @@ fn can_add_did_services() {
 				PRECOMPILE_ADDRESS,
 				EvmDataWriter::new_with_selector(Action::AddDIDServices)
 					.write(Address(TestAccount::Alice.into()))
-					.write::<Vec<u8>>(service_types)
-					.write::<Vec<Bytes>>(services_details)
+					.write::<Vec<(u8, Bytes)>>(raw_services)
 					.build(),
 			)
 			.execute_returns(EvmDataWriter::new().write(true).build());
 		assert!(events().contains(&pallet_did::Event::<Test>::DidServicesAdded {
 			did: TestAccount::Alice,
-			new_services: service_keys
+			new_services: service_keys,
 		}));
 	});
 }
@@ -278,7 +250,7 @@ fn can_remove_did_services() {
 			.execute_returns(EvmDataWriter::new().write(true).build());
 		assert!(events().contains(&pallet_did::Event::<Test>::DidServicesRemoved {
 			did: TestAccount::Charlie,
-			removed_services: services_keys
+			removed_services: services_keys,
 		}));
 	});
 }
