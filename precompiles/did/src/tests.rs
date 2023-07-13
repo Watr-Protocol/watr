@@ -53,8 +53,8 @@ fn hash_services(
 
 fn create_default_did(controller: TestAccount, use_assertion: bool) -> Document<Test> {
 	let controller = controller;
-	let authentication: H160 = H160::from([0u8; 20]);
-	let assertion: H160 = H160::from([1u8; 20]);
+	let authentication = H160::from([0u8; 20]);
+	let assertion = H160::from([1u8; 20]);
 	let services = default_services();
 	let mut services_keys = hash_services(&services);
 	services_keys.sort();
@@ -90,7 +90,7 @@ fn insert_default_did(controller: TestAccount) {
 }
 
 fn insert_default_issuer(issuer: TestAccount) {
-	assert_ok!(DID::add_issuer(RuntimeOrigin::root(), issuer.clone(),));
+	assert_ok!(DID::add_issuer(RuntimeOrigin::root(), issuer.clone()));
 	assert!(DID::issuers::<TestAccount>(issuer).is_some());
 }
 
@@ -351,6 +351,42 @@ fn it_issues_credentials() {
 			did: TestAccount::Alice,
 			credentials,
 			verifiable_credential_hash: BoundedVec::try_from(vec![5u8; 32]).unwrap(),
+		}));
+	});
+}
+
+#[test]
+fn it_revokes_credentials() {
+	new_test_ext().execute_with(|| {
+		let credentials: BoundedVec<
+			BoundedVec<u8, <mock::Test as pallet_did::Config>::MaxCredentialTypeLength>,
+			<mock::Test as pallet_did::Config>::MaxCredentialsTypes,
+		> = bounded_vec![bounded_vec![1u8; 32]];
+		insert_default_credential_types(credentials.clone());
+		insert_default_did(TestAccount::Alice);
+		insert_default_issuer(TestAccount::Alice);
+		assert_ok!(DID::issue_credentials(
+			RuntimeOrigin::signed(TestAccount::Alice),
+			TestAccount::Alice,
+			TestAccount::Alice,
+			bounded_vec![bounded_vec![1u8; 32]],
+			bounded_vec![5u8; 32],
+		));
+		precompiles()
+			.prepare_test(
+				TestAccount::Alice,
+				PRECOMPILE_ADDRESS,
+				EvmDataWriter::new_with_selector(Action::RevokeCredentials)
+					.write(Address(TestAccount::Alice.into()))
+					.write(Address(TestAccount::Alice.into()))
+					.write(vec![Bytes(vec![1u8; 32])])
+					.build(),
+			)
+			.execute_returns(EvmDataWriter::new().write(true).build());
+		assert!(events().contains(&pallet_did::Event::<Test>::CredentialsRevoked {
+			issuer: TestAccount::Alice,
+			did: TestAccount::Alice,
+			credentials,
 		}));
 	});
 }

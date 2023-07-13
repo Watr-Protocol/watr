@@ -32,7 +32,7 @@ pub enum Action {
 	AddDIDServices = "addDidServices(address,(uint8,bytes)[])",
 	RemoveDIDServices = "removeDidServices(address,bytes32[])",
 	IssueCredentials = "issueCredentials(address,address,bytes[],bytes)",
-	RevokeCredentials = "revokeCredentials(address,bytes32)",
+	RevokeCredentials = "revokeCredentials(address,bytes[])",
 }
 
 pub struct WatrDIDPrecompile<R>(PhantomData<R>);
@@ -208,6 +208,20 @@ where
 		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 
+	fn parse_credentials(
+		raw_credentials: Vec<Bytes>,
+	) -> EvmResult<BoundedVec<BoundedVec<u8, R::MaxCredentialTypeLength>, R::MaxCredentialsTypes>> {
+		let mut credentials = BoundedVec::with_bounded_capacity(raw_credentials.len());
+		for raw_credential in raw_credentials {
+			let credential = BoundedVec::try_from(raw_credential.0)
+				.map_err(|_| revert("Credential too long"))?;
+			credentials
+				.try_push(credential)
+				.map_err(|_| revert("failed to parse to service"))?;
+		}
+		Ok(credentials)
+	}
+
 	fn issue_credentials(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = handle.read_input()?;
 		input.expect_arguments(4)?;
@@ -216,19 +230,7 @@ where
 		let subject_did =
 			R::AddressMapping::into_account_id(input.read::<Address>()?.into()).into();
 		let raw_credentials = input.read::<Vec<Bytes>>()?;
-
-		let mut credentials: BoundedVec<
-			BoundedVec<u8, R::MaxCredentialTypeLength>,
-			R::MaxCredentialsTypes,
-		> = BoundedVec::with_bounded_capacity(raw_credentials.len());
-		for raw_credential in raw_credentials {
-			let credential = BoundedVec::try_from(raw_credential.0)
-				.map_err(|_| revert("Credential too long"))?;
-			credentials
-				.try_push(credential)
-				.map_err(|_| revert("failed to parse to service"))?;
-		}
-
+		let credentials = Self::parse_credentials(raw_credentials)?;
 		let raw_verifiable_credential_hash = input.read::<Bytes>()?;
 		let verifiable_credential_hash: BoundedVec<u8, R::MaxHash> = raw_verifiable_credential_hash
 			.0
@@ -250,7 +252,23 @@ where
 	}
 
 	fn revoke_credentials(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
-		todo!()
+		let mut input = handle.read_input()?;
+		input.expect_arguments(3)?;
+
+		let origin = R::AddressMapping::into_account_id(handle.context().caller);
+		let issuer_did = R::AddressMapping::into_account_id(input.read::<Address>()?.into()).into();
+		let subject_did =
+			R::AddressMapping::into_account_id(input.read::<Address>()?.into()).into();
+		let raw_credentials = input.read::<Vec<Bytes>>()?;
+		let credentials = Self::parse_credentials(raw_credentials)?;
+
+		RuntimeHelper::<R>::try_dispatch(
+			handle,
+			origin.into(),
+			pallet_did::Call::<R>::revoke_credentials { issuer_did, subject_did, credentials },
+		)?;
+
+		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 
 	fn parse_services(
