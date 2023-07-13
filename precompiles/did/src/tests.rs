@@ -89,6 +89,21 @@ fn insert_default_did(controller: TestAccount) {
 	assert!(DID::dids::<TestAccount>(controller).is_some());
 }
 
+fn insert_default_issuer(issuer: TestAccount) {
+	assert_ok!(DID::add_issuer(RuntimeOrigin::root(), issuer.clone(),));
+	assert!(DID::issuers::<TestAccount>(issuer).is_some());
+}
+
+fn insert_default_credential_types(
+	credential_types: BoundedVec<
+		BoundedVec<u8, <mock::Test as pallet_did::Config>::MaxCredentialTypeLength>,
+		<mock::Test as pallet_did::Config>::MaxCredentialsTypes,
+	>,
+) {
+	assert_ok!(DID::add_credentials_type(RuntimeOrigin::root(), credential_types.clone()));
+	assert!(DID::credential_types()[0] == credential_types[0]);
+}
+
 fn default_services(
 ) -> BoundedVec<ServiceInfo<Test>, <mock::Test as pallet_did::Config>::MaxServices> {
 	bounded_vec![ServiceInfo {
@@ -305,6 +320,37 @@ fn can_remove_did_services() {
 		assert!(events().contains(&pallet_did::Event::<Test>::DidServicesRemoved {
 			did: TestAccount::Charlie,
 			removed_services: services_keys,
+		}));
+	});
+}
+
+#[test]
+fn it_issues_credentials() {
+	new_test_ext().execute_with(|| {
+		let credentials: BoundedVec<
+			BoundedVec<u8, <mock::Test as pallet_did::Config>::MaxCredentialTypeLength>,
+			<mock::Test as pallet_did::Config>::MaxCredentialsTypes,
+		> = bounded_vec![bounded_vec![1u8; 32]];
+		insert_default_credential_types(credentials.clone());
+		insert_default_did(TestAccount::Alice);
+		insert_default_issuer(TestAccount::Alice);
+		precompiles()
+			.prepare_test(
+				TestAccount::Alice,
+				PRECOMPILE_ADDRESS,
+				EvmDataWriter::new_with_selector(Action::IssueCredentials)
+					.write(Address(TestAccount::Alice.into()))
+					.write(Address(TestAccount::Alice.into()))
+					.write(vec![Bytes(vec![1u8; 32])])
+					.write(Bytes(vec![5u8; 32]))
+					.build(),
+			)
+			.execute_returns(EvmDataWriter::new().write(true).build());
+		assert!(events().contains(&pallet_did::Event::<Test>::CredentialsIssued {
+			issuer: TestAccount::Alice,
+			did: TestAccount::Alice,
+			credentials,
+			verifiable_credential_hash: BoundedVec::try_from(vec![5u8; 32]).unwrap(),
 		}));
 	});
 }

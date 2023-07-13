@@ -16,7 +16,6 @@ use sp_core::H256;
 use sp_std::marker::PhantomData;
 
 use precompile_utils::{Address, Bytes, EvmResult, PrecompileHandleExt};
-use sp_core::H160;
 
 #[cfg(test)]
 mod mock;
@@ -26,13 +25,13 @@ mod tests;
 #[precompile_utils::generate_function_selector]
 #[derive(Debug, PartialEq)]
 pub enum Action {
-	CreateDID = "createDID(address,address,(bool,address),(uint8,bytes)[])",
+	CreateDID = "createDid(address,address,(bool,address),(uint8,bytes)[])",
 	UpdateDID =
-		"updateDID(address,(bool,address),(bool,address),(bool,address),(bool,(uint8,bytes)[]))",
-	RemoveDID = "removeDID(address)",
+		"updateDid(address,(bool,address),(bool,address),(bool,address),(bool,(uint8,bytes)[]))",
+	RemoveDID = "removeDid(address)",
 	AddDIDServices = "addDidServices(address,(uint8,bytes)[])",
 	RemoveDIDServices = "removeDidServices(address,bytes32[])",
-	IssueCredentials = "issueCredentials(address,address,bytes32,bytes)",
+	IssueCredentials = "issueCredentials(address,address,bytes[],bytes)",
 	RevokeCredentials = "revokeCredentials(address,bytes32)",
 }
 
@@ -210,7 +209,44 @@ where
 	}
 
 	fn issue_credentials(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
-		todo!()
+		let mut input = handle.read_input()?;
+		input.expect_arguments(4)?;
+		let origin = R::AddressMapping::into_account_id(handle.context().caller);
+		let issuer_did = R::AddressMapping::into_account_id(input.read::<Address>()?.into()).into();
+		let subject_did =
+			R::AddressMapping::into_account_id(input.read::<Address>()?.into()).into();
+		let raw_credentials = input.read::<Vec<Bytes>>()?;
+
+		let mut credentials: BoundedVec<
+			BoundedVec<u8, R::MaxCredentialTypeLength>,
+			R::MaxCredentialsTypes,
+		> = BoundedVec::with_bounded_capacity(raw_credentials.len());
+		for raw_credential in raw_credentials {
+			let credential = BoundedVec::try_from(raw_credential.0)
+				.map_err(|_| revert("Credential too long"))?;
+			credentials
+				.try_push(credential)
+				.map_err(|_| revert("failed to parse to service"))?;
+		}
+
+		let raw_verifiable_credential_hash = input.read::<Bytes>()?;
+		let verifiable_credential_hash: BoundedVec<u8, R::MaxHash> = raw_verifiable_credential_hash
+			.0
+			.try_into()
+			.map_err(|_| revert("Verifiable credential hash too long"))?;
+
+		RuntimeHelper::<R>::try_dispatch(
+			handle,
+			origin.into(),
+			pallet_did::Call::<R>::issue_credentials {
+				issuer_did,
+				subject_did,
+				credentials,
+				verifiable_credential_hash,
+			},
+		)?;
+
+		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 
 	fn revoke_credentials(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
