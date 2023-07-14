@@ -157,6 +157,7 @@ where
 
 	fn remove_did(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = handle.read_input()?;
+		input.expect_arguments(1)?;
 		let origin = R::AddressMapping::into_account_id(handle.context().caller);
 		let address = R::AddressMapping::into_account_id(input.read::<Address>()?.into());
 		RuntimeHelper::<R>::try_dispatch(
@@ -170,6 +171,7 @@ where
 
 	fn add_did_services(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = handle.read_input()?;
+		input.expect_arguments(2)?;
 		let origin = R::AddressMapping::into_account_id(handle.context().caller);
 		let did = R::AddressMapping::into_account_id(input.read::<Address>()?.into());
 		let raw_services = input.read::<Vec<(u8, Bytes)>>()?;
@@ -186,6 +188,7 @@ where
 
 	fn remove_did_services(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = handle.read_input()?;
+		input.expect_arguments(2)?;
 		let origin = R::AddressMapping::into_account_id(handle.context().caller);
 		let did = R::AddressMapping::into_account_id(input.read::<Address>()?.into());
 		let service_details = input.read::<Vec<Bytes>>()?;
