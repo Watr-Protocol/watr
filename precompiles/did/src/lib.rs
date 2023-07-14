@@ -188,16 +188,16 @@ where
 		let mut input = handle.read_input()?;
 		let origin = R::AddressMapping::into_account_id(handle.context().caller);
 		let did = R::AddressMapping::into_account_id(input.read::<Address>()?.into());
-		let service_details = input.read::<Vec<H256>>()?;
+		let service_details = input.read::<Vec<Bytes>>()?;
 		let mut services: BoundedVec<<R as frame_system::Config>::Hash, R::MaxServices> =
 			BoundedVec::with_bounded_capacity(service_details.len());
-		for service in service_details.iter() {
-			let endpoint: <R as frame_system::Config>::Hash =
-				service.to_owned().try_into().map_err(|_| revert("Services string too long"))?;
-			match services.try_push(endpoint) {
-				Ok(_) => {},
-				Err(_) => return Err(revert("failed to parse to service")),
+		for service in service_details.into_iter() {
+			if service.0.len() != H256::len_bytes() {
+				return Err(revert("Service length different than 32 bytes"))
 			}
+			let hash = H256::from_slice(service.0.as_slice());
+			let endpoint = <R as frame_system::Config>::Hash::from(hash);
+			services.try_push(endpoint).map_err(|_| revert("failed to parse to service"))?;
 		}
 		RuntimeHelper::<R>::try_dispatch(
 			handle,

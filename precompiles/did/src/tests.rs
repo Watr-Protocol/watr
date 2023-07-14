@@ -313,7 +313,13 @@ fn can_remove_did_services() {
 				PRECOMPILE_ADDRESS,
 				EvmDataWriter::new_with_selector(Action::RemoveDIDServices)
 					.write(Address(TestAccount::Charlie.into()))
-					.write::<Vec<H256>>(services_keys.to_vec())
+					.write::<Vec<Bytes>>(
+						services_keys
+							.to_vec()
+							.into_iter()
+							.map(|s| Bytes(s.0.as_slice().to_vec()))
+							.collect(),
+					)
 					.build(),
 			)
 			.execute_returns(EvmDataWriter::new().write(true).build());
