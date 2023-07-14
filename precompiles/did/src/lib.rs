@@ -287,12 +287,9 @@ where
 			};
 			let endpoint: BoundedVec<u8, R::MaxString> =
 				service.1.clone().0.try_into().map_err(|_| revert("Services string too long"))?;
-			match services
+			services
 				.try_push(ServiceInfo { type_id: service_type, service_endpoint: endpoint })
-			{
-				Ok(_) => {},
-				Err(_) => return Err(revert("failed to parse to service")),
-			}
+				.map_err(|_| revert("failed to parse to service"))?;
 		}
 		Ok(services)
 	}
