@@ -74,17 +74,14 @@ where
 	fn create_did(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = handle.read_input()?;
 		input.expect_arguments(4)?;
-		let (controller_raw, authentication, optional_attestation_method, raw_services) = (
+		let (controller_raw, authentication, maybe_attestation_method, raw_services) = (
 			input.read::<Address>()?,
 			input.read::<Address>()?,
 			input.read::<(bool, Address)>()?,
 			input.read::<Vec<(u8, Bytes)>>()?,
 		);
-		let attestation_method = if optional_attestation_method.0 {
-			Some(optional_attestation_method.1 .0.into())
-		} else {
-			None
-		};
+		let attestation_method =
+			maybe_attestation_method.0.then(|| maybe_attestation_method.1 .0.into());
 		let services: BoundedVec<ServiceInfo<R>, R::MaxServices> =
 			Self::parse_services(raw_services)?;
 
@@ -109,10 +106,10 @@ where
 		input.expect_arguments(5)?;
 		let (
 			did_raw,
-			optional_controller_raw,
-			optional_authentication,
-			optional_attestation_method,
-			optional_raw_services,
+			maybe_controller_raw,
+			maybe_authentication,
+			maybe_attestation_method,
+			maybe_raw_services,
 		) = (
 			input.read::<Address>()?,
 			input.read::<(bool, Address)>()?,
@@ -120,24 +117,16 @@ where
 			input.read::<(bool, Address)>()?,
 			input.read::<(bool, Vec<(u8, Bytes)>)>()?,
 		);
-		let controller = if optional_controller_raw.0 {
-			Some(R::AddressMapping::into_account_id(optional_controller_raw.1.into()).into())
-		} else {
-			None
-		};
-		let authentication =
-			if optional_authentication.0 { Some(optional_authentication.1.into()) } else { None };
-		let attestation_method = if optional_attestation_method.0 {
-			Some(optional_attestation_method.1 .0.into())
-		} else {
-			None
-		};
-		let services: Option<BoundedVec<ServiceInfo<R>, R::MaxServices>> =
-			if optional_raw_services.0 {
-				Some(Self::parse_services(optional_raw_services.1)?)
-			} else {
-				None
-			};
+		let controller = maybe_controller_raw
+			.0
+			.then(|| R::AddressMapping::into_account_id(maybe_controller_raw.1.into()).into());
+		let authentication = maybe_authentication.0.then(|| maybe_authentication.1.into());
+		let attestation_method =
+			maybe_attestation_method.0.then(|| maybe_attestation_method.1 .0.into());
+		let services: Option<BoundedVec<ServiceInfo<R>, R::MaxServices>> = maybe_raw_services
+			.0
+			.then(|| Self::parse_services(maybe_raw_services.1))
+			.transpose()?;
 
 		let origin = R::AddressMapping::into_account_id(handle.context().caller);
 		RuntimeHelper::<R>::try_dispatch(
@@ -220,7 +209,7 @@ where
 				.map_err(|_| revert("Credential too long"))?;
 			credentials
 				.try_push(credential)
-				.map_err(|_| revert("failed to parse to service"))?;
+				.map_err(|_| revert("failed to parse to credential"))?;
 		}
 		Ok(credentials)
 	}
