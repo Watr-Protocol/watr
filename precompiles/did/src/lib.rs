@@ -84,7 +84,6 @@ where
 			maybe_attestation_method.0.then(|| maybe_attestation_method.1 .0.into());
 		let services: BoundedVec<ServiceInfo<R>, R::MaxServices> =
 			Self::parse_services(raw_services)?;
-
 		let origin = R::AddressMapping::into_account_id(handle.context().caller);
 		let controller = R::AddressMapping::into_account_id(controller_raw.into());
 		RuntimeHelper::<R>::try_dispatch(
