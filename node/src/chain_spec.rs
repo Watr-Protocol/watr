@@ -438,8 +438,8 @@ fn devnet_testnet_genesis(
 				(2018, root_key.clone(), true, 10_000),
 			],
 			metadata: vec![
-				(1984, b"Tether USD".to_vec(), b"USDt".to_vec(), 6),
-				(2018, b"Native TUSD".to_vec(), b"NTUSD".to_vec(), 18),
+				(1984, b"Foreign USD".to_vec(), b"FUSD".to_vec(), 6),
+				(2018, b"Native USD".to_vec(), b"NUSD".to_vec(), 18),
 			],
 			accounts: vec![],
 		},
@@ -530,7 +530,7 @@ fn mainnet_testnet_genesis(
 		aura_ext: Default::default(),
 		assets: mainnet::AssetsConfig {
 			assets: vec![(1984, root_key, true, 10_000)],
-			metadata: vec![(1984, b"Tether USD".to_vec(), b"USDt".to_vec(), 6)],
+			metadata: vec![(1984, b"Foreign USD".to_vec(), b"FUSD".to_vec(), 6)],
 			accounts: vec![],
 		},
 		parachain_system: Default::default(),
