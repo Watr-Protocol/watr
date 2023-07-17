@@ -18,7 +18,7 @@ interface WatrDID {
 	function updateDid(OptionalAddress calldata controller, OptionalAddress calldata authentication, OptionalAddress calldata assertion, OptionalServices calldata services) external;
 	function removeDid(address did) external;
 	function addDidServices(address did, Service[] calldata services) external;
-	function removeDidServices(address did, bytes32[] calldata serviceKeys) external;
+	function removeDidServices(address did, bytes[] calldata serviceKeys) external;
 	function issueCredentials(address issuerDid, address subjectDid, bytes[] calldata credentials, bytes calldata verifiableCredentialHash) external;
 	function revokeCredentials(address issuerDid, address subjectDid, bytes[] calldata credentials) external;
 }

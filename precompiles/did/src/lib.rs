@@ -30,7 +30,7 @@ pub enum Action {
 		"updateDid(address,(bool,address),(bool,address),(bool,address),(bool,(uint8,bytes)[]))",
 	RemoveDID = "removeDid(address)",
 	AddDIDServices = "addDidServices(address,(uint8,bytes)[])",
-	RemoveDIDServices = "removeDidServices(address,bytes32[])",
+	RemoveDIDServices = "removeDidServices(address,bytes[])",
 	IssueCredentials = "issueCredentials(address,address,bytes[],bytes)",
 	RevokeCredentials = "revokeCredentials(address,bytes[])",
 }
