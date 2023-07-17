@@ -5812,6 +5812,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-block-reward"
+version = "2.2.2"
+source = "git+https://github.com/AstarNetwork/astar-frame?branch=polkadot-v0.9.30#143fa4765541a7f74853ba05c015fe3e3d4af25e"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-arithmetic",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-bounties"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.30#a3ed0119c45cdd0d571ad34e5b3ee7518c8cef8d"
@@ -12766,6 +12785,7 @@ dependencies = [
  "pallet-authorship",
  "pallet-balances",
  "pallet-base-fee",
+ "pallet-block-reward",
  "pallet-collator-selection",
  "pallet-collective",
  "pallet-did",
@@ -12856,6 +12876,7 @@ dependencies = [
  "hex-literal",
  "jsonrpsee",
  "log",
+ "pallet-block-reward",
  "pallet-transaction-payment-rpc",
  "parachains-common",
  "parity-scale-codec",
