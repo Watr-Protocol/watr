@@ -204,7 +204,9 @@ where
 	) -> EvmResult<BoundedVec<BoundedVec<u8, R::MaxCredentialTypeLength>, R::MaxCredentialsTypes>> {
 		let mut credentials = BoundedVec::with_bounded_capacity(raw_credentials.len());
 		for raw_credential in raw_credentials {
-			raw_credential.as_str().map_err(|_| revert("Not a valid UTF8 credential string"))?;
+			raw_credential
+				.as_str()
+				.map_err(|_| revert("Not a valid UTF8 credential string"))?;
 			let credential = BoundedVec::try_from(raw_credential.0)
 				.map_err(|_| revert("Credential too long"))?;
 			credentials
