@@ -36,14 +36,18 @@ pub struct RemarkBuilder<RuntimeApi, Executor: sc_executor::NativeExecutionDispa
 	client: Arc<ParachainClient<RuntimeApi, Executor>>,
 }
 
-impl<RuntimeApi, Executor: sc_executor::NativeExecutionDispatch> RemarkBuilder<RuntimeApi, Executor> {
+impl<RuntimeApi, Executor: sc_executor::NativeExecutionDispatch>
+	RemarkBuilder<RuntimeApi, Executor>
+{
 	/// Creates a new [`Self`] from the given client.
 	pub fn new(client: Arc<ParachainClient<RuntimeApi, Executor>>) -> Self {
 		Self { client }
 	}
 }
 
-impl frame_benchmarking_cli::ExtrinsicBuilder for RemarkBuilder<watr_devnet_runtime::RuntimeApi, WatrDevnetRuntimeExecutor> {
+impl frame_benchmarking_cli::ExtrinsicBuilder
+	for RemarkBuilder<watr_devnet_runtime::RuntimeApi, WatrDevnetRuntimeExecutor>
+{
 	fn pallet(&self) -> &str {
 		"system"
 	}
@@ -106,7 +110,9 @@ impl frame_benchmarking_cli::ExtrinsicBuilder for RemarkBuilder<watr_devnet_runt
 	}
 }
 
-impl frame_benchmarking_cli::ExtrinsicBuilder for RemarkBuilder<watr_runtime::RuntimeApi, WatrRuntimeExecutor> {
+impl frame_benchmarking_cli::ExtrinsicBuilder
+	for RemarkBuilder<watr_runtime::RuntimeApi, WatrRuntimeExecutor>
+{
 	fn pallet(&self) -> &str {
 		"system"
 	}
@@ -137,7 +143,6 @@ impl frame_benchmarking_cli::ExtrinsicBuilder for RemarkBuilder<watr_runtime::Ru
 			frame_system::CheckNonce::<runtime::Runtime>::from(nonce),
 			frame_system::CheckWeight::<runtime::Runtime>::new(),
 			pallet_transaction_payment::ChargeTransactionPayment::<runtime::Runtime>::from(tip),
-
 		);
 
 		let genesis_hash = self.client.block_hash(0).ok().flatten().expect("Genesis block exists");

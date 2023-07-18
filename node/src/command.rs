@@ -359,7 +359,7 @@ pub fn run() -> Result<()> {
 				}),
 				BenchmarkCmd::Machine(cmd) =>
 					runner.sync_run(|config| cmd.run(&config, SUBSTRATE_REFERENCE_HARDWARE.clone())),
-				BenchmarkCmd::Overhead(cmd) =>  runner.sync_run(|config| {
+				BenchmarkCmd::Overhead(cmd) => runner.sync_run(|config| {
 					construct_benchmark_partials!(config, |partial| {
 						let ext_builder = RemarkBuilder::new(partial.client.clone());
 
@@ -380,9 +380,9 @@ pub fn run() -> Result<()> {
 		},
 		#[cfg(feature = "try-runtime")]
 		Some(Subcommand::TryRuntime(cmd)) => {
-			use watr_common::MILLISECS_PER_BLOCK;
 			use sc_executor::{sp_wasm_interface::ExtendedHostFunctions, NativeExecutionDispatch};
 			use try_runtime_cli::block_building_info::timestamp_with_aura_info;
+			use watr_common::MILLISECS_PER_BLOCK;
 
 			let runner = cli.create_runner(cmd)?;
 
@@ -399,24 +399,22 @@ pub fn run() -> Result<()> {
 
 			let info_provider = timestamp_with_aura_info(MILLISECS_PER_BLOCK);
 			match runner.config().chain_spec.runtime() {
-				Runtime::Devnet | Runtime::Default =>
-					runner.async_run(|_| {
-						Ok((
-							cmd.run::<Block, HostFunctionsOf<WatrDevnetRuntimeExecutor>, _>(Some(
-								info_provider,
-							)),
-							task_manager,
-						))
-					}),
-				Runtime::Mainnet =>
-					runner.async_run(|_| {
-						Ok((
-							cmd.run::<Block, HostFunctionsOf<WatrRuntimeExecutor>, _>(Some(
-								info_provider,
-							)),
-							task_manager,
-						))
-					}),
+				Runtime::Devnet | Runtime::Default => runner.async_run(|_| {
+					Ok((
+						cmd.run::<Block, HostFunctionsOf<WatrDevnetRuntimeExecutor>, _>(Some(
+							info_provider,
+						)),
+						task_manager,
+					))
+				}),
+				Runtime::Mainnet => runner.async_run(|_| {
+					Ok((
+						cmd.run::<Block, HostFunctionsOf<WatrRuntimeExecutor>, _>(Some(
+							info_provider,
+						)),
+						task_manager,
+					))
+				}),
 			}
 		},
 		#[cfg(not(feature = "try-runtime"))]
