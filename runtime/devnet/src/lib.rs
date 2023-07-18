@@ -472,7 +472,7 @@ impl pallet_block_reward::Config for Runtime {
     type BeneficiaryPayout = BeneficiaryPayout;
     type RewardAmount = RewardAmount;
     type RuntimeEvent = RuntimeEvent;
-    type WeightInfo = pallet_block_reward::weights::SubstrateWeight<Runtime>;
+    type WeightInfo = weights::pallet_block_reward::WeightInfo<Runtime>;
 }
 
 parameter_types! {
@@ -1029,6 +1029,7 @@ mod benches {
 		[pallet_membership, CouncilMembership]
 		[pallet_preimage, Preimage]
 		[pallet_did, DID]
+		[pallet_block_reward, BlockReward]
 	);
 }
 
