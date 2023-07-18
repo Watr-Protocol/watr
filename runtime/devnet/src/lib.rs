@@ -46,8 +46,8 @@ use sp_core::{
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
-		AccountIdConversion, AccountIdLookup, BlakeTwo256, Block as BlockT, DispatchInfoOf, Dispatchable,
-		PostDispatchInfoOf, UniqueSaturatedInto,
+		AccountIdConversion, AccountIdLookup, BlakeTwo256, Block as BlockT, DispatchInfoOf,
+		Dispatchable, PostDispatchInfoOf, UniqueSaturatedInto,
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
 	ApplyExtrinsicResult,
@@ -449,30 +449,30 @@ type NegativeImbalanceAstar = <Balances as CurrencyT<AccountId>>::NegativeImbala
 
 pub struct BeneficiaryPayout();
 impl pallet_block_reward::BeneficiaryPayout<NegativeImbalanceAstar> for BeneficiaryPayout {
-    fn treasury(reward: NegativeImbalanceAstar) {
-        Balances::resolve_creating(&TreasuryPalletId::get().into_account_truncating(), reward);
-    }
+	fn treasury(reward: NegativeImbalanceAstar) {
+		Balances::resolve_creating(&TreasuryPalletId::get().into_account_truncating(), reward);
+	}
 
-    fn collators(reward: NegativeImbalanceAstar) {
-        ToStakingPot::on_unbalanced(reward);
-    }
+	fn collators(reward: NegativeImbalanceAstar) {
+		ToStakingPot::on_unbalanced(reward);
+	}
 
-    fn dapps_staking(_: NegativeImbalanceAstar, _: NegativeImbalanceAstar) {
-        // DappsStaking::rewards(stakers, dapps)
-    }
+	fn dapps_staking(_: NegativeImbalanceAstar, _: NegativeImbalanceAstar) {
+		// DappsStaking::rewards(stakers, dapps)
+	}
 }
 
 parameter_types! {
-    pub const RewardAmount: Balance = 266_400 * MILLI_WATRD;
+	pub const RewardAmount: Balance = 266_400 * MILLI_WATRD;
 }
 
 impl pallet_block_reward::Config for Runtime {
-    type Currency = Balances;
-    type DappsStakingTvlProvider = ();
-    type BeneficiaryPayout = BeneficiaryPayout;
-    type RewardAmount = RewardAmount;
-    type RuntimeEvent = RuntimeEvent;
-    type WeightInfo = weights::pallet_block_reward::WeightInfo<Runtime>;
+	type Currency = Balances;
+	type DappsStakingTvlProvider = ();
+	type BeneficiaryPayout = BeneficiaryPayout;
+	type RewardAmount = RewardAmount;
+	type RuntimeEvent = RuntimeEvent;
+	type WeightInfo = weights::pallet_block_reward::WeightInfo<Runtime>;
 }
 
 parameter_types! {
