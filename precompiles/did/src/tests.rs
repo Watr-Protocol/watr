@@ -13,16 +13,12 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Watr.  If not, see <http://www.gnu.org/licenses/>.
-
-use core::ops::Bound;
-
 use frame_support::{assert_ok, sp_runtime::traits::Hash};
 use pallet_did::{
 	types::{AssertionMethod, AuthenticationMethod, Document},
 	ServiceKeysOf,
 };
 use precompile_utils::testing::PrecompileTesterExt;
-use serde::__private::ser;
 use sp_core::{bounded_vec, H160};
 
 use super::*;
@@ -57,8 +53,8 @@ fn hash_services(
 
 fn create_default_did(controller: TestAccount, use_assertion: bool) -> Document<Test> {
 	let controller = controller;
-	let authentication: H160 = H160::from([0u8; 20]);
-	let assertion: H160 = H160::from([0u8; 20]);
+	let authentication = H160::from([0u8; 20]);
+	let assertion = H160::from([1u8; 20]);
 	let services = default_services();
 	let mut services_keys = hash_services(&services);
 	services_keys.sort();
@@ -93,6 +89,21 @@ fn insert_default_did(controller: TestAccount) {
 	assert!(DID::dids::<TestAccount>(controller).is_some());
 }
 
+fn insert_default_issuer(issuer: TestAccount) {
+	assert_ok!(DID::add_issuer(RuntimeOrigin::root(), issuer.clone()));
+	assert!(DID::issuers::<TestAccount>(issuer).is_some());
+}
+
+fn insert_default_credential_types(
+	credential_types: BoundedVec<
+		BoundedVec<u8, <mock::Test as pallet_did::Config>::MaxCredentialTypeLength>,
+		<mock::Test as pallet_did::Config>::MaxCredentialsTypes,
+	>,
+) {
+	assert_ok!(DID::add_credentials_type(RuntimeOrigin::root(), credential_types.clone()));
+	assert!(DID::credential_types()[0] == credential_types[0]);
+}
+
 fn default_services(
 ) -> BoundedVec<ServiceInfo<Test>, <mock::Test as pallet_did::Config>::MaxServices> {
 	bounded_vec![ServiceInfo {
@@ -102,7 +113,7 @@ fn default_services(
 }
 
 #[test]
-fn it_creates_did() {
+fn it_creates_did_without_assertion() {
 	new_test_ext().execute_with(|| {
 		let expected_document = create_default_did(TestAccount::Alice, false);
 		precompiles()
@@ -112,15 +123,15 @@ fn it_creates_did() {
 				EvmDataWriter::new_with_selector(Action::CreateDID)
 					.write(Address(TestAccount::Alice.into()))
 					.write(Address(H160::from([0u8; 20])))
-					.write(vec![1u8])
-					.write(vec![Bytes(default_services()[0].service_endpoint.to_vec())])
+					.write((false, Address(H160::from([0u8; 20]))))
+					.write(vec![(1u8, Bytes(default_services()[0].service_endpoint.to_vec()))])
 					.build(),
 			)
 			.execute_returns(EvmDataWriter::new().write(true).build());
 		let events = events();
 		assert!(events.contains(&pallet_did::Event::<Test>::DidCreated {
 			did: TestAccount::Alice,
-			document: expected_document
+			document: expected_document,
 		}));
 	});
 }
@@ -133,43 +144,76 @@ fn it_creates_did_with_assertion() {
 			.prepare_test(
 				TestAccount::Alice,
 				PRECOMPILE_ADDRESS,
-				EvmDataWriter::new_with_selector(Action::CreateDIDOptional)
+				EvmDataWriter::new_with_selector(Action::CreateDID)
 					.write(Address(TestAccount::Alice.into()))
 					.write(Address(H160::from([0u8; 20])))
-					.write(Address(H160::from([0u8; 20])))
-					.write(vec![0u8])
-					.write(vec![Bytes(default_services()[0].service_endpoint.to_vec())])
+					.write((true, Address(H160::from([1u8; 20]))))
+					.write(vec![(0u8, Bytes(default_services()[0].service_endpoint.to_vec()))])
 					.build(),
 			)
 			.execute_returns(EvmDataWriter::new().write(true).build());
 		assert!(events().contains(&pallet_did::Event::<Test>::DidCreated {
 			did: TestAccount::Alice,
-			document: expected_document
+			document: expected_document,
 		}));
 	});
 }
 
 #[test]
-fn it_reverts_if_there_is_a_mismatch_between_number_of_service_types_and_service_details() {
+fn it_updates_nothing_from_did() {
 	new_test_ext().execute_with(|| {
-		create_default_did(TestAccount::Alice, true);
+		let expected_document = create_default_did(TestAccount::Alice, true);
+		insert_default_did(TestAccount::Alice);
 		precompiles()
 			.prepare_test(
 				TestAccount::Alice,
 				PRECOMPILE_ADDRESS,
-				EvmDataWriter::new_with_selector(Action::CreateDIDOptional)
+				EvmDataWriter::new_with_selector(Action::UpdateDID)
 					.write(Address(TestAccount::Alice.into()))
-					.write(Address(H160::from([0u8; 20])))
-					.write(Address(H160::from([0u8; 20])))
-					.write(vec![0u8, 1u8])
-					.write(vec![Bytes(default_services()[0].service_endpoint.to_vec())])
+					.write((false, Address(TestAccount::Alice.into())))
+					.write((false, Address(H160::from([0u8; 20]))))
+					.write((false, Address(H160::from([0u8; 20]))))
+					.write((
+						false,
+						vec![(0u8, Bytes(default_services()[0].service_endpoint.to_vec()))],
+					))
 					.build(),
 			)
-			.execute_reverts(|_| {
-				//todo: proper revert check
-				true
-			});
-		assert!(events().is_empty());
+			.execute_returns(EvmDataWriter::new().write(true).build());
+		assert!(events().contains(&pallet_did::Event::<Test>::DidUpdated {
+			did: TestAccount::Alice,
+			document: expected_document,
+		}));
+	});
+}
+
+#[test]
+fn it_updates_all_from_did() {
+	new_test_ext().execute_with(|| {
+		let expected_document = Document {
+			controller: TestAccount::Bob,
+			authentication: AuthenticationMethod { controller: H160::from([1u8; 20]) },
+			assertion_method: Some(AssertionMethod { controller: H160::from([2u8; 20]) }),
+			services: BoundedVec::default(),
+		};
+		insert_default_did(TestAccount::Alice);
+		precompiles()
+			.prepare_test(
+				TestAccount::Alice,
+				PRECOMPILE_ADDRESS,
+				EvmDataWriter::new_with_selector(Action::UpdateDID)
+					.write(Address(TestAccount::Alice.into()))
+					.write((true, Address(TestAccount::Bob.into())))
+					.write((true, Address(H160::from([1u8; 20]))))
+					.write((true, Address(H160::from([2u8; 20]))))
+					.write((true, vec![] as Vec<(bool, Vec<(u8, Bytes)>)>))
+					.build(),
+			)
+			.execute_returns(EvmDataWriter::new().write(true).build());
+		assert!(events().contains(&pallet_did::Event::<Test>::DidUpdated {
+			did: TestAccount::Alice,
+			document: expected_document,
+		}));
 	});
 }
 
@@ -232,14 +276,13 @@ fn can_add_did_services() {
 		insert_default_did(TestAccount::Alice);
 		let mut service_keys = hash_services(&services);
 		service_keys.sort();
-		let mut service_types: Vec<u8> = Vec::with_capacity(services.len());
-		let mut services_details: Vec<Bytes> = Vec::with_capacity(services.len());
+		let mut raw_services: Vec<(u8, Bytes)> = Vec::with_capacity(services.len());
 
 		for service in services.iter() {
 			match service.type_id {
-				ServiceType::VerifiableCredentialFileStorage => service_types.push(0u8),
+				ServiceType::VerifiableCredentialFileStorage =>
+					raw_services.push((0u8, Bytes(service.service_endpoint.to_vec()))),
 			}
-			services_details.push(Bytes(service.service_endpoint.to_vec()))
 		}
 
 		precompiles()
@@ -248,14 +291,13 @@ fn can_add_did_services() {
 				PRECOMPILE_ADDRESS,
 				EvmDataWriter::new_with_selector(Action::AddDIDServices)
 					.write(Address(TestAccount::Alice.into()))
-					.write::<Vec<u8>>(service_types)
-					.write::<Vec<Bytes>>(services_details)
+					.write::<Vec<(u8, Bytes)>>(raw_services)
 					.build(),
 			)
 			.execute_returns(EvmDataWriter::new().write(true).build());
 		assert!(events().contains(&pallet_did::Event::<Test>::DidServicesAdded {
 			did: TestAccount::Alice,
-			new_services: service_keys
+			new_services: service_keys,
 		}));
 	});
 }
@@ -271,13 +313,86 @@ fn can_remove_did_services() {
 				PRECOMPILE_ADDRESS,
 				EvmDataWriter::new_with_selector(Action::RemoveDIDServices)
 					.write(Address(TestAccount::Charlie.into()))
-					.write::<Vec<H256>>(services_keys.to_vec())
+					.write::<Vec<Bytes>>(
+						services_keys
+							.to_vec()
+							.into_iter()
+							.map(|s| Bytes(s.0.as_slice().to_vec()))
+							.collect(),
+					)
 					.build(),
 			)
 			.execute_returns(EvmDataWriter::new().write(true).build());
 		assert!(events().contains(&pallet_did::Event::<Test>::DidServicesRemoved {
 			did: TestAccount::Charlie,
-			removed_services: services_keys
+			removed_services: services_keys,
+		}));
+	});
+}
+
+#[test]
+fn it_issues_credentials() {
+	new_test_ext().execute_with(|| {
+		let credentials: BoundedVec<
+			BoundedVec<u8, <mock::Test as pallet_did::Config>::MaxCredentialTypeLength>,
+			<mock::Test as pallet_did::Config>::MaxCredentialsTypes,
+		> = bounded_vec![bounded_vec![1u8; 32]];
+		insert_default_credential_types(credentials.clone());
+		insert_default_did(TestAccount::Alice);
+		insert_default_issuer(TestAccount::Alice);
+		precompiles()
+			.prepare_test(
+				TestAccount::Alice,
+				PRECOMPILE_ADDRESS,
+				EvmDataWriter::new_with_selector(Action::IssueCredentials)
+					.write(Address(TestAccount::Alice.into()))
+					.write(Address(TestAccount::Alice.into()))
+					.write(vec![Bytes(vec![1u8; 32])])
+					.write(Bytes(vec![5u8; 32]))
+					.build(),
+			)
+			.execute_returns(EvmDataWriter::new().write(true).build());
+		assert!(events().contains(&pallet_did::Event::<Test>::CredentialsIssued {
+			issuer: TestAccount::Alice,
+			did: TestAccount::Alice,
+			credentials,
+			verifiable_credential_hash: BoundedVec::try_from(vec![5u8; 32]).unwrap(),
+		}));
+	});
+}
+
+#[test]
+fn it_revokes_credentials() {
+	new_test_ext().execute_with(|| {
+		let credentials: BoundedVec<
+			BoundedVec<u8, <mock::Test as pallet_did::Config>::MaxCredentialTypeLength>,
+			<mock::Test as pallet_did::Config>::MaxCredentialsTypes,
+		> = bounded_vec![bounded_vec![1u8; 32]];
+		insert_default_credential_types(credentials.clone());
+		insert_default_did(TestAccount::Alice);
+		insert_default_issuer(TestAccount::Alice);
+		assert_ok!(DID::issue_credentials(
+			RuntimeOrigin::signed(TestAccount::Alice),
+			TestAccount::Alice,
+			TestAccount::Alice,
+			bounded_vec![bounded_vec![1u8; 32]],
+			bounded_vec![5u8; 32],
+		));
+		precompiles()
+			.prepare_test(
+				TestAccount::Alice,
+				PRECOMPILE_ADDRESS,
+				EvmDataWriter::new_with_selector(Action::RevokeCredentials)
+					.write(Address(TestAccount::Alice.into()))
+					.write(Address(TestAccount::Alice.into()))
+					.write(vec![Bytes(vec![1u8; 32])])
+					.build(),
+			)
+			.execute_returns(EvmDataWriter::new().write(true).build());
+		assert!(events().contains(&pallet_did::Event::<Test>::CredentialsRevoked {
+			issuer: TestAccount::Alice,
+			did: TestAccount::Alice,
+			credentials,
 		}));
 	});
 }
