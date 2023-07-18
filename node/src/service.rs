@@ -61,7 +61,7 @@ use substrate_prometheus_endpoint::Registry;
 
 // Frontier
 use fc_consensus::FrontierBlockImport;
-use fc_mapping_sync::{MappingSyncWorker, SyncStrategy};
+use fc_mapping_sync::{kv::MappingSyncWorker, SyncStrategy};
 use fc_rpc::EthTask;
 use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
 
@@ -136,7 +136,7 @@ pub fn new_partial<RuntimeApi, Executor, BIQ>(
 			ParachainBlockImport<RuntimeApi, Executor>,
 			Option<Telemetry>,
 			Option<TelemetryWorkerHandle>,
-			Arc<fc_db::Backend<Block>>,
+			Arc<fc_db::kv::Backend<Block>>,
 		),
 	>,
 	sc_service::Error,
@@ -505,7 +505,7 @@ where
 			collator_key: collator_key.expect("Command line arguments do not allow this. qed"),
 			relay_chain_slot_duration,
 			recovery_handle: Box::new(overseer_handle),
-			sync_service
+			sync_service,
 		};
 
 		start_collator(params).await?;
@@ -519,7 +519,7 @@ where
 			relay_chain_slot_duration,
 			import_queue,
 			recovery_handle: Box::new(overseer_handle),
-			sync_service
+			sync_service,
 		};
 
 		start_full_node(params)?;
