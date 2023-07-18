@@ -8,7 +8,7 @@ interface WatrDID {
 	}
 	struct Service {
 		uint8 typeId;
-		bytes serviceEndpoint;
+		string serviceEndpoint;
 	}
 	struct OptionalServices {
 		bool hasValue;
@@ -19,6 +19,6 @@ interface WatrDID {
 	function removeDid(address did) external;
 	function addDidServices(address did, Service[] calldata services) external;
 	function removeDidServices(address did, bytes[] calldata serviceKeys) external;
-	function issueCredentials(address issuerDid, address subjectDid, bytes[] calldata credentials, bytes calldata verifiableCredentialHash) external;
-	function revokeCredentials(address issuerDid, address subjectDid, bytes[] calldata credentials) external;
+	function issueCredentials(address issuerDid, address subjectDid, string[] calldata credentials, bytes calldata verifiableCredentialHash) external;
+	function revokeCredentials(address issuerDid, address subjectDid, string[] calldata credentials) external;
 }

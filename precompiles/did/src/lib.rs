@@ -25,14 +25,14 @@ mod tests;
 #[precompile_utils::generate_function_selector]
 #[derive(Debug, PartialEq)]
 pub enum Action {
-	CreateDID = "createDid(address,address,(bool,address),(uint8,bytes)[])",
+	CreateDID = "createDid(address,address,(bool,address),(uint8,string)[])",
 	UpdateDID =
-		"updateDid(address,(bool,address),(bool,address),(bool,address),(bool,(uint8,bytes)[]))",
+		"updateDid(address,(bool,address),(bool,address),(bool,address),(bool,(uint8,string)[]))",
 	RemoveDID = "removeDid(address)",
-	AddDIDServices = "addDidServices(address,(uint8,bytes)[])",
+	AddDIDServices = "addDidServices(address,(uint8,string)[])",
 	RemoveDIDServices = "removeDidServices(address,bytes[])",
-	IssueCredentials = "issueCredentials(address,address,bytes[],bytes)",
-	RevokeCredentials = "revokeCredentials(address,bytes[])",
+	IssueCredentials = "issueCredentials(address,address,string[],bytes)",
+	RevokeCredentials = "revokeCredentials(address,string[])",
 }
 
 pub struct WatrDIDPrecompile<R>(PhantomData<R>);
@@ -204,6 +204,7 @@ where
 	) -> EvmResult<BoundedVec<BoundedVec<u8, R::MaxCredentialTypeLength>, R::MaxCredentialsTypes>> {
 		let mut credentials = BoundedVec::with_bounded_capacity(raw_credentials.len());
 		for raw_credential in raw_credentials {
+			raw_credential.as_str().map_err(|_| revert("Not a valid UTF8 credential string"))?;
 			let credential = BoundedVec::try_from(raw_credential.0)
 				.map_err(|_| revert("Credential too long"))?;
 			credentials
@@ -273,6 +274,7 @@ where
 				0u8 => ServiceType::VerifiableCredentialFileStorage,
 				_ => ServiceType::default(),
 			};
+			service.1.as_str().map_err(|_| revert("Not a valid UTF8 service string"))?;
 			let endpoint: BoundedVec<u8, R::MaxString> =
 				service.1.clone().0.try_into().map_err(|_| revert("Services string too long"))?;
 			services
