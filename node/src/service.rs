@@ -230,32 +230,6 @@ where
 	Ok(params)
 }
 
-// async fn build_relay_chain_interface(
-// 	polkadot_config: Configuration,
-// 	parachain_config: &Configuration,
-// 	telemetry_worker_handle: Option<TelemetryWorkerHandle>,
-// 	task_manager: &mut TaskManager,
-// 	collator_options: CollatorOptions,
-// 	hwbench: Option<sc_sysinfo::HwBench>,
-// ) -> RelayChainResult<(Arc<(dyn RelayChainInterface + 'static)>, Option<CollatorPair>)> {
-// 	if !collator_options.relay_chain_rpc_urls.is_empty() {
-// 		build_minimal_relay_chain_node(
-// 			polkadot_config,
-// 			task_manager,
-// 			collator_options.relay_chain_rpc_urls,
-// 		)
-// 		.await
-// 	} else {
-// 		build_inprocess_relay_chain(
-// 			polkadot_config,
-// 			parachain_config,
-// 			telemetry_worker_handle,
-// 			task_manager,
-// 			hwbench,
-// 		)
-// 	}
-// }
-
 /// Start a node with the given parachain `Configuration` and relay chain `Configuration`.
 ///
 /// This is the actual implementation that is abstract over the executor and the runtime api.
@@ -381,7 +355,7 @@ where
 			0,
 			SyncStrategy::Parachain,
 			sync_service.clone(),
-			pubsub_notification_sinks,
+			pubsub_notification_sinks.clone(),
 		)
 		.for_each(|()| future::ready(())),
 	);
@@ -427,6 +401,7 @@ where
 		let overrides = overrides.clone();
 		let fee_history_cache = fee_history_cache.clone();
 		let sync_service = sync_service.clone();
+		let pubsub_notification_sinks = pubsub_notification_sinks.clone();
 
 		Box::new(move |deny_unsafe, subscription_task_executor| {
 			let deps = crate::rpc::FullDeps {
@@ -445,7 +420,7 @@ where
 				block_data_cache: block_data_cache.clone(),
 			};
 
-			crate::rpc::create_full(deps, subscription_task_executor).map_err(Into::into)
+			crate::rpc::create_full(deps, subscription_task_executor, pubsub_notification_sinks.clone()).map_err(Into::into)
 		})
 	};
 
