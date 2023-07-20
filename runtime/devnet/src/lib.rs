@@ -457,9 +457,7 @@ impl pallet_block_reward::BeneficiaryPayout<NegativeImbalanceAstar> for Benefici
 		ToStakingPot::on_unbalanced(reward);
 	}
 
-	fn dapps_staking(_: NegativeImbalanceAstar, _: NegativeImbalanceAstar) {
-		// DappsStaking::rewards(stakers, dapps)
-	}
+	fn dapps_staking(_: NegativeImbalanceAstar, _: NegativeImbalanceAstar) {}
 }
 
 parameter_types! {
