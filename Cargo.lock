@@ -12783,6 +12783,7 @@ dependencies = [
  "pallet-motion",
  "pallet-multisig",
  "pallet-preimage",
+ "pallet-proxy",
  "pallet-scheduler",
  "pallet-session",
  "pallet-sudo",
