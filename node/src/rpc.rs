@@ -114,13 +114,7 @@ pub fn open_frontier_backend<C>(
 where
 	C: sp_blockchain::HeaderBackend<Block>,
 {
-	let config_dir = config
-		.base_path
-		.as_ref()
-		.map(|base_path| base_path.config_dir(config.chain_spec.id()))
-		.unwrap_or_else(|| {
-			sc_service::BasePath::from_project("", "", "watr").config_dir(config.chain_spec.id())
-		});
+	let config_dir = config.base_path.config_dir(config.chain_spec.id());
 	let path = config_dir.join("frontier").join("db");
 
 	Ok(Arc::new(fc_db::kv::Backend::<Block>::new(
@@ -136,8 +130,8 @@ pub fn create_full<C, P, BE, A>(
 	deps: FullDeps<C, P, A>,
 	subscription_task_executor: SubscriptionTaskExecutor,
 	pubsub_notification_sinks: Arc<
-	fc_mapping_sync::EthereumBlockNotificationSinks<
-		fc_mapping_sync::EthereumBlockNotification<Block>,
+		fc_mapping_sync::EthereumBlockNotificationSinks<
+			fc_mapping_sync::EthereumBlockNotification<Block>,
 		>,
 	>,
 ) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>

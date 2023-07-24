@@ -324,6 +324,9 @@ where
 				Box::new(block_announce_validator)
 			})),
 			warp_sync_params: None,
+			net_config: sc_network::config::FullNetworkConfiguration::new(
+				&parachain_config.network,
+			),
 		})?;
 
 	let filter_pool: Option<FilterPool> = Some(Arc::new(std::sync::Mutex::new(BTreeMap::new())));
@@ -420,7 +423,12 @@ where
 				block_data_cache: block_data_cache.clone(),
 			};
 
-			crate::rpc::create_full(deps, subscription_task_executor, pubsub_notification_sinks.clone()).map_err(Into::into)
+			crate::rpc::create_full(
+				deps,
+				subscription_task_executor,
+				pubsub_notification_sinks.clone(),
+			)
+			.map_err(Into::into)
 		})
 	};
 
