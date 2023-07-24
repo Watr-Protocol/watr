@@ -41,7 +41,10 @@ use crate::AssetId;
 /// to Erc20AssetsPrecompileSet
 pub const ASSET_PRECOMPILE_ADDRESS_PREFIX: &[u8] = &[255u8; 4];
 
-pub const TUSD_PRECOMPILE_ADDRESS: AssetId = 2018;
+/// NUSD -> Native USD
+pub const NUSD_PRECOMPILE_ID: AssetId = 2018;
+/// XC-20 assets to perform an origin check on.
+pub const ASSET_PRECOMPILE_IDS: &[AssetId] = &[NUSD_PRECOMPILE_ID; 1];
 
 /// The PrecompileSet installed in the Astar runtime.
 #[derive(Debug, Default, Clone, Copy)]
@@ -99,15 +102,16 @@ where
 			a if a == hash(1025) => Some(Dispatch::<R>::execute(handle)),
 			// If the address matches asset prefix, the we route through the asset precompile set
 			a if &a.to_fixed_bytes()[0..4] == ASSET_PRECOMPILE_ADDRESS_PREFIX => {
-				// Get asset id to check if it is TUSD
+				// Get asset id to check if it is NUSD
 				let asset_id = R::address_to_asset_id(a).unwrap_or(0.into());
-				// If asset is TUSD, ensure origin is TUSD contract. May return error
-				if asset_id == TUSD_PRECOMPILE_ADDRESS.into() {
+				// If asset needs an origin check, ensure origin is the issuer of the asset. May return error.
+				// This is useful for limiting precompile use to a smart contract.
+				if ASSET_PRECOMPILE_IDS.iter().find(|&&a| asset_id == a.into()).is_some() {
 					let owner = pallet_assets::Pallet::<R>::issuer(asset_id);
 					let origin = R::AddressMapping::into_account_id(handle.context().caller);
 
 					if Some(origin.clone()) != owner.clone() {
-						return Some(Err(error("bad origin for tusd precompile")))
+						return Some(Err(error("bad origin for asset precompile")))
 					}
 				}
 
