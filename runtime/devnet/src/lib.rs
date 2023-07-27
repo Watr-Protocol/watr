@@ -461,7 +461,7 @@ impl pallet_block_reward::BeneficiaryPayout<NegativeImbalanceAstar> for Benefici
 }
 
 parameter_types! {
-	pub const RewardAmount: Balance = 266_400 * MILLI_WATRD;
+	pub const RewardAmount: Balance = 6_000 * MILLI_WATRD;
 }
 
 impl pallet_block_reward::Config for Runtime {
