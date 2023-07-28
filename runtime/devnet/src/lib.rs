@@ -48,8 +48,8 @@ use sp_core::{
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
-		AccountIdLookup, BlakeTwo256, Block as BlockT, DispatchInfoOf, Dispatchable,
-		PostDispatchInfoOf, UniqueSaturatedInto,
+		AccountIdConversion, AccountIdLookup, BlakeTwo256, Block as BlockT, DispatchInfoOf,
+		Dispatchable, PostDispatchInfoOf, UniqueSaturatedInto,
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
 	ApplyExtrinsicResult,
@@ -326,7 +326,7 @@ parameter_types! {
 impl pallet_timestamp::Config for Runtime {
 	/// A timestamp: milliseconds since the unix epoch.
 	type Moment = u64;
-	type OnTimestampSet = ();
+	type OnTimestampSet = BlockReward;
 	type MinimumPeriod = MinimumPeriod;
 	type WeightInfo = weights::pallet_timestamp::WeightInfo<Runtime>;
 }
@@ -449,6 +449,34 @@ impl pallet_collator_selection::Config for Runtime {
 	type ValidatorIdOf = pallet_collator_selection::IdentityCollator;
 	type ValidatorRegistration = Session;
 	type WeightInfo = weights::pallet_collator_selection::WeightInfo<Runtime>;
+}
+
+type NegativeImbalanceAstar = <Balances as CurrencyT<AccountId>>::NegativeImbalance;
+
+pub struct BeneficiaryPayout();
+impl pallet_block_reward::BeneficiaryPayout<NegativeImbalanceAstar> for BeneficiaryPayout {
+	fn treasury(reward: NegativeImbalanceAstar) {
+		Balances::resolve_creating(&TreasuryPalletId::get().into_account_truncating(), reward);
+	}
+
+	fn collators(reward: NegativeImbalanceAstar) {
+		ToStakingPot::on_unbalanced(reward);
+	}
+
+	fn dapps_staking(_: NegativeImbalanceAstar, _: NegativeImbalanceAstar) {}
+}
+
+parameter_types! {
+	pub const RewardAmount: Balance = 6_000 * MILLI_WATRD;
+}
+
+impl pallet_block_reward::Config for Runtime {
+	type Currency = Balances;
+	type DappsStakingTvlProvider = ();
+	type BeneficiaryPayout = BeneficiaryPayout;
+	type RewardAmount = RewardAmount;
+	type RuntimeEvent = RuntimeEvent;
+	type WeightInfo = weights::pallet_block_reward::WeightInfo<Runtime>;
 }
 
 parameter_types! {
@@ -969,6 +997,7 @@ construct_runtime!(
 		// Monetary stuff.
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>} = 10,
 		TransactionPayment: pallet_transaction_payment::{Pallet, Storage, Event<T>} = 11,
+		BlockReward: pallet_block_reward::{Pallet, Storage, Event<T>, Config} = 12,
 
 		// Collator support. The order of these 4 are important and shall not change.
 		Authorship: pallet_authorship::{Pallet, Call, Storage} = 20,
@@ -1092,6 +1121,7 @@ mod benches {
 		[pallet_membership, CouncilMembership]
 		[pallet_preimage, Preimage]
 		[pallet_did, DID]
+		[pallet_block_reward, BlockReward]
 	);
 }
 
