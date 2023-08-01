@@ -26,7 +26,10 @@ use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
 use sp_core::{sr25519, Pair, Public, H160};
-use sp_runtime::traits::{IdentifyAccount, Verify};
+use sp_runtime::{
+	traits::{IdentifyAccount, Verify},
+	Perbill,
+};
 use std::collections::BTreeMap;
 
 use watr_common::{AccountId, AuraId, Signature};
@@ -34,7 +37,7 @@ use watr_runtime as mainnet;
 use watr_runtime::WATR;
 
 use watr_devnet_runtime as devnet;
-use watr_devnet_runtime::WATRD;
+use watr_devnet_runtime::{BlockRewardConfig, WATRD};
 
 /// Specialized `MainnetChainSpec` for the normal parachain runtime.
 pub type MainnetChainSpec = sc_service::GenericChainSpec<mainnet::GenesisConfig, Extensions>;
@@ -408,6 +411,17 @@ fn devnet_testnet_genesis(
 		},
 
 		balances: devnet::BalancesConfig { balances },
+		block_reward: BlockRewardConfig {
+			// Make sure sum is 100
+			reward_config: pallet_block_reward::RewardDistributionConfig {
+				base_treasury_percent: Perbill::from_percent(10),
+				base_staker_percent: Perbill::from_percent(20),
+				dapps_percent: Perbill::from_percent(0),
+				collators_percent: Perbill::from_percent(25),
+				adjustable_percent: Perbill::from_percent(45),
+				ideal_dapps_staking_tvl: Perbill::from_percent(40),
+			},
+		},
 
 		parachain_info: devnet::ParachainInfoConfig { parachain_id: id },
 		collator_selection: devnet::CollatorSelectionConfig {
@@ -435,8 +449,8 @@ fn devnet_testnet_genesis(
 		assets: devnet::AssetsConfig {
 			assets: vec![(1984, root_key.clone(), true, 10_000), (2018, root_key, true, 10_000)],
 			metadata: vec![
-				(1984, b"Tether USD".to_vec(), b"USDt".to_vec(), 6),
-				(2018, b"Native TUSD".to_vec(), b"NTUSD".to_vec(), 18),
+				(1984, b"Foreign USD".to_vec(), b"FUSD".to_vec(), 6),
+				(2018, b"Native USD".to_vec(), b"NUSD".to_vec(), 18),
 			],
 			accounts: vec![],
 		},
@@ -527,7 +541,7 @@ fn mainnet_testnet_genesis(
 		aura_ext: Default::default(),
 		assets: mainnet::AssetsConfig {
 			assets: vec![(1984, root_key, true, 10_000)],
-			metadata: vec![(1984, b"Tether USD".to_vec(), b"USDt".to_vec(), 6)],
+			metadata: vec![(1984, b"Foreign USD".to_vec(), b"FUSD".to_vec(), 6)],
 			accounts: vec![],
 		},
 		parachain_system: Default::default(),
