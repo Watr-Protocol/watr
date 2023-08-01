@@ -46,6 +46,7 @@ pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/parityt
 pallet-treasury = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.43" }
 pallet-utility = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.43" }
 sp-api = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.43" }
+pallet-proxy = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.43" }
 sp-block-builder = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.43" }
 sp-consensus-aura = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.43" }
 sp-core = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.43" }
@@ -103,6 +104,7 @@ pallet-evm-precompile-dispatch = { git = 'https://github.com/paritytech/frontier
 pallet-evm-precompile-assets-erc20 = { git = "https://github.com/Watr-Protocol/astar-frame.git", branch = "polkadot-v0.9.43", default-features = false }
 pallet-xc-asset-config = { git = "https://github.com/Watr-Protocol/astar-frame.git", branch = "polkadot-v0.9.43", default-features = false }
 precompile-utils = { git = "https://github.com/Watr-Protocol/astar-frame.git", branch = "polkadot-v0.9.43", default-features = false }
+pallet-block-reward = { git = "https://github.com/Watr-Protocol/astar-frame.git", branch = "polkadot-v0.9.43", default-features = false }
 
 pallet-multisig = {git = "https://github.com/paritytech/substrate", package = "pallet-multisig", default-features = false, branch = "polkadot-v0.9.43" }
 pallet-identity = {git = "https://github.com/paritytech/substrate", package = "pallet-identity", default-features = false, branch = "polkadot-v0.9.43" }
@@ -137,6 +139,7 @@ std = [
 	"pallet-aura/std",
 	"pallet-authorship/std",
 	"pallet-balances/std",
+	"pallet-block-reward/std",
 	"pallet-collator-selection/std",
 	"pallet-collective/std",
 	"pallet-motion/std",
@@ -173,6 +176,7 @@ std = [
 	"pallet-membership/std",
 	"pallet-multisig/std",
 	"pallet-identity/std",
+	"pallet-proxy/std",
 	# Frontier
 	"fp-rpc/std",
 	"fp-self-contained/std",
@@ -197,6 +201,7 @@ runtime-benchmarks = [
 	"pallet-assets/runtime-benchmarks",
 	"pallet-balances/runtime-benchmarks",
 	"pallet-sudo/runtime-benchmarks",
+	"pallet-block-reward/runtime-benchmarks",
 	"pallet-collective/runtime-benchmarks",
 	"pallet-collator-selection/runtime-benchmarks",
 	"pallet-ethereum/runtime-benchmarks",
@@ -209,6 +214,7 @@ runtime-benchmarks = [
 	"pallet-utility/runtime-benchmarks",
 	"pallet-multisig/runtime-benchmarks",
 	"pallet-identity/runtime-benchmarks",
+	"pallet-proxy/runtime-benchmarks",
 	"pallet-xcm/runtime-benchmarks",
 	"pallet-xc-asset-config/runtime-benchmarks",
 	"pallet-did/runtime-benchmarks",
@@ -253,6 +259,7 @@ try-runtime = [
   "pallet-ethereum/try-runtime",
   "pallet-base-fee/try-runtime",
   "pallet-xc-asset-config/try-runtime",
+  "pallet-block-reward/try-runtime",
 ]
 # Set timing constants (e.g. session period) to faster versions to speed up testing.
 fast-runtime = []
