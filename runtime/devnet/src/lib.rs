@@ -153,7 +153,7 @@ pub type Executive = frame_executive::Executive<
 		pallet_assets::migration::v1::MigrateToV1<Runtime>,
 		pallet_xcm::migration::v1::MigrateToV1<Runtime>,
 		pallet_xc_asset_config::migrations::MigrationXcmV3<Runtime>,
-	)
+	),
 >;
 
 /// Handles converting a weight scalar to a fee value, based on the scale and granularity of the
