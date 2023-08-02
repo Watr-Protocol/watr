@@ -53,14 +53,12 @@ cumulus_based = true
     name = "collator3"
     args = ["--state-cache-size=0"]
     ws_port = 9820
-    rpc_port = 8833
     command = "./bin/watr-node"
 
     [[parachains.collators]]
     name = "collator4"
 	args = [ "--state-cache-size=0", "-lxcm::barriers=trace", "-lxcm::execute_xcm_in_credit=trace", "-lxcm::execute_xcm=trace", "-lxcm::weight=trace", "-lxcm::should_execute=trace", "-lxcm::fungibles_adapter=trace", "-lxcm::TransactAsset::withdraw_asset", "-lxcm::matches_fungibles" ]
     ws_port = 9821
-	rpc_port = 8834
     command = "./bin/watr-node"
 
 # [[hrmp_channels]]

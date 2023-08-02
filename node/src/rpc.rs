@@ -75,7 +75,7 @@ pub struct FullDeps<C, P, A: ChainApi> {
 	/// EthFilterApi pool.
 	pub filter_pool: Option<FilterPool>,
 	/// Backend.
-	pub backend: Arc<fc_db::kv::Backend<Block>>,
+	pub backend: Arc<dyn fc_db::BackendReader<Block> + Send + Sync>,
 	/// Fee history cache.
 	pub fee_history_cache: FeeHistoryCache,
 	/// Maximum fee history cache size.

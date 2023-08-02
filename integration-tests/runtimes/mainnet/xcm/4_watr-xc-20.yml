@@ -9,7 +9,7 @@ settings:
     chains:
       watr_parachain:
         networkName: &watr_network_name "watr-mainnet"
-        rpcPort: &watr_rpc_port 8833
+        rpcPort: &watr_rpc_port 9821
         amount: &watr_amount_to_transfer "100000000000000000000" # 100 WTRD
         asset_ower:
           signer: &watr_asset_owner_signer //Alice
@@ -23,9 +23,9 @@ settings:
           wallet: &watr_asset_receiver_wallet 2zXaVmcdqbL7XdDQxLkUnAmFqqhV6NNVQEw2fAyBBJJ9A8Mp
           wallet_eth: &watr_asset_receiver_wallet_eth "0x90b5ab205c6974c9ea841be688864633dc9ca8a3" # Correspond to wallet '2zXaVmcdqbL7XdDQxLkUnAmFqqhV6NNVQEw2fAyBBJJ9A8Mp'
         asset:
-          id: &watr_asset_id 1984 # Tether USD
-          name: &watr_asset_name Tether USD
-          symbol: &watr_asset_symbol USDt
+          id: &watr_asset_id 1984 # Foreign USD
+          name: &watr_asset_name Foreign USD
+          symbol: &watr_asset_symbol FUSD
           decimals: &watr_asset_decimals 6
           amount: &amount_to_fund 100000000 # 100 Assets
           total_supply: &watr_asset_total_supply 250000000000000 # Coming from the previous test

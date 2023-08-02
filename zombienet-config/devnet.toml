@@ -28,10 +28,8 @@ chain = "devnet-local"
 	name = "watr-collator01"
 	command = "./target/release/watr-node"
 	ws_port = 9933
-	rpc_port = 8833
 
 	[[parachains.collators]]
 	name = "watr-collator02"
 	ws_port = 9822
-	rpc_port = 8822
 	command = "./target/release/watr-node"

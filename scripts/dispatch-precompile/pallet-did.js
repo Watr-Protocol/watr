@@ -3,7 +3,7 @@ const polkadotCryptoUtils = require("@polkadot/util-crypto");
 const Web3 = require('web3');
 
 const wsProvider = new WsProvider('ws://127.0.0.1:9933');
-const web3 = new Web3('http://127.0.0.1:8833');
+const web3 = new Web3('http://127.0.0.1:9933');
 
 async function eth_call() {
     const api = await ApiPromise.create({ provider: wsProvider });
