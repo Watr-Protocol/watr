@@ -290,7 +290,7 @@ where
 	let (parachain_block_import, mut telemetry, telemetry_worker_handle, frontier_backend) =
 		params.other;
 
-    let net_config = sc_network::config::FullNetworkConfiguration::new(&parachain_config.network);
+	let net_config = sc_network::config::FullNetworkConfiguration::new(&parachain_config.network);
 
 	let client = params.client.clone();
 	let backend = params.backend.clone();
@@ -314,17 +314,17 @@ where
 	let import_queue = params.import_queue.service();
 
 	let (network, system_rpc_tx, tx_handler_controller, start_network, sync_service) =
-	cumulus_client_service::build_network(cumulus_client_service::BuildNetworkParams {
-		parachain_config: &parachain_config,
-		net_config,
-		para_id: id,
-		client: client.clone(),
-		transaction_pool: transaction_pool.clone(),
-		spawn_handle: task_manager.spawn_handle(),
-		import_queue: params.import_queue,
-		relay_chain_interface: relay_chain_interface.clone(),
-	})
-	.await?;
+		cumulus_client_service::build_network(cumulus_client_service::BuildNetworkParams {
+			parachain_config: &parachain_config,
+			net_config,
+			para_id: id,
+			client: client.clone(),
+			transaction_pool: transaction_pool.clone(),
+			spawn_handle: task_manager.spawn_handle(),
+			import_queue: params.import_queue,
+			relay_chain_interface: relay_chain_interface.clone(),
+		})
+		.await?;
 
 	let filter_pool: Option<FilterPool> = Some(Arc::new(std::sync::Mutex::new(BTreeMap::new())));
 	let fee_history_cache: FeeHistoryCache = Arc::new(std::sync::Mutex::new(BTreeMap::new()));
