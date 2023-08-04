@@ -75,7 +75,7 @@ impl frame_benchmarking_cli::ExtrinsicBuilder
 				period,
 				best_block.saturated_into(),
 			)),
-			frame_system::CheckNonce::<runtime::Runtime>::from(nonce),
+			frame_system::CheckNonce::<runtime::Runtime>::from(nonce.into()),
 			frame_system::CheckWeight::<runtime::Runtime>::new(),
 			pallet_transaction_payment::ChargeTransactionPayment::<runtime::Runtime>::from(tip),
 		);
@@ -140,7 +140,7 @@ impl frame_benchmarking_cli::ExtrinsicBuilder
 				period,
 				best_block.saturated_into(),
 			)),
-			frame_system::CheckNonce::<runtime::Runtime>::from(nonce),
+			frame_system::CheckNonce::<runtime::Runtime>::from(nonce.into()),
 			frame_system::CheckWeight::<runtime::Runtime>::new(),
 			pallet_transaction_payment::ChargeTransactionPayment::<runtime::Runtime>::from(tip),
 		);

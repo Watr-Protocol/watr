@@ -46,7 +46,7 @@ pub struct WeightInfo<T>(PhantomData<T>);
 impl<T: frame_system::Config> pallet_block_reward::WeightInfo for WeightInfo<T> {
 	// Storage: BlockReward RewardDistributionConfigStorage (r:0 w:1)
 	fn set_configuration() -> Weight {
-		Weight::from_parts(17_000_000 as u64, 0)
-			.saturating_add(T::DbWeight::get().writes(1 as u64))
+		Weight::from_parts(17_000_000u64, 0)
+			.saturating_add(T::DbWeight::get().writes(1u64))
 	}
 }

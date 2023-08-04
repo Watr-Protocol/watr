@@ -15,44 +15,44 @@
 // along with Watr.  If not, see <http://www.gnu.org/licenses/>.
 
 use core::marker::PhantomData;
+
 use frame_support::{
 	log,
 	traits::{Contains, ContainsPair, Get},
 };
-use sp_std::{borrow::Borrow, result};
-
+use sp_runtime::traits::MaybeEquivalence;
 use xcm::latest::prelude::*;
-use xcm_executor::traits::Convert;
 
 pub struct AsForeignToLocal<Prefix, Asset, AssetId, ConvertAssetId>(
 	PhantomData<(Prefix, Asset, AssetId, ConvertAssetId)>,
 );
+
 impl<
 		Prefix: Get<MultiLocation>,
 		Asset: Get<(u128, u128)>,
 		AssetId: Clone,
-		ConvertAssetId: Convert<u128, AssetId>,
-	> Convert<MultiLocation, AssetId> for AsForeignToLocal<Prefix, Asset, AssetId, ConvertAssetId>
+		ConvertAssetId: MaybeEquivalence<u128, AssetId>,
+	> MaybeEquivalence<MultiLocation, AssetId>
+	for AsForeignToLocal<Prefix, Asset, AssetId, ConvertAssetId>
 {
-	fn convert_ref(id: impl Borrow<MultiLocation>) -> result::Result<AssetId, ()> {
+	fn convert(id: &MultiLocation) -> Option<AssetId> {
 		let prefix = Prefix::get();
 		let asset = Asset::get();
-		let id = id.borrow();
 
 		match id.match_and_split(&prefix) {
 			Some(&GeneralIndex(asset_id)) =>
 				if asset_id == asset.0 {
-					ConvertAssetId::convert_ref(&asset.1)
+					ConvertAssetId::convert(&asset.1)
 				} else {
-					return Err(())
+					return None
 				},
-			_ => Err(()),
+			_ => None,
 		}
 	}
 
-	fn reverse_ref(what: impl Borrow<AssetId>) -> result::Result<MultiLocation, ()> {
+	fn convert_back(what: &AssetId) -> Option<MultiLocation> {
 		let mut location = Prefix::get();
-		let id = ConvertAssetId::reverse_ref(what)?;
+		let id = ConvertAssetId::convert_back(what)?;
 		let asset = Asset::get();
 
 		if id == asset.1 {
@@ -61,12 +61,12 @@ impl<
 				"location: {:?}",
 				location
 			);
-			location.push_interior(Junction::GeneralIndex(asset.0)).map_err(|_| ())?;
+			location.push_interior(Junction::GeneralIndex(asset.0)).ok()?;
 		} else {
-			return Err(())
+			return None
 		}
 
-		Ok(location)
+		Some(location)
 	}
 }
 

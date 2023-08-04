@@ -30,7 +30,7 @@ use sc_client_api::BlockchainEvents;
 use cumulus_client_cli::CollatorOptions;
 
 // Local Runtime Types
-pub use watr_common::{AccountId, AuraId, Balance, Block, Hash, Index as Nonce};
+pub use watr_common::{AccountId, AuraId, Balance, Block, Hash, Nonce};
 
 use sc_consensus::ImportQueue;
 

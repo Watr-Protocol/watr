@@ -35,10 +35,11 @@ use xcm::{latest::prelude::*, prelude::AssetId as XcmAssetId};
 use xcm_builder::{
 	AccountId32Aliases, AllowKnownQueryResponses, AllowSubscriptionsFrom,
 	AllowTopLevelPaidExecutionFrom, AsPrefixedGeneralIndex, ConvertedConcreteId, CurrencyAdapter,
-	EnsureXcmOrigin, FixedRateOfFungible, FixedWeightBounds, FungiblesAdapter, IsConcrete,
-	NativeAsset, NoChecking, ParentIsPreset, RelayChainAsNative, SiblingParachainAsNative,
-	SiblingParachainConvertsVia, SignedAccountId32AsNative, SignedToAccountId32,
-	SovereignSignedViaLocation, TakeWeightCredit, UsingComponents,
+	DenyReserveTransferToRelayChain, DenyThenTry, EnsureXcmOrigin, FixedRateOfFungible,
+	FixedWeightBounds, FungiblesAdapter, IsConcrete, NativeAsset, NoChecking, ParentIsPreset,
+	RelayChainAsNative, SiblingParachainAsNative, SiblingParachainConvertsVia,
+	SignedAccountId32AsNative, SignedToAccountId32, SovereignSignedViaLocation, TakeWeightCredit,
+	UsingComponents,
 };
 use xcm_executor::{traits::JustTry, XcmExecutor};
 
@@ -47,13 +48,12 @@ use cumulus_primitives_utility::{ParentAsUmp, XcmFeesTo32ByteAccount};
 use watr_common::{
 	impls::DealWithFees,
 	xcm_config::{AllowOnlySendToReservePerAsset, AsForeignToLocal, ConcreteNativeAssetFrom},
-	xcm_config_parachains::{DenyReserveTransferToRelayChain, DenyThenTry},
 };
 
 use frame_system::EnsureRoot;
 
 parameter_types! {
-	pub const USDT: (u128, u128) = (1984, 1984); // (Reserve AssetId, Local AssetId)
+	pub const FUSD: (u128, u128) = (1984, 1984); // (Reserve AssetId, Local AssetId)
 	pub const RelayLocation: MultiLocation = MultiLocation::parent();
 	// pub SelfReserve: MultiLocation = MultiLocation { parents:0, interior: Here };
 	pub SelfReserve: Junctions = Junctions::Here;
@@ -65,8 +65,8 @@ parameter_types! {
 	pub RelayChainOrigin: RuntimeOrigin = cumulus_pallet_xcm::Origin::Relay.into();
 	pub Ancestry: MultiLocation = Parachain(ParachainInfo::parachain_id().into()).into();
 	pub CheckingAccount: AccountId = PolkadotXcm::check_account();
-	pub USDTperSecond: (XcmAssetId, u128, u128) = (
-		MultiLocation::new(1, X3(Parachain(1000), PalletInstance(50), GeneralIndex(USDT::get().1))).into(),
+	pub FUSDperSecond: (XcmAssetId, u128, u128) = (
+		MultiLocation::new(1, X3(Parachain(1000), PalletInstance(50), GeneralIndex(FUSD::get().1))).into(),
 		default_fee_per_second() * 10,
 		0
 	);
@@ -127,7 +127,7 @@ pub type FungiblesTransactor = FungiblesAdapter<
 		ConvertedConcreteId<
 			AssetId,
 			Balance,
-			AsForeignToLocal<StatemintAssetsPalletLocation, USDT, AssetId, JustTry>, // For remote references (foreign)
+			AsForeignToLocal<StatemintAssetsPalletLocation, FUSD, AssetId, JustTry>, // For remote references (foreign)
 			JustTry,
 		>,
 	),
@@ -175,6 +175,9 @@ match_types! {
 	pub type Statemint: impl Contains<MultiLocation> = {
 		MultiLocation { parents: 1, interior: X1(Parachain(1000)) }
 	};
+	pub type OnlyParachains: impl Contains<MultiLocation> = {
+		MultiLocation { parents: 0, interior: X1(Parachain(_)) }
+	};
 }
 
 pub type Barrier = DenyThenTry<
@@ -206,7 +209,7 @@ impl xcm_executor::Config for XcmConfig {
 	type Weigher = FixedWeightBounds<UnitWeightCost, RuntimeCall, MaxInstructions>;
 	type Trader = (
 		FixedRateOfFungible<
-			USDTperSecond,
+			FUSDperSecond,
 			XcmFeesTo32ByteAccount<FungiblesTransactor, AccountId, XcmAssetFeesReceiver>,
 		>,
 		UsingComponents<WeightToFee, SelfReserve, AccountId, Balances, DealWithFees<Runtime>>,
@@ -224,6 +227,7 @@ impl xcm_executor::Config for XcmConfig {
 	type UniversalAliases = Nothing;
 	type CallDispatcher = RuntimeCall;
 	type SafeCallFilter = Everything;
+	type Aliasers = Nothing;
 }
 
 /// No local origins on this chain are allowed to dispatch XCM sends/executions.
@@ -239,7 +243,7 @@ pub type XcmRouter = (
 );
 
 pub type XcmExecuteFilter =
-	AllowOnlySendToReservePerAsset<SelfReserve, StatemintAssetsPalletLocation, USDT>;
+	AllowOnlySendToReservePerAsset<SelfReserve, StatemintAssetsPalletLocation, FUSD>;
 
 #[cfg(feature = "runtime-benchmarks")]
 parameter_types! {

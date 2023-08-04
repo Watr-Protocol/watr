@@ -28,7 +28,7 @@
 use jsonrpsee::RpcModule;
 use std::{collections::BTreeMap, sync::Arc};
 
-use watr_common::{opaque::Block, AccountId, Balance, Hash, Index as Nonce};
+use watr_common::{opaque::Block, AccountId, Balance, Hash, Nonce};
 
 use sc_client_api::{
 	backend::{AuxStore, Backend, StateBackend, StorageProvider},
@@ -212,13 +212,13 @@ where
 
 	let max_past_logs: u32 = 10_000;
 	let max_stored_filters: usize = 500;
-	let tx_pool = TxPool::new(client.clone(), graph);
+	let tx_pool = TxPool::new(client.clone(), graph.clone());
 	if let Some(filter_pool) = filter_pool {
 		io.merge(
 			EthFilter::new(
 				client.clone(),
 				backend,
-				tx_pool.clone(),
+				graph.clone(),
 				filter_pool,
 				max_stored_filters, // max stored filters
 				max_past_logs,
