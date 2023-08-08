@@ -142,8 +142,6 @@ pub type SignedPayload = generic::SignedPayload<RuntimeCall, SignedExtra>;
 pub type CheckedExtrinsic =
 	fp_self_contained::CheckedExtrinsic<AccountId, RuntimeCall, SignedExtra, H160>;
 
-
-
 pub mod migrations {
 	use super::*;
 	use frame_support::traits::{GetStorageVersion, OnRuntimeUpgrade, StorageVersion};
@@ -187,7 +185,6 @@ pub mod migrations {
 		}
 	}
 }
-
 
 /// Executive: handles dispatch to the various modules.
 pub type Executive = frame_executive::Executive<
