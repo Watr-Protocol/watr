@@ -20,7 +20,6 @@ do
 
     target/release/watr-node benchmark pallet \
 		--chain=$benchmarkRuntimeName \
-		--execution=wasm \
 		--wasm-execution=compiled \
 		--pallet=$pallet  \
 		--extrinsic='*' \
