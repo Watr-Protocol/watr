@@ -36,9 +36,9 @@ pub use watr_common::{
 	NORMAL_DISPATCH_RATIO, SLOT_DURATION, WEIGHT_REF_TIME_PER_GAS,
 };
 
+use codec::{Decode, Encode, MaxEncodedLen};
 use cumulus_pallet_parachain_system::RelayNumberStrictlyIncreases;
 use smallvec::smallvec;
-use codec::{Decode, Encode, MaxEncodedLen};
 use sp_api::impl_runtime_apis;
 use sp_core::{
 	crypto::{ByteArray, KeyTypeId},
@@ -187,7 +187,6 @@ pub mod migrations {
 		}
 	}
 }
-
 
 /// Executive: handles dispatch to the various modules.
 pub type Executive = frame_executive::Executive<
