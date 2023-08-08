@@ -142,6 +142,53 @@ pub type SignedPayload = generic::SignedPayload<RuntimeCall, SignedExtra>;
 pub type CheckedExtrinsic =
 	fp_self_contained::CheckedExtrinsic<AccountId, RuntimeCall, SignedExtra, H160>;
 
+
+
+pub mod migrations {
+	use super::*;
+	use frame_support::traits::{GetStorageVersion, OnRuntimeUpgrade, StorageVersion};
+
+	/// Migrations that set `StorageVersion`s we missed to set.
+	///
+	/// It's *possible* that these pallets have not in fact been migrated to the versions being set,
+	/// which we should keep in mind in the future if we notice any strange behavior.
+	/// We opted to not check exactly what on-chain versions each pallet is at, since it would be
+	/// an involved effort, this is testnet, and no one has complained
+	/// (https://github.com/paritytech/polkadot/issues/6657#issuecomment-1552956439).
+	pub struct SetStorageVersions;
+
+	impl OnRuntimeUpgrade for SetStorageVersions {
+		fn on_runtime_upgrade() -> Weight {
+			let mut writes = 0;
+			let mut reads = 0;
+
+			// Council
+			if Council::on_chain_storage_version() < 4 {
+				StorageVersion::new(4).put::<Council>();
+				writes += 1;
+			}
+			reads += 1;
+
+			// CouncilMembership
+			if CouncilMembership::on_chain_storage_version() < 4 {
+				StorageVersion::new(4).put::<CouncilMembership>();
+				writes += 1;
+			}
+			reads += 1;
+
+			// Scheduler
+			if Scheduler::on_chain_storage_version() < 4 {
+				StorageVersion::new(4).put::<Scheduler>();
+				writes += 1;
+			}
+			reads += 1;
+
+			RocksDbWeight::get().reads_writes(reads, writes)
+		}
+	}
+}
+
+
 /// Executive: handles dispatch to the various modules.
 pub type Executive = frame_executive::Executive<
 	Runtime,
@@ -150,6 +197,10 @@ pub type Executive = frame_executive::Executive<
 	Runtime,
 	AllPalletsWithSystem,
 	(
+		migrations::SetStorageVersions,
+		pallet_balances::migration::MigrateToTrackInactive<Runtime, xcm_config::CheckingAccount>,
+		pallet_preimage::migration::v1::Migration<Runtime>,
+		pallet_multisig::migrations::v1::MigrateToV1<Runtime>,
 		pallet_assets::migration::v1::MigrateToV1<Runtime>,
 		pallet_xcm::migration::v1::MigrateToV1<Runtime>,
 		pallet_xc_asset_config::migrations::MigrationXcmV3<Runtime>,

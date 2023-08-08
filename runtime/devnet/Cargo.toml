@@ -69,19 +69,19 @@ xcm-builder = { git = "https://github.com/paritytech/polkadot", default-features
 xcm-executor = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.43" }
 
 # Cumulus
-cumulus-pallet-aura-ext = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43", default-features = false }
-cumulus-pallet-dmp-queue = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43", default-features = false }
-cumulus-pallet-parachain-system = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43", default-features = false }
-cumulus-pallet-session-benchmarking = {git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43", default-features = false, version = "3.0.0"}
-cumulus-pallet-xcm = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43", default-features = false }
-cumulus-pallet-xcmp-queue = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43", default-features = false }
-cumulus-primitives-core = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43", default-features = false }
-cumulus-primitives-timestamp = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43", default-features = false }
-cumulus-primitives-utility = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43", default-features = false }
-pallet-collator-selection = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43", default-features = false }
+cumulus-pallet-aura-ext = { git = "https://github.com/paritytech/cumulus", default-features = false , branch = "watr/patch-xcmp-dmp-migrations" }
+cumulus-pallet-dmp-queue = { git = "https://github.com/paritytech/cumulus", default-features = false , branch = "watr/patch-xcmp-dmp-migrations" }
+cumulus-pallet-parachain-system = { git = "https://github.com/paritytech/cumulus", default-features = false , branch = "watr/patch-xcmp-dmp-migrations" }
+cumulus-pallet-session-benchmarking = {git = "https://github.com/paritytech/cumulus", default-features = false, version = "3.0.0", branch = "watr/patch-xcmp-dmp-migrations" }
+cumulus-pallet-xcm = { git = "https://github.com/paritytech/cumulus", default-features = false , branch = "watr/patch-xcmp-dmp-migrations" }
+cumulus-pallet-xcmp-queue = { git = "https://github.com/paritytech/cumulus", default-features = false , branch = "watr/patch-xcmp-dmp-migrations" }
+cumulus-primitives-core = { git = "https://github.com/paritytech/cumulus", default-features = false , branch = "watr/patch-xcmp-dmp-migrations" }
+cumulus-primitives-timestamp = { git = "https://github.com/paritytech/cumulus", default-features = false , branch = "watr/patch-xcmp-dmp-migrations" }
+cumulus-primitives-utility = { git = "https://github.com/paritytech/cumulus", default-features = false , branch = "watr/patch-xcmp-dmp-migrations" }
+pallet-collator-selection = { git = "https://github.com/paritytech/cumulus", default-features = false , branch = "watr/patch-xcmp-dmp-migrations" }
 
-parachains-common = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43", default-features = false }
-parachain-info = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43", default-features = false }
+parachains-common = { git = "https://github.com/paritytech/cumulus", default-features = false , branch = "watr/patch-xcmp-dmp-migrations" }
+parachain-info = { git = "https://github.com/paritytech/cumulus", default-features = false , branch = "watr/patch-xcmp-dmp-migrations" }
 
 # Frontier
 fp-rpc = { git = 'https://github.com/paritytech/frontier', branch = "polkadot-v0.9.43", default-features = false }

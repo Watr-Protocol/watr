@@ -78,19 +78,19 @@ polkadot-service = { git = "https://github.com/paritytech/polkadot", branch = "r
 xcm = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.43" }
 
 # Cumulus
-cumulus-client-cli = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43" }
-cumulus-client-collator = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43" }
-cumulus-client-consensus-aura = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43" }
-cumulus-client-consensus-common = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43" }
-cumulus-client-network = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43" }
-cumulus-client-service = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43" }
-cumulus-primitives-core = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43" }
-cumulus-primitives-parachain-inherent = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43" }
-cumulus-relay-chain-inprocess-interface = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43" }
-cumulus-relay-chain-interface = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43" }
-cumulus-relay-chain-minimal-node = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43" }
-cumulus-relay-chain-rpc-interface = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43" }
-parachains-common = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.43", default-features = false }
+cumulus-client-cli = { git = "https://github.com/paritytech/cumulus", branch = "watr/patch-xcmp-dmp-migrations" }
+cumulus-client-collator = { git = "https://github.com/paritytech/cumulus", branch = "watr/patch-xcmp-dmp-migrations" }
+cumulus-client-consensus-aura = { git = "https://github.com/paritytech/cumulus", branch = "watr/patch-xcmp-dmp-migrations" }
+cumulus-client-consensus-common = { git = "https://github.com/paritytech/cumulus", branch = "watr/patch-xcmp-dmp-migrations" }
+cumulus-client-network = { git = "https://github.com/paritytech/cumulus", branch = "watr/patch-xcmp-dmp-migrations" }
+cumulus-client-service = { git = "https://github.com/paritytech/cumulus", branch = "watr/patch-xcmp-dmp-migrations" }
+cumulus-primitives-core = { git = "https://github.com/paritytech/cumulus", branch = "watr/patch-xcmp-dmp-migrations" }
+cumulus-primitives-parachain-inherent = { git = "https://github.com/paritytech/cumulus", branch = "watr/patch-xcmp-dmp-migrations" }
+cumulus-relay-chain-inprocess-interface = { git = "https://github.com/paritytech/cumulus", branch = "watr/patch-xcmp-dmp-migrations" }
+cumulus-relay-chain-interface = { git = "https://github.com/paritytech/cumulus", branch = "watr/patch-xcmp-dmp-migrations" }
+cumulus-relay-chain-minimal-node = { git = "https://github.com/paritytech/cumulus", branch = "watr/patch-xcmp-dmp-migrations" }
+cumulus-relay-chain-rpc-interface = { git = "https://github.com/paritytech/cumulus", branch = "watr/patch-xcmp-dmp-migrations" }
+parachains-common = { git = "https://github.com/paritytech/cumulus", default-features = false , branch = "watr/patch-xcmp-dmp-migrations" }
 
 # Frontier
 fc-cli = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.43" }
