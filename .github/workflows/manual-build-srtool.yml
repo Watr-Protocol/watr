@@ -2,6 +2,7 @@ name: Deterministic Build
 
 env:
   SUBWASM_VERSION: 0.18.0
+  RUSTC_VERSION: nightly-2023-07-13
 
 on:
   workflow_dispatch:
