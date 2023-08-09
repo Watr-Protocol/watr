@@ -40,9 +40,9 @@ use watr_devnet_runtime as devnet;
 use watr_devnet_runtime::{BlockRewardConfig, WATRD};
 
 /// Specialized `MainnetChainSpec` for the normal parachain runtime.
-pub type MainnetChainSpec = sc_service::GenericChainSpec<mainnet::GenesisConfig, Extensions>;
+pub type MainnetChainSpec = sc_service::GenericChainSpec<mainnet::RuntimeGenesisConfig, Extensions>;
 
-pub type DevnetChainSpec = sc_service::GenericChainSpec<devnet::GenesisConfig, Extensions>;
+pub type DevnetChainSpec = sc_service::GenericChainSpec<devnet::RuntimeGenesisConfig, Extensions>;
 
 /// The default XCM version to set in genesis config.
 const SAFE_XCM_VERSION: u32 = xcm::prelude::XCM_VERSION;
@@ -388,7 +388,7 @@ fn devnet_testnet_genesis(
 	councillors: sp_runtime::BoundedVec<AccountId, devnet::CouncilMaxMembers>,
 	id: ParaId,
 	total_issuance: Option<devnet::Balance>,
-) -> devnet::GenesisConfig {
+) -> devnet::RuntimeGenesisConfig {
 	use devnet::EVMConfig;
 
 	let num_endowed_accounts = endowed_accounts.len();
@@ -403,11 +403,12 @@ fn devnet_testnet_genesis(
 		None => vec![],
 	};
 
-	devnet::GenesisConfig {
+	devnet::RuntimeGenesisConfig {
 		system: devnet::SystemConfig {
 			code: devnet::WASM_BINARY
 				.expect("WASM binary was not build, please build it!")
 				.to_vec(),
+			..Default::default()
 		},
 
 		balances: devnet::BalancesConfig { balances },
@@ -421,9 +422,10 @@ fn devnet_testnet_genesis(
 				adjustable_percent: Perbill::from_percent(45),
 				ideal_dapps_staking_tvl: Perbill::from_percent(40),
 			},
+			..Default::default()
 		},
 
-		parachain_info: devnet::ParachainInfoConfig { parachain_id: id },
+		parachain_info: devnet::ParachainInfoConfig { parachain_id: id, ..Default::default() },
 		collator_selection: devnet::CollatorSelectionConfig {
 			invulnerables: invulnerables.iter().cloned().map(|(acc, _)| acc).collect(),
 			candidacy_bond: devnet::EXISTENTIAL_DEPOSIT * 16,
@@ -447,10 +449,7 @@ fn devnet_testnet_genesis(
 		aura: Default::default(),
 		aura_ext: Default::default(),
 		assets: devnet::AssetsConfig {
-			assets: vec![
-				(1984, root_key.clone(), true, 10_000),
-				(2018, root_key.clone(), true, 10_000),
-			],
+			assets: vec![(1984, root_key.clone(), true, 10_000), (2018, root_key, true, 10_000)],
 			metadata: vec![
 				(1984, b"Foreign USD".to_vec(), b"FUSD".to_vec(), 6),
 				(2018, b"Native USD".to_vec(), b"NUSD".to_vec(), 18),
@@ -458,7 +457,10 @@ fn devnet_testnet_genesis(
 			accounts: vec![],
 		},
 		parachain_system: Default::default(),
-		polkadot_xcm: devnet::PolkadotXcmConfig { safe_xcm_version: Some(SAFE_XCM_VERSION) },
+		polkadot_xcm: devnet::PolkadotXcmConfig {
+			safe_xcm_version: Some(SAFE_XCM_VERSION),
+			..Default::default()
+		},
 
 		council_membership: devnet::CouncilMembershipConfig {
 			members: councillors,
@@ -471,7 +473,7 @@ fn devnet_testnet_genesis(
 			accounts: {
 				let mut map = BTreeMap::new();
 				map.insert(
-					H160::from_str("0xfFFFffFF000000000000000000000000000007e2")
+					H160::from_str("0xffffffff000000000000000000000000000007e2")
 						.expect("invalid address"),
 					fp_evm::GenesisAccount {
 						nonce: Default::default(),
@@ -482,6 +484,7 @@ fn devnet_testnet_genesis(
 				);
 				map
 			},
+			..Default::default()
 		},
 		ethereum: Default::default(),
 		base_fee: Default::default(),
@@ -495,7 +498,7 @@ fn mainnet_testnet_genesis(
 	councillors: sp_runtime::BoundedVec<AccountId, mainnet::CouncilMaxMembers>,
 	id: ParaId,
 	total_issuance: Option<mainnet::Balance>,
-) -> mainnet::GenesisConfig {
+) -> mainnet::RuntimeGenesisConfig {
 	use mainnet::EVMConfig;
 
 	let num_endowed_accounts = endowed_accounts.len();
@@ -510,16 +513,17 @@ fn mainnet_testnet_genesis(
 		None => vec![],
 	};
 
-	mainnet::GenesisConfig {
+	mainnet::RuntimeGenesisConfig {
 		system: mainnet::SystemConfig {
 			code: mainnet::WASM_BINARY
 				.expect("WASM binary was not build, please build it!")
 				.to_vec(),
+			..Default::default()
 		},
 
 		balances: mainnet::BalancesConfig { balances },
 
-		parachain_info: mainnet::ParachainInfoConfig { parachain_id: id },
+		parachain_info: mainnet::ParachainInfoConfig { parachain_id: id, ..Default::default() },
 		collator_selection: mainnet::CollatorSelectionConfig {
 			invulnerables: invulnerables.iter().cloned().map(|(acc, _)| acc).collect(),
 			candidacy_bond: mainnet::EXISTENTIAL_DEPOSIT * 16,
@@ -548,7 +552,10 @@ fn mainnet_testnet_genesis(
 			accounts: vec![],
 		},
 		parachain_system: Default::default(),
-		polkadot_xcm: mainnet::PolkadotXcmConfig { safe_xcm_version: Some(SAFE_XCM_VERSION) },
+		polkadot_xcm: mainnet::PolkadotXcmConfig {
+			safe_xcm_version: Some(SAFE_XCM_VERSION),
+			..Default::default()
+		},
 
 		council_membership: mainnet::CouncilMembershipConfig {
 			members: councillors,
@@ -557,7 +564,7 @@ fn mainnet_testnet_genesis(
 		treasury: Default::default(),
 
 		// EVM compatibility
-		evm: EVMConfig { accounts: { BTreeMap::new() } },
+		evm: EVMConfig { accounts: { BTreeMap::new() }, ..Default::default() },
 		ethereum: Default::default(),
 		base_fee: Default::default(),
 	}

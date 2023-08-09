@@ -28,30 +28,32 @@
 use jsonrpsee::RpcModule;
 use std::{collections::BTreeMap, sync::Arc};
 
-use watr_runtime::{opaque::Block, AccountId, Balance, Hash, Index as Nonce};
+use watr_common::{opaque::Block, AccountId, Balance, Hash, Nonce};
 
 use sc_client_api::{
 	backend::{AuxStore, Backend, StateBackend, StorageProvider},
 	client::BlockchainEvents,
 };
 use sc_network::NetworkService;
+use sc_network_sync::SyncingService;
 use sc_rpc::{DenyUnsafe, SubscriptionTaskExecutor};
 use sc_transaction_pool::{ChainApi, Pool};
 use sc_transaction_pool_api::TransactionPool;
-use sp_api::ProvideRuntimeApi;
+use sp_api::{CallApiAt, ProvideRuntimeApi};
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{
 	Backend as BlockchainBackend, Error as BlockChainError, HeaderBackend, HeaderMetadata,
 };
 
-use sp_runtime::traits::BlakeTwo256;
+use sp_runtime::traits::{BlakeTwo256, Block as BlockT};
 
 // Frontier
 use fc_rpc::{
 	EthBlockDataCacheTask, OverrideHandle, RuntimeApiStorageOverride, SchemaV1Override,
-	SchemaV2Override, SchemaV3Override, StorageOverride,
+	SchemaV2Override, SchemaV3Override, TxPool, TxPoolApiServer,
 };
 use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
+use fp_rpc::EthereumRuntimeRPCApi;
 use fp_storage::EthereumStorageSchema;
 
 /// Full client dependencies.
@@ -68,10 +70,12 @@ pub struct FullDeps<C, P, A: ChainApi> {
 	pub is_authority: bool,
 	/// Network service
 	pub network: Arc<NetworkService<Block, Hash>>,
+	/// Chain syncing service
+	pub sync: Arc<SyncingService<Block>>,
 	/// EthFilterApi pool.
 	pub filter_pool: Option<FilterPool>,
 	/// Backend.
-	pub backend: Arc<fc_db::Backend<Block>>,
+	pub backend: Arc<dyn fc_db::BackendReader<Block> + Send + Sync>,
 	/// Fee history cache.
 	pub fee_history_cache: FeeHistoryCache,
 	/// Maximum fee history cache size.
@@ -82,34 +86,20 @@ pub struct FullDeps<C, P, A: ChainApi> {
 	pub block_data_cache: Arc<EthBlockDataCacheTask<Block>>,
 }
 
-pub fn overrides_handle<C, BE>(client: Arc<C>) -> Arc<OverrideHandle<Block>>
+pub fn overrides_handle<B, C, BE>(client: Arc<C>) -> Arc<OverrideHandle<B>>
 where
-	C: ProvideRuntimeApi<Block> + StorageProvider<Block, BE> + AuxStore,
-	C: HeaderBackend<Block> + HeaderMetadata<Block, Error = BlockChainError>,
-	C: Send + Sync + 'static,
-	C::Api: fp_rpc::EthereumRuntimeRPCApi<Block>,
-	BE: Backend<Block> + 'static,
-	BE::State: StateBackend<BlakeTwo256>,
+	B: BlockT,
+	C: ProvideRuntimeApi<B>,
+	C::Api: EthereumRuntimeRPCApi<B>,
+	C: HeaderBackend<B> + StorageProvider<B, BE> + 'static,
+	BE: Backend<B> + 'static,
 {
-	let mut overrides_map = BTreeMap::new();
-	overrides_map.insert(
-		EthereumStorageSchema::V1,
-		Box::new(SchemaV1Override::new(client.clone()))
-			as Box<dyn StorageOverride<_> + Send + Sync>,
-	);
-	overrides_map.insert(
-		EthereumStorageSchema::V2,
-		Box::new(SchemaV2Override::new(client.clone()))
-			as Box<dyn StorageOverride<_> + Send + Sync>,
-	);
-	overrides_map.insert(
-		EthereumStorageSchema::V3,
-		Box::new(SchemaV3Override::new(client.clone()))
-			as Box<dyn StorageOverride<_> + Send + Sync>,
-	);
-
 	Arc::new(OverrideHandle {
-		schemas: overrides_map,
+		schemas: BTreeMap::from([
+			(EthereumStorageSchema::V1, Box::new(SchemaV1Override::new(client.clone())) as Box<_>),
+			(EthereumStorageSchema::V2, Box::new(SchemaV2Override::new(client.clone())) as Box<_>),
+			(EthereumStorageSchema::V3, Box::new(SchemaV3Override::new(client.clone())) as Box<_>),
+		]),
 		fallback: Box::new(RuntimeApiStorageOverride::new(client)),
 	})
 }
@@ -120,22 +110,18 @@ where
 pub fn open_frontier_backend<C>(
 	client: Arc<C>,
 	config: &sc_service::Configuration,
-) -> Result<Arc<fc_db::Backend<Block>>, String>
+) -> Result<Arc<fc_db::kv::Backend<Block>>, String>
 where
 	C: sp_blockchain::HeaderBackend<Block>,
 {
-	let config_dir = config
-		.base_path
-		.as_ref()
-		.map(|base_path| base_path.config_dir(config.chain_spec.id()))
-		.unwrap_or_else(|| {
-			sc_service::BasePath::from_project("", "", "watr").config_dir(config.chain_spec.id())
-		});
+	let config_dir = config.base_path.config_dir(config.chain_spec.id());
 	let path = config_dir.join("frontier").join("db");
 
-	Ok(Arc::new(fc_db::Backend::<Block>::new(
+	Ok(Arc::new(fc_db::kv::Backend::<Block>::new(
 		client,
-		&fc_db::DatabaseSettings { source: fc_db::DatabaseSource::RocksDb { path, cache_size: 0 } },
+		&fc_db::kv::DatabaseSettings {
+			source: fc_db::DatabaseSource::RocksDb { path, cache_size: 0 },
+		},
 	)?))
 }
 
@@ -143,6 +129,11 @@ where
 pub fn create_full<C, P, BE, A>(
 	deps: FullDeps<C, P, A>,
 	subscription_task_executor: SubscriptionTaskExecutor,
+	pubsub_notification_sinks: Arc<
+		fc_mapping_sync::EthereumBlockNotificationSinks<
+			fc_mapping_sync::EthereumBlockNotification<Block>,
+		>,
+	>,
 ) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
 	C: ProvideRuntimeApi<Block>
@@ -155,6 +146,7 @@ where
 		+ Sync
 		+ 'static,
 	C: sc_client_api::BlockBackend<Block>,
+	C: CallApiAt<Block>,
 	C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>
 		+ pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>
 		+ fp_rpc::ConvertTransactionRuntimeApi<Block>
@@ -181,6 +173,7 @@ where
 		deny_unsafe,
 		is_authority,
 		network,
+		sync,
 		filter_pool,
 		backend,
 		fee_history_cache,
@@ -200,9 +193,9 @@ where
 		Eth::new(
 			client.clone(),
 			pool.clone(),
-			graph,
+			graph.clone(),
 			no_tx_converter,
-			network.clone(),
+			sync.clone(),
 			signers,
 			overrides.clone(),
 			backend.clone(),
@@ -212,17 +205,20 @@ where
 			fee_history_cache,
 			fee_history_cache_limit,
 			10,
+			None,
 		)
 		.into_rpc(),
 	)?;
 
 	let max_past_logs: u32 = 10_000;
 	let max_stored_filters: usize = 500;
+	let tx_pool = TxPool::new(client.clone(), graph.clone());
 	if let Some(filter_pool) = filter_pool {
 		io.merge(
 			EthFilter::new(
 				client.clone(),
 				backend,
+				graph.clone(),
 				filter_pool,
 				max_stored_filters, // max stored filters
 				max_past_logs,
@@ -236,9 +232,10 @@ where
 		EthPubSub::new(
 			pool,
 			client.clone(),
-			network.clone(),
+			sync,
 			subscription_task_executor,
 			overrides,
+			pubsub_notification_sinks,
 		)
 		.into_rpc(),
 	)?;
@@ -254,6 +251,7 @@ where
 	)?;
 
 	io.merge(Web3::new(client).into_rpc())?;
+	io.merge(tx_pool.into_rpc())?;
 
 	Ok(io)
 }

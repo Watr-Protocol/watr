@@ -6,47 +6,13 @@ runtimeName=$1
 benchmarkOutput=./runtime/$runtimeName/src/weights
 benchmarkRuntimeName="$runtimeName-dev"
 
-if [[ $runtimeName == "devnet" ]]; then
-    pallets=(
-        frame_system
-        pallet_assets
-        pallet_balances
-        pallet_multisig
-        pallet_preimage
-        pallet_session
-        pallet_utility
-        pallet_timestamp
-        pallet_collator_selection
-        cumulus_pallet_xcmp_queue
-        pallet_collective
-        pallet_identity
-        pallet_scheduler
-        pallet_treasury
-        pallet_membership
-        pallet_did
-    )
-elif [[ $runtimeName == "mainnet" ]]; then
-    pallets=(
-        frame_system
-        pallet_assets
-        pallet_balances
-        pallet_multisig
-        pallet_preimage
-        pallet_session
-        pallet_utility
-        pallet_timestamp
-        pallet_collator_selection
-        cumulus_pallet_xcmp_queue
-        pallet_collective
-        pallet_identity
-        pallet_scheduler
-        pallet_treasury
-        pallet_membership
-    )
-else
-	echo "'$runtimeName' pallet list not found in benchmarks-ci.sh"
-	exit 1
-fi
+pallets=($(
+  target/release/watr-node benchmark pallet --list --chain=$benchmarkRuntimeName |\
+    tail -n+2 |\
+    cut -d',' -f1 |\
+    sort |\
+    uniq
+))
 
 for pallet in ${pallets[@]}
 do
@@ -54,7 +20,6 @@ do
 
     target/release/watr-node benchmark pallet \
 		--chain=$benchmarkRuntimeName \
-		--execution=wasm \
 		--wasm-execution=compiled \
 		--pallet=$pallet  \
 		--extrinsic='*' \

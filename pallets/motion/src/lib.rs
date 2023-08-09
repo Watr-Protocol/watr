@@ -35,7 +35,6 @@ pub mod pallet {
 	use frame_support::{dispatch::GetDispatchInfo, traits::UnfilteredDispatchable};
 
 	#[pallet::pallet]
-	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
 	#[pallet::config]
@@ -80,6 +79,7 @@ pub mod pallet {
 			let dispatch_info = call.get_dispatch_info();
 			(dispatch_info.weight, dispatch_info.class)
 		})]
+		#[pallet::call_index(0)]
 		pub fn simple_majority(
 			origin: OriginFor<T>,
 			call: Box<<T as Config>::RuntimeCall>,
@@ -104,6 +104,7 @@ pub mod pallet {
 			let dispatch_info = call.get_dispatch_info();
 			(dispatch_info.weight, dispatch_info.class)
 		})]
+		#[pallet::call_index(1)]
 		pub fn super_majority(
 			origin: OriginFor<T>,
 			call: Box<<T as Config>::RuntimeCall>,
@@ -128,6 +129,7 @@ pub mod pallet {
 			let dispatch_info = call.get_dispatch_info();
 			(dispatch_info.weight, dispatch_info.class)
 		})]
+		#[pallet::call_index(2)]
 		pub fn unanimous(
 			origin: OriginFor<T>,
 			call: Box<<T as Config>::RuntimeCall>,
