@@ -93,7 +93,7 @@ cumulus-relay-chain-rpc-interface ={ workspace = true }
 parachains-common = { workspace = true, default-features = false }
 
 # Frontier
-fc-cli = { workspace = true, default-features = false }
+fc-cli = { workspace = true }
 fc-consensus = { workspace = true }
 fc-db = { workspace = true }
 fc-mapping-sync = { workspace = true }
