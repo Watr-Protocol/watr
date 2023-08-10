@@ -36,9 +36,10 @@ futures = { version = "0.3.1", features = ["compat"] }
 jsonrpsee = { version = "0.16.2", features = ["server"] }
 
 # Watr
-watr-runtime = { path = "runtime/mainnet" }
-watr-devnet-runtime = { path = "runtime/devnet" }
+pallet-did = { path = "pallets/did", default-features = false }
 watr-common = { path = "runtime/common", default-features = false }
+watr-devnet-runtime = { path = "runtime/devnet" }
+watr-runtime = { path = "runtime/mainnet" }
 
 # Substrate (Client)
 frame-benchmarking-cli = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
@@ -63,6 +64,7 @@ sc-transaction-pool-api = { git = "https://github.com/paritytech/substrate", bra
 substrate-build-script-utils = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
 substrate-frame-rpc-system = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
 substrate-prometheus-endpoint = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
+substrate-wasm-builder = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
 try-runtime-cli = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
 
 # Substrate (Wasm)
@@ -73,7 +75,7 @@ pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "p
 pallet-collective = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
 pallet-membership = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
 pallet-transaction-payment = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
+scale-info = { version = "2.1.1", features = ["derive"], default-features = false }
 sp-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false  }
 sp-block-builder = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false  }
 sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
@@ -98,7 +100,10 @@ polkadot-primitives = { git = "https://github.com/paritytech/polkadot", branch =
 polkadot-service = { git = "https://github.com/paritytech/polkadot", branch = "release-v1.0.0" }
 
 # Polkadot (Wasm)
-xcm = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v1.0.0" }
+pallet-xcm = { git = "https://github.com/paritytech/polkadot", branch = "release-v1.0.0", default-features = false }
+xcm = { git = "https://github.com/paritytech/polkadot", branch = "release-v1.0.0", default-features = false }
+xcm-builder = { git = "https://github.com/paritytech/polkadot", branch = "release-v1.0.0", default-features = false }
+xcm-executor = { git = "https://github.com/paritytech/polkadot", branch = "release-v1.0.0", default-features = false }
 
 # Cumulus (Client)
 cumulus-client-cli = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v1.0.0" }
@@ -131,5 +136,5 @@ fp-evm = { git = 'https://github.com/paritytech/frontier.git', branch = "polkado
 fp-rpc = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v1.0.0", default-features = false }
 fp-storage = { git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v1.0.0", default-features = false }
 
-# Astar
+# Astar (Wasm)
 pallet-block-reward = { git = "https://github.com/Watr-Protocol/astar-frame", branch = "polkadot-v1.0.0", default-features = false}
