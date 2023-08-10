@@ -15,8 +15,8 @@
 // along with Watr.  If not, see <http://www.gnu.org/licenses/>.
 
 use super::*;
-use parity_scale_codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::pallet_prelude::{CloneNoBound, PartialEqNoBound, RuntimeDebugNoBound};
+use parity_scale_codec::{Decode, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
 use sp_runtime::{ArithmeticError, RuntimeDebug};
 

@@ -34,7 +34,9 @@ pallet-aura = { workspace = true }
 pallet-authorship = { workspace = true }
 pallet-balances = { workspace = true }
 pallet-collective = { workspace = true }
+pallet-identity = { workspace = true }
 pallet-membership = { workspace = true }
+pallet-multisig = { workspace = true }
 pallet-preimage = { workspace = true }
 pallet-session = { workspace = true }
 pallet-scheduler = { workspace = true }
@@ -77,9 +79,9 @@ cumulus-primitives-core = { workspace = true }
 cumulus-primitives-timestamp = { workspace = true }
 cumulus-primitives-utility = { workspace = true }
 pallet-collator-selection = { workspace = true }
-
 parachains-common = { workspace = true }
 parachain-info = { workspace = true }
+
 
 # Frontier
 fp-rpc = { workspace = true }
@@ -102,9 +104,6 @@ pallet-evm-precompile-assets-erc20 = { workspace = true }
 pallet-xc-asset-config = { workspace = true }
 precompile-utils = { workspace = true }
 pallet-block-reward = { workspace = true, features = ["serde"] }
-
-pallet-multisig = { workspace = true }
-pallet-identity = { workspace = true }
 
 # Local
 watr-common = { workspace = true }

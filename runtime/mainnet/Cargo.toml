@@ -15,11 +15,11 @@ targets = ["x86_64-unknown-linux-gnu"]
 substrate-wasm-builder = { workspace = true }
 
 [dependencies]
-hex-literal = { version = "0.3.4", optional = true }
-codec = { package = "parity-scale-codec", version = "3.4.0", default-features = false, features = ["derive"] }
-log = { version = "0.4.17", default-features = false }
-scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
-smallvec = "1.9.0"
+hex-literal = { workspace = true, optional = true }
+parity-scale-codec = { workspace = true, features = ["derive"] }
+log = { workspace = true }
+scale-info = { workspace = true, features = ["derive"] }
+smallvec = { workspace = true }
 
 # Substrate
 frame-benchmarking = { workspace = true, optional = true }
@@ -34,7 +34,9 @@ pallet-aura = { workspace = true }
 pallet-authorship = { workspace = true }
 pallet-balances = { workspace = true }
 pallet-collective = { workspace = true }
+pallet-identity = { workspace = true }
 pallet-membership = { workspace = true }
+pallet-multisig = { workspace = true }
 pallet-preimage = { workspace = true }
 pallet-session = { workspace = true }
 pallet-scheduler = { workspace = true }
@@ -99,8 +101,6 @@ pallet-evm-precompile-bn128 = { workspace = true }
 # Astar Pallets
 pallet-evm-precompile-assets-erc20 = { workspace = true }
 
-pallet-multisig = { workspace = true }
-pallet-identity = { workspace = true }
 
 # Local
 watr-common = { workspace = true }
@@ -111,7 +111,6 @@ default = [
     "std",
 ]
 std = [
-    "codec/std",
     "log/std",
     "scale-info/std",
     "cumulus-pallet-aura-ext/std",
@@ -144,6 +143,7 @@ std = [
     "pallet-utility/std",
     "pallet-xcm/std",
     "parachain-info/std",
+    "parity-scale-codec/std",
     "polkadot-parachain/std",
     "polkadot-primitives/std",
     "polkadot-runtime-common/std",

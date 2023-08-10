@@ -36,8 +36,8 @@ pub use watr_common::{
 	NORMAL_DISPATCH_RATIO, SLOT_DURATION, WEIGHT_REF_TIME_PER_GAS,
 };
 
-use parity_scale_codec::{Decode, Encode, MaxEncodedLen};
 use cumulus_pallet_parachain_system::RelayNumberStrictlyIncreases;
+use parity_scale_codec::{Decode, Encode, MaxEncodedLen};
 use smallvec::smallvec;
 use sp_api::impl_runtime_apis;
 use sp_core::{
@@ -751,7 +751,9 @@ parameter_types! {
 #[cfg(feature = "runtime-benchmarks")]
 pub struct AssetsBenchmarkHelper;
 #[cfg(feature = "runtime-benchmarks")]
-impl pallet_assets::BenchmarkHelper<codec::Compact<AssetId>> for AssetsBenchmarkHelper {
+impl pallet_assets::BenchmarkHelper<parity_scale_codec::Compact<AssetId>>
+	for AssetsBenchmarkHelper
+{
 	fn create_asset_id_parameter(id: u32) -> parity_scale_codec::Compact<AssetId> {
 		AssetId::from(id).into()
 	}
