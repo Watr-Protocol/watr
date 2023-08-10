@@ -74,7 +74,7 @@ where
 			return Some(Err(PrecompileFailure::Revert {
 				exit_status: ExitRevert::Reverted,
 				output: b"cannot be called with DELEGATECALL or CALLCODE".to_vec(),
-			}))
+			}));
 		}
 		match address {
 			// Ethereum precompiles :
@@ -91,8 +91,9 @@ where
 			// nor Ethereum precompiles :
 			a if a == hash(1024) => Some(Sha3FIPS256::execute(handle)),
 			// If the address matches asset prefix, the we route through the asset precompile set
-			a if &a.to_fixed_bytes()[0..4] == ASSET_PRECOMPILE_ADDRESS_PREFIX =>
-				Erc20AssetsPrecompileSet::<R>::new().execute(handle),
+			a if &a.to_fixed_bytes()[0..4] == ASSET_PRECOMPILE_ADDRESS_PREFIX => {
+				Erc20AssetsPrecompileSet::<R>::new().execute(handle)
+			},
 			// Default
 			_ => None,
 		}
@@ -100,11 +101,12 @@ where
 
 	fn is_precompile(&self, address: H160, gas: u64) -> IsPrecompileResult {
 		match Erc20AssetsPrecompileSet::<R>::new().is_precompile(address, gas) {
-			IsPrecompileResult::Answer { is_precompile, extra_cost } =>
+			IsPrecompileResult::Answer { is_precompile, extra_cost } => {
 				IsPrecompileResult::Answer {
 					is_precompile: Self::used_addresses().any(|x| x == address) || is_precompile,
 					extra_cost,
-				},
+				}
+			},
 			_ => IsPrecompileResult::Answer { is_precompile: false, extra_cost: 0 },
 		}
 	}

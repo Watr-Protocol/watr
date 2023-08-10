@@ -100,8 +100,9 @@ fn load_spec(id: &str) -> std::result::Result<Box<dyn ChainSpec>, String> {
 		path => {
 			let path: PathBuf = path.into();
 			match path.runtime() {
-				Runtime::Devnet | Runtime::Default =>
-					Box::new(chain_spec::DevnetChainSpec::from_json_file(path)?),
+				Runtime::Devnet | Runtime::Default => {
+					Box::new(chain_spec::DevnetChainSpec::from_json_file(path)?)
+				},
 				Runtime::Mainnet => Box::new(chain_spec::MainnetChainSpec::from_json_file(path)?),
 			}
 		},
@@ -312,7 +313,7 @@ pub fn run() -> Result<()> {
 			let runner = cli.create_runner(cmd)?;
 			// Switch on the concrete benchmark sub-command-
 			match cmd {
-				BenchmarkCmd::Pallet(cmd) =>
+				BenchmarkCmd::Pallet(cmd) => {
 					if cfg!(feature = "runtime-benchmarks") {
 						runner.sync_run(|config| match config.chain_spec.runtime() {
 							Runtime::Devnet | Runtime::Default => cmd.run::<Block, ()>(config),
@@ -322,18 +323,20 @@ pub fn run() -> Result<()> {
 						Err("Benchmarking wasn't enabled when building the node. \
 					You can enable it with `--features runtime-benchmarks`."
 							.into())
-					},
+					}
+				},
 				BenchmarkCmd::Block(cmd) => runner.sync_run(|config| {
 					construct_benchmark_partials!(config, |partials| cmd.run(partials.client))
 				}),
 				#[cfg(not(feature = "runtime-benchmarks"))]
-				BenchmarkCmd::Storage(_) =>
+				BenchmarkCmd::Storage(_) => {
 					return Err(sc_cli::Error::Input(
 						"Compile with --features=runtime-benchmarks \
 						to enable storage benchmarks."
 							.to_string(),
 					)
-					.into()),
+					.into())
+				},
 				#[cfg(feature = "runtime-benchmarks")]
 				BenchmarkCmd::Storage(cmd) => runner.sync_run(|config| {
 					construct_benchmark_partials!(config, |partials| {
@@ -343,8 +346,9 @@ pub fn run() -> Result<()> {
 						cmd.run(config, partials.client.clone(), db, storage)
 					})
 				}),
-				BenchmarkCmd::Machine(cmd) =>
-					runner.sync_run(|config| cmd.run(&config, SUBSTRATE_REFERENCE_HARDWARE.clone())),
+				BenchmarkCmd::Machine(cmd) => {
+					runner.sync_run(|config| cmd.run(&config, SUBSTRATE_REFERENCE_HARDWARE.clone()))
+				},
 				BenchmarkCmd::Overhead(cmd) => runner.sync_run(|config| {
 					construct_benchmark_partials!(config, |partial| {
 						let ext_builder = RemarkBuilder::new(partial.client.clone());
