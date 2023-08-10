@@ -88,7 +88,7 @@ where
 			return Some(Err(PrecompileFailure::Revert {
 				exit_status: ExitRevert::Reverted,
 				output: b"cannot be called with DELEGATECALL or CALLCODE".to_vec(),
-			}))
+			}));
 		}
 		match address {
 			// Ethereum precompiles :
@@ -116,7 +116,7 @@ where
 					let origin = R::AddressMapping::into_account_id(handle.context().caller);
 
 					if Some(origin.clone()) != owner.clone() {
-						return Some(Err(error("bad origin for asset precompile")))
+						return Some(Err(error("bad origin for asset precompile")));
 					}
 				}
 
@@ -130,11 +130,12 @@ where
 
 	fn is_precompile(&self, address: H160, gas: u64) -> IsPrecompileResult {
 		match Erc20AssetsPrecompileSet::<R>::new().is_precompile(address, gas) {
-			IsPrecompileResult::Answer { is_precompile, extra_cost } =>
+			IsPrecompileResult::Answer { is_precompile, extra_cost } => {
 				IsPrecompileResult::Answer {
 					is_precompile: is_precompile || Self::used_addresses().any(|x| x == address),
 					extra_cost,
-				},
+				}
+			},
 			_ => IsPrecompileResult::Answer { is_precompile: false, extra_cost: 0 },
 		}
 	}

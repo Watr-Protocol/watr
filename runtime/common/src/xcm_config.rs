@@ -40,12 +40,13 @@ impl<
 		let asset = Asset::get();
 
 		match id.match_and_split(&prefix) {
-			Some(&GeneralIndex(asset_id)) =>
+			Some(&GeneralIndex(asset_id)) => {
 				if asset_id == asset.0 {
 					ConvertAssetId::convert(&asset.1)
 				} else {
-					return None
-				},
+					return None;
+				}
+			},
 			_ => None,
 		}
 	}
@@ -63,7 +64,7 @@ impl<
 			);
 			location.push_interior(Junction::GeneralIndex(asset.0)).ok()?;
 		} else {
-			return None
+			return None;
 		}
 
 		Some(location)
@@ -78,10 +79,11 @@ impl<Location: Get<MultiLocation>> ContainsPair<MultiAsset, MultiLocation>
 	fn contains(asset: &MultiAsset, origin: &MultiLocation) -> bool {
 		let prefix = Location::get();
 		log::trace!(target: "xcm::filter_asset_location", "prefix: {:?}, origin: {:?}", prefix, origin);
-		&prefix == origin &&
-			match asset {
-				MultiAsset { id: xcm::latest::AssetId::Concrete(asset_loc), fun: Fungible(_a) } =>
-					asset_loc.starts_with(&prefix),
+		&prefix == origin
+			&& match asset {
+				MultiAsset { id: xcm::latest::AssetId::Concrete(asset_loc), fun: Fungible(_a) } => {
+					asset_loc.starts_with(&prefix)
+				},
 				_ => false,
 			}
 	}
@@ -108,12 +110,12 @@ impl<
 		reserve_location.take_last();
 
 		if reserve_pallet_location.append_with(X1(GeneralIndex(reserve_asset_id))).is_err() {
-			return false
+			return false;
 		};
 		let reserve_asset_location = reserve_pallet_location.clone();
 		let self_location = SelfLocation::get();
 		if reserve_pallet_location.reanchor(&reserve_location, self_location).is_err() {
-			return false
+			return false;
 		};
 		let reserve_asset_location_as_local = reserve_pallet_location.clone();
 		let mut withdraw_amount = 0;
@@ -141,7 +143,7 @@ impl<
 			};
 
 			let initiate_reserve_withdraw_is_correct = match &inner_message[1] {
-				InitiateReserveWithdraw { assets: Wild(all), reserve, xcm: Xcm(inner_xcm) } =>
+				InitiateReserveWithdraw { assets: Wild(all), reserve, xcm: Xcm(inner_xcm) } => {
 					if inner_xcm.len() == 2 && all == &All && reserve == &reserve_location {
 						let buy_execution_is_correct = match &inner_xcm[0] {
 							BuyExecution {
@@ -167,13 +169,14 @@ impl<
 						buy_execution_is_correct && deposit_asset_is_correct
 					} else {
 						false
-					},
+					}
+				},
 				_ => false,
 			};
 
-			return withdraw_is_correct &&
-				initiate_reserve_withdraw_is_correct &&
-				(withdraw_amount >= buy_amount)
+			return withdraw_is_correct
+				&& initiate_reserve_withdraw_is_correct
+				&& (withdraw_amount >= buy_amount);
 		}
 		false
 	}
