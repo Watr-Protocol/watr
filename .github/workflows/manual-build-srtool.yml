@@ -2,7 +2,6 @@ name: Deterministic Build
 
 env:
   SUBWASM_VERSION: 0.18.0
-  RUSTC_VERSION: nightly-2023-07-13
 
 on:
   workflow_dispatch:
@@ -41,6 +40,8 @@ jobs:
       - name: Srtool build
         id: srtool_build
         uses: chevdor/srtool-actions@v0.6.0
+        env:
+          RUSTC_VERSION: "nightly-2023-07-13"
         with:
           package: ${{ github.event.inputs.package }}
           image: ${{ github.event.inputs.srtool_image }}
