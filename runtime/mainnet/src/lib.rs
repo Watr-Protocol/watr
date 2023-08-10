@@ -582,7 +582,7 @@ parameter_types! {
 pub struct AssetsBenchmarkHelper;
 #[cfg(feature = "runtime-benchmarks")]
 impl pallet_assets::BenchmarkHelper<codec::Compact<AssetId>> for AssetsBenchmarkHelper {
-	fn create_asset_id_parameter(id: u32) -> codec::Compact<AssetId> {
+	fn create_asset_id_parameter(id: u32) -> parity_scale_codec::Compact<AssetId> {
 		AssetId::from(id).into()
 	}
 }

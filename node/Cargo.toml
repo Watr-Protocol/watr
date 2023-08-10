@@ -14,7 +14,7 @@ async-trait = { workspace = true }
 clap = { workspace = true }
 derive_more = { workspace = true }
 log = { workspace = true }
-codec = { workspace = true }
+parity-scale-codec = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 hex-literal = { workspace = true }

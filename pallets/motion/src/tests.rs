@@ -17,7 +17,7 @@
 use super::*;
 use crate as pallet_motion;
 use crate::{mock::*, Event as MotionEvent};
-use codec::Encode;
+use parity_scale_codec::Encode;
 use frame_support::{assert_ok, dispatch::GetDispatchInfo, weights::Weight};
 use frame_system::{EventRecord, Phase};
 use mock::{RuntimeCall, RuntimeEvent};
