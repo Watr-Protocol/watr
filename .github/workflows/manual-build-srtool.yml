@@ -39,9 +39,7 @@ jobs:
 
       - name: Srtool build
         id: srtool_build
-        uses: chevdor/srtool-actions@v0.6.0
-        env:
-          RUSTC_VERSION: "nightly-2023-07-13"
+        uses: chevdor/srtool-actions@v0.7.0
         with:
           package: ${{ github.event.inputs.package }}
           image: ${{ github.event.inputs.srtool_image }}
