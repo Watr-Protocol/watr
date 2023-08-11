@@ -20,19 +20,32 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly
+          toolchain: stable
           target: wasm32-unknown-unknown
           override: true
           components: rustfmt, clippy
 
       - uses: actions/checkout@v3
 
+      - name: Set up cargo cache
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
       - name: Rustfmt
         run: cargo fmt --all -- --check
       - name: Clippy
-        run: cargo clippy --all --features runtime-benchmarks
+        run: cargo clippy --release --workspace --no-deps --features runtime-benchmarks
 
       - name: Run tests
-        run: cargo test --locked --verbose --all
+        run: cargo test --release --workspace --locked --verbose
       - name: Ensure benchmarking compiles
-        run: cargo check --release --features=runtime-benchmarks
+        run: cargo check --workspace --release --features=runtime-benchmarks

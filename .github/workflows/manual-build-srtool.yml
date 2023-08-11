@@ -6,10 +6,6 @@ env:
 on:
   workflow_dispatch:
     inputs:
-      srtool_tag:
-        description: The SRTOOL tag to use
-        default: 1.66.1
-        required: false
       srtool_image:
         description: The SRTOOL image to use
         default: paritytech/srtool
@@ -39,11 +35,10 @@ jobs:
 
       - name: Srtool build
         id: srtool_build
-        uses: chevdor/srtool-actions@v0.6.0
+        uses: chevdor/srtool-actions@v0.7.0
         with:
           package: ${{ github.event.inputs.package }}
           image: ${{ github.event.inputs.srtool_image }}
-          tag: ${{ github.event.inputs.srtool_tag }}
           runtime_dir: ${{ github.event.inputs.runtime_dir }}
 
       - name: Summary

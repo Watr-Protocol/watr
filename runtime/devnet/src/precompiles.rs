@@ -19,8 +19,8 @@
 // https://github.com/AstarNetwork/Astar/blob/master/runtime/astar/src/precompiles.rs
 
 use pallet_evm::{
-	AddressMapping, ExitRevert, Precompile, PrecompileFailure, PrecompileHandle, PrecompileResult,
-	PrecompileSet,
+	AddressMapping, ExitRevert, IsPrecompileResult, Precompile, PrecompileFailure,
+	PrecompileHandle, PrecompileResult, PrecompileSet,
 };
 use pallet_evm_precompile_assets_erc20::{AddressToAssetId, Erc20AssetsPrecompileSet};
 use pallet_evm_precompile_blake2::Blake2F;
@@ -41,7 +41,10 @@ use crate::AssetId;
 /// to Erc20AssetsPrecompileSet
 pub const ASSET_PRECOMPILE_ADDRESS_PREFIX: &[u8] = &[255u8; 4];
 
-pub const TUSD_PRECOMPILE_ADDRESS: AssetId = 2018;
+/// NUSD -> Native USD
+pub const NUSD_PRECOMPILE_ID: AssetId = 2018;
+/// XC-20 assets to perform an origin check on.
+pub const ASSET_PRECOMPILE_IDS: &[AssetId] = &[NUSD_PRECOMPILE_ID; 1];
 
 /// The PrecompileSet installed in the Astar runtime.
 #[derive(Debug, Default, Clone, Copy)]
@@ -76,11 +79,16 @@ where
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<PrecompileResult> {
 		let address = handle.code_address();
-		if self.is_precompile(address) && address > hash(9) && handle.context().address != address {
+
+		let is_precompile = match self.is_precompile(address, 0) {
+			IsPrecompileResult::Answer { is_precompile, .. } => is_precompile,
+			_ => false,
+		};
+		if is_precompile && address > hash(9) && handle.context().address != address {
 			return Some(Err(PrecompileFailure::Revert {
 				exit_status: ExitRevert::Reverted,
 				output: b"cannot be called with DELEGATECALL or CALLCODE".to_vec(),
-			}))
+			}));
 		}
 		match address {
 			// Ethereum precompiles :
@@ -99,15 +107,16 @@ where
 			a if a == hash(1025) => Some(Dispatch::<R>::execute(handle)),
 			// If the address matches asset prefix, the we route through the asset precompile set
 			a if &a.to_fixed_bytes()[0..4] == ASSET_PRECOMPILE_ADDRESS_PREFIX => {
-				// Get asset id to check if it is TUSD
+				// Get asset id to check if it is NUSD
 				let asset_id = R::address_to_asset_id(a).unwrap_or(0.into());
-				// If asset is TUSD, ensure origin is TUSD contract. May return error
-				if asset_id == TUSD_PRECOMPILE_ADDRESS.into() {
+				// If asset needs an origin check, ensure origin is the issuer of the asset. May return error.
+				// This is useful for limiting precompile use to a smart contract.
+				if ASSET_PRECOMPILE_IDS.iter().find(|&&a| asset_id == a.into()).is_some() {
 					let owner = pallet_assets::Pallet::<R>::issuer(asset_id);
 					let origin = R::AddressMapping::into_account_id(handle.context().caller);
 
 					if Some(origin.clone()) != owner.clone() {
-						return Some(Err(error("bad origin for tusd precompile")))
+						return Some(Err(error("bad origin for asset precompile")));
 					}
 				}
 
@@ -119,9 +128,16 @@ where
 		}
 	}
 
-	fn is_precompile(&self, address: H160) -> bool {
-		Self::used_addresses().any(|x| x == address) ||
-			Erc20AssetsPrecompileSet::<R>::new().is_precompile(address)
+	fn is_precompile(&self, address: H160, gas: u64) -> IsPrecompileResult {
+		match Erc20AssetsPrecompileSet::<R>::new().is_precompile(address, gas) {
+			IsPrecompileResult::Answer { is_precompile, extra_cost } => {
+				IsPrecompileResult::Answer {
+					is_precompile: is_precompile || Self::used_addresses().any(|x| x == address),
+					extra_cost,
+				}
+			},
+			_ => IsPrecompileResult::Answer { is_precompile: false, extra_cost: 0 },
+		}
 	}
 }
 

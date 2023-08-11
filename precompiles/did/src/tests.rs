@@ -280,8 +280,9 @@ fn can_add_did_services() {
 
 		for service in services.iter() {
 			match service.type_id {
-				ServiceType::VerifiableCredentialFileStorage =>
-					raw_services.push((0u8, Bytes(service.service_endpoint.to_vec()))),
+				ServiceType::VerifiableCredentialFileStorage => {
+					raw_services.push((0u8, Bytes(service.service_endpoint.to_vec())))
+				},
 			}
 		}
 

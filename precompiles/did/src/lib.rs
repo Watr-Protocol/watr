@@ -184,7 +184,7 @@ where
 			BoundedVec::with_bounded_capacity(service_details.len());
 		for service in service_details.into_iter() {
 			if service.0.len() != H256::len_bytes() {
-				return Err(revert("Service length different than 32 bytes"))
+				return Err(revert("Service length different than 32 bytes"));
 			}
 			let hash = H256::from_slice(service.0.as_slice());
 			let endpoint = <R as frame_system::Config>::Hash::from(hash);

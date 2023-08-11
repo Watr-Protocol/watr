@@ -52,6 +52,7 @@ pub mod pallet {
 	use frame_support::{
 		dispatch::GetDispatchInfo, pallet_prelude::*, traits::UnfilteredDispatchable,
 	};
+	use frame_system::pallet_prelude::*;
 
 	/// The current storage version.
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(0);
@@ -72,7 +73,7 @@ pub mod pallet {
 	pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 
 	/// Type for a block number.
-	pub type BlockNumberOf<T> = <T as frame_system::Config>::BlockNumber;
+	pub type BlockNumberOf<T> = <HeaderFor<T> as sp_runtime::traits::Header>::Number;
 
 	pub type BalanceOf<T> = <CurrencyOf<T> as Currency<AccountIdOf<T>>>::Balance;
 
@@ -82,7 +83,6 @@ pub mod pallet {
 	pub type ServiceKeysOf<T> = BoundedVec<KeyIdOf<T>, <T as Config>::MaxServices>;
 
 	#[pallet::pallet]
-	#[pallet::generate_store(pub(super) trait Store)]
 	#[pallet::storage_version(STORAGE_VERSION)]
 	pub struct Pallet<T>(_);
 

@@ -13,405 +13,122 @@ settings:
   variables:
     common:
       amount: &amount 2000000000000
-      require_weight_at_most: &weight_at_most 1000000000
+      require_weight_at_most:
+        &weight_at_most { refTime: 1000000000, proofSize: 200000 }
+      weight_threshold:
+        &weight_threshold { refTime: [10, 10], proofSize: [10, 10] }
       hrmp_channels:
         proposed_max_capacity: &max_capacity 8
         proposed_max_message_size: &max_message_size 8192
-        channel: &channel {
-          maxCapacity: 8,
-          maxTotalSize: 8192,
-          maxMessageSize: 8192,
-          msgCount: 0,
-          totalSize: 0,
-          mqcHead: null,
-          senderDeposit: 0,
-          recipientDeposit: 0
-        }
+        channel:
+          &channel {
+            maxCapacity: 8,
+            maxTotalSize: 8192,
+            maxMessageSize: 8192,
+            msgCount: 0,
+            totalSize: 0,
+            mqcHead: null,
+            senderDeposit: 0,
+            recipientDeposit: 0,
+          }
     chains:
       relay_chain:
         sudo:
           signer: &rc_sudo_signer //Alice
         destinations:
-          statemint: &rc->stmt_dest { v1: { 0, interior: { x1: { parachain: *stmt_id }}}}
-        dot: &rc_dot { concrete: { 0, interior: { here: true }}}
-        dot_fungible: &rc_dot_fungible { id: *rc_dot, fun: { fungible: *amount }}
+          statemint:
+            &rc->stmt_dest {
+              v3: { 0, interior: { x1: { parachain: *stmt_id } } },
+            }
+        dot: &rc_dot { concrete: { 0, interior: { here: true } } }
+        dot_fungible:
+          &rc_dot_fungible { id: *rc_dot, fun: { fungible: *amount } }
       statemint_parachain:
         sovereign_account: &stmt_sovereign 5Ec4AhPZk8STuex8Wsi9TwDtJQxKqzPJRCH7348Xtcs9vZLJ
         destinations:
-          relay_chain: &stmt->rc_dest { v1: { parents: 1, interior: { here: true }}}
+          relay_chain:
+            &stmt->rc_dest { v3: { parents: 1, interior: { here: true } } }
       watr_parachain:
         sudo:
           signer: &watr_sudo_signer //Alice
         sovereign_account: &watr_sovereign 5Ec4AhNoGMRn8j7rpcumbokVMzWeTNdqw42r7pcH8dtqH29G
         destinations:
-          relay_chain: &watr->rc_dest { v1: { parents: 1, interior: { here: true }}}
-  decodedCalls:
-    init_open_channel_with_stmt:
-      chain: *relay_chain
-      pallet: hrmp
-      call: hrmpInitOpenChannel
-      args: [
-        *stmt_id, # recipient
-        *max_capacity, # proposedMaxCapacity
-        *max_message_size # proposedMaxMessageSize
-      ]
-    init_open_channel_with_watr:
-      chain: *relay_chain
-      pallet: hrmp
-      call: hrmpInitOpenChannel
-      args: [
-        *watr_id, # recipient
-        *max_capacity, # proposedMaxCapacity
-        *max_message_size # proposedMaxMessageSize
-      ]
-    accept_open_channel_with_stmt:
-      chain: *relay_chain
-      pallet: hrmp
-      call: hrmpAcceptOpenChannel
-      args: [
-        *stmt_id, # recipient
-      ]
-    accept_init_open_request_from_watr:
-      chain: *relay_chain
-      pallet: hrmp
-      call: hrmpAcceptOpenChannel
-      args: [
-        *watr_id, # sender
-      ]
-    xcm_accept_init_open_request_from_watr:
-      chain: *stmt_parachain
-      pallet: polkadotXcm
-      call: send
-      args: [
-        *stmt->rc_dest, # destination
-        {
-          v2: [ #message
-            {
-              WithdrawAsset: [*rc_dot_fungible]
-            },
-            {
-              BuyExecution: {
-                  fees: *rc_dot_fungible,
-                  weightLimit: Unlimited
-              }
-            },
-            {
-              Transact: {
-                originType: Native,
-                requireWeightAtMost: *weight_at_most,
-                call: $accept_init_open_request_from_watr
-              }
-            }
-          ]
-        }
-      ]
-    xcm_init_open_channel_with_watr:
-      chain: *stmt_parachain
-      pallet: polkadotXcm
-      call: send
-      args: [
-        *stmt->rc_dest, # destination
-        {
-          v2: [ #message
-            {
-              WithdrawAsset: [*rc_dot_fungible]
-            },
-            {
-              BuyExecution: {
-                  fees: *rc_dot_fungible,
-                  weightLimit: Unlimited
-              }
-            },
-            {
-              Transact: {
-                originType: Native,
-                requireWeightAtMost: *weight_at_most,
-                call: $init_open_channel_with_watr
-              }
-            }
-          ]
-        }
-      ]
-
+          relay_chain:
+            &watr->rc_dest { v3: { parents: 1, interior: { here: true } } }
 tests:
-  - name: HRMP channel (Watr Parachain → Statemine Parachain)
+  - name: HRMP
     beforeEach:
-      - name: DEPENDANCY | Watr Parachain Sovereign account in the Relay Chain needs to be funded
+      - name: DEPENDENCY | Watr Parachain Sovereign account in the Relay Chain needs to be funded
         actions:
           - extrinsics:
-            - chain: *relay_chain
-              signer: *rc_sudo_signer
-              pallet: balances
-              call: transfer
-              args: [
-                *watr_sovereign, # destination
-                *amount, # value
-              ]
-              events:
-                - name: balances.Transfer
+              - chain: *relay_chain
+                signer: *rc_sudo_signer
+                pallet: balances
+                call: transfer
+                args: [
+                    *watr_sovereign, # destination
+                    *amount, # value
+                  ]
+                events:
+                  - name: balances.Transfer
 
-      - name: DEPENDANCY | Statemine Parachain Sovereign account in the Relay Chain needs to be funded
+      - name: DEPENDENCY | Statemint Parachain Sovereign account in the Relay Chain needs to be funded
         actions:
           - extrinsics:
-            - chain: *relay_chain
-              signer: *rc_sudo_signer
-              pallet: balances
-              call: transfer
-              args: [
-                *stmt_sovereign, # destination
-                *amount, # value
-              ]
-              events:
-                - name: balances.Transfer
+              - chain: *relay_chain
+                signer: *rc_sudo_signer
+                pallet: balances
+                call: transfer
+                args: [
+                    *stmt_sovereign, # destination
+                    *amount, # value
+                  ]
+                events:
+                  - name: balances.Transfer
     describes:
-      - name: hrmp.hrmpInitOpenChannel (Watr Parachain → Statemine Parachain)
+      - name: hrmp.forceOpenHrmpChannel (Watr Parachain → Statemint Parachain)
         its:
-          - name: Watr Parachain sends a request to the Relay Chain to open a channel with Statemine Parchain
+          - name: Open Watr Parachain to Statemint Parachain
             actions:
               - extrinsics:
-                - chain: *watr_parachain
-                  signer: *watr_sudo_signer
-                  sudo: true
-                  pallet: polkadotXcm
-                  call: send
-                  args: [
-                    *watr->rc_dest, # destination
-                    {
-                      v2: [ #message
-                        {
-                          WithdrawAsset: [*rc_dot_fungible]
-                        },
-                        {
-                          BuyExecution: {
-                              fees: *rc_dot_fungible,
-                              weightLimit: Unlimited
-                          }
-                        },
-                        {
-                          Transact: {
-                            originType: Native,
-                            requireWeightAtMost: *weight_at_most,
-                            call: $init_open_channel_with_stmt
-                          }
-                        }
-                      ]
-                    }
-                  ]
-                  events:
-                    - name: sudo.Sudid
-                      attributes:
-                        - type: Result<Null, SpRuntimeDispatchError>
-                          value: Ok
-                    - name: polkadotXcm.Sent
-                    - name: ump.ExecutedUpward
-                      chain: *relay_chain
-                      attributes:
-                        - type: XcmV2TraitsOutcome
-                          xcmOutcome: Complete
-                          # value: 4,000,000,000
-                          threshold: [10, 10]
-                          value: 1,160,892,000
-                    - name: hrmp.OpenChannelRequested
-                      chain: *relay_chain
-              - queries:
-                  requested_channels:
-                    chain: *relay_chain
+                  - chain: *relay_chain
+                    signer: *rc_sudo_signer
+                    sudo: true
                     pallet: hrmp
-                    call: hrmpOpenChannelRequestsList
-                    args: []
-              - asserts:
-                  equal:
-                    args: [
-                      $requested_channels,
-                      [
-                        {
-                          sender: *watr_id,
-                          recipient: *stmt_id
-                        }
-                      ]
-                    ]
+                    call: forceOpenHrmpChannel
+                    args: [*watr_id, *stmt_id, *max_capacity, *max_message_size]
+                    events:
+                      - name: sudo.Sudid
+                        result: { sudoResult: Ok }
+                      - name: hrmp.HrmpChannelForceOpened
 
-      - name: hrmp.hrmpAcceptOpenChannel (Statemine Parachain → Watr Parachain)
+      - name: hrmp.forceOpenHrmpChannel (Statemint Parachain → Watr Parachain)
         its:
-          - name: Statemine Parachain sends a response to the Relay Chain accepting the Watr Parachain's request for openning a HRMP channel
+          - name: Open Statemint Parachain to Watr Parachain
             actions:
               - extrinsics:
-                - chain: *relay_chain
-                  signer: *rc_sudo_signer
-                  sudo: true
-                  pallet: xcmPallet
-                  call: send
-                  args: [
-                    *rc->stmt_dest, # destination
-                    {
-                      v2: [ #message
-                        {
-                          Transact: {
-                            originType: Superuser,
-                            requireWeightAtMost: *weight_at_most,
-                            call: $xcm_accept_init_open_request_from_watr
-                          }
-                        }
-                      ]
-                    }
-                  ]
-                  events:
-                    - name: sudo.Sudid
-                      attributes:
-                        - type: Result<Null, SpRuntimeDispatchError>
-                          value: Ok
-                    - name: xcmPallet.Sent
-                    - name: dmpQueue.ExecutedDownward
-                      chain: *stmt_parachain
-                      attributes:
-                        - type: XcmV2TraitsOutcome
-                          xcmOutcome: Complete
-                          threshold: [10, 10]
-                          value: 1,020,807,000
-                    - name: polkadotXcm.Sent
-                      chain: *stmt_parachain
-                    - name: ump.ExecutedUpward
-                      timeout: 40000
-                      attributes:
-                        - type: XcmV2TraitsOutcome
-                          xcmOutcome: Complete
-                          # value: 4,000,000,000
-                          threshold: [10, 10]
-                          value: 1,160,892,000
-                    - name: hrmp.OpenChannelAccepted
-                      timeout: 40000
-              - queries:
-                  open_channels:
-                    chain: *relay_chain
+                  - chain: *relay_chain
+                    signer: *rc_sudo_signer
+                    sudo: true
                     pallet: hrmp
-                    call: hrmpChannels
-                    delay: 80000
-                    args: [
-                      {
-                        sender: *watr_id,
-                        recipient: *stmt_id
-                      }
-                    ]
-              - asserts:
-                  equal:
-                    args: [
-                      $open_channels,
-                      *channel
-                    ]
+                    call: forceOpenHrmpChannel
+                    args: [*stmt_id, *watr_id, *max_capacity, *max_message_size]
+                    events:
+                      - name: sudo.Sudid
+                        result: { sudoResult: Ok }
+                      - name: hrmp.HrmpChannelForceOpened
 
-      - name: hrmp.hrmpInitOpenChannel (Statemine Parachain → Watr Parachain)
+      - name: hrmp.forceProcessHrmpOpen (make sure all the channels are open)
         its:
-          - name: Statemine Parchain sends a request to the Relay Chain to open a channel with a Watr Parachain
+          - name: Make sure all the pending channels are open
             actions:
               - extrinsics:
-                - chain: *relay_chain
-                  signer: *rc_sudo_signer
-                  sudo: true
-                  pallet: xcmPallet
-                  call: send
-                  args: [
-                    *rc->stmt_dest, # destination
-                    {
-                      v2: [ #message
-                        {
-                          Transact: {
-                            originType: Superuser,
-                            requireWeightAtMost: *weight_at_most,
-                            call: $xcm_init_open_channel_with_watr
-                          }
-                        }
-                      ]
-                    }
-                  ]
-                  events:
-                    - name: sudo.Sudid
-                      attributes:
-                        - type: Result<Null, SpRuntimeDispatchError>
-                          value: Ok
-                    - name: xcmPallet.Sent
-                    - name: dmpQueue.ExecutedDownward
-                      chain: *stmt_parachain
-                      attributes:
-                        - type: XcmV2TraitsOutcome
-                          xcmOutcome: Complete
-                          threshold: [10, 10]
-                          value: 1,020,807,000
-                    - name: polkadotXcm.Sent
-                      chain: *stmt_parachain
-                    - name: ump.ExecutedUpward
-                      timeout: 40000
-                      attributes:
-                        - type: XcmV2TraitsOutcome
-                          xcmOutcome: Complete
-                          # value: 4,000,000,000
-                          threshold: [10, 10]
-                          value: 1,160,892,000
-                    - name: hrmp.OpenChannelRequested
-                      timeout: 40000
-              - queries:
-                  requested_channels:
-                    chain: *relay_chain
+                  - chain: *relay_chain
+                    signer: *rc_sudo_signer
+                    sudo: true
                     pallet: hrmp
-                    call: hrmpOpenChannelRequestsList
-                    args: []
-              - asserts:
-                  equal:
-                    args: [
-                      $requested_channels,
-                      [
-                        {
-                          sender: *stmt_id,
-                          recipient: *watr_id
-                        }
-                      ]
-                    ]
-
-      - name: hrmp.hrmpAcceptOpenChannel (Watr Parachain → Statemine Parachain)
-        its:
-          - name: Watr Parachain sends a response to the Relay Chain accepting the Statemine Parachain's request for openning a HRMP channel
-            actions:
-              - extrinsics:
-                - chain: *watr_parachain
-                  signer: *watr_sudo_signer
-                  sudo: true
-                  pallet: polkadotXcm
-                  call: send
-                  args: [
-                    *watr->rc_dest, # destination
-                    {
-                      v2: [ #message
-                        {
-                          WithdrawAsset: [*rc_dot_fungible]
-                        },
-                        {
-                          BuyExecution: {
-                              fees: *rc_dot_fungible,
-                              weightLimit: Unlimited
-                          }
-                        },
-                        {
-                          Transact: {
-                            originType: Native,
-                            requireWeightAtMost: *weight_at_most,
-                            call: $accept_open_channel_with_stmt
-                          }
-                        }
-                      ]
-                    }
-                  ]
-                  events:
-                    - name: sudo.Sudid
-                      attributes:
-                        - type: Result<Null, SpRuntimeDispatchError>
-                          value: Ok
-                    - name: polkadotXcm.Sent
-                    - name: ump.ExecutedUpward
-                      chain: *relay_chain
-                      attributes:
-                        - type: XcmV2TraitsOutcome
-                          xcmOutcome: Complete
-                          # value: 4,000,000,000
-                          threshold: [10, 10]
-                          value: 1,160,892,000
-                    - name: hrmp.OpenChannelAccepted
-                      chain: *relay_chain
+                    call: forceProcessHrmpOpen
+                    args: [2]
+                    events:
+                      - name: sudo.Sudid
+                        result: { sudoResult: Ok }
