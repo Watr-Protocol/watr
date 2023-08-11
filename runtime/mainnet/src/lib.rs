@@ -36,8 +36,8 @@ pub use watr_common::{
 	SLOT_DURATION, WEIGHT_REF_TIME_PER_GAS,
 };
 
-use codec::{Decode, Encode};
 use cumulus_pallet_parachain_system::RelayNumberStrictlyIncreases;
+use parity_scale_codec::{Decode, Encode};
 use smallvec::smallvec;
 use sp_api::impl_runtime_apis;
 use sp_core::{
@@ -581,8 +581,10 @@ parameter_types! {
 #[cfg(feature = "runtime-benchmarks")]
 pub struct AssetsBenchmarkHelper;
 #[cfg(feature = "runtime-benchmarks")]
-impl pallet_assets::BenchmarkHelper<codec::Compact<AssetId>> for AssetsBenchmarkHelper {
-	fn create_asset_id_parameter(id: u32) -> codec::Compact<AssetId> {
+impl pallet_assets::BenchmarkHelper<parity_scale_codec::Compact<AssetId>>
+	for AssetsBenchmarkHelper
+{
+	fn create_asset_id_parameter(id: u32) -> parity_scale_codec::Compact<AssetId> {
 		AssetId::from(id).into()
 	}
 }
@@ -604,7 +606,7 @@ impl pallet_assets::Config for Runtime {
 	type WeightInfo = weights::pallet_assets::WeightInfo<Runtime>;
 	type AssetAccountDeposit = AssetAccountDeposit;
 	type RemoveItemsLimit = frame_support::traits::ConstU32<1000>;
-	type AssetIdParameter = codec::Compact<AssetId>;
+	type AssetIdParameter = parity_scale_codec::Compact<AssetId>;
 	type CallbackHandle = ();
 	#[cfg(feature = "runtime-benchmarks")]
 	type BenchmarkHelper = AssetsBenchmarkHelper;
