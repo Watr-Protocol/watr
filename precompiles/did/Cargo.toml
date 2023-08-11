@@ -1,27 +1,24 @@
 [package]
-name = "did"
+name = "pallet-did-precompile"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-num_enum = { version = "0.5.3", default-features = false }
-
-codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = [
-	"derive",
-] }
+num_enum = { workspace = true }
+parity-scale-codec = { workspace = true, features = ["derive"] }
 
 pallet-evm = { workspace = true }
 sp-std = { workspace = true }
 sp-core = { workspace = true }
-precompile-utils = { workspace = true, features = ["testing"] }
+precompile-utils = { workspace = true }
 frame-system = { workspace = true }
 frame-support = { workspace = true }
-
 pallet-did = { workspace = true }
 
 [dev-dependencies]
+precompile-utils = { workspace = true, features = ["testing"] }
 scale-info = { workspace = true, features = ["derive"] }
 serde = { workspace = true }
 derive_more = { workspace = true }

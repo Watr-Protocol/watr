@@ -8,13 +8,13 @@ settings:
   variables:
     chains:
       watr_parachain:
-        networkName: &watr_network_name "watr-mainnet"
+        networkName: &watr_network_name "watr-devnet"
         rpcPort: &watr_rpc_port 9821
-        amount: &watr_amount_to_transfer "100000000000000000000" # 100 WTRD
-        asset_ower:
+        amount: &watr_amount_to_transfer "100000000000000000000" # 100
+        controller:
           signer: &watr_asset_owner_signer //Alice
-        asset_funder:
-          signer: &watr_asset_funder_signer //Bob
+        sender:
+          signer: &watr_asset_funder_signer //Alice
         eth_asset_sender:
           wallet_eth_priv_key: &watr_asset_sender_wallet_eth_priv_key "0x05306c74d0514acf0d2a02049c31284c17c9200270df88eda11f4421cd04742a" # '0xe31b11a052afc923259949352b2f573a21301ba4'
           wallet_eth: &watr_asset_sender_wallet_eth "0xe31b11a052afc923259949352b2f573a21301ba4"
@@ -68,7 +68,7 @@ tests:
           - name: Should read correct metadata from xc-20 asset
             actions:
               - customs:
-                  - path: ../../../customs/xcm/xcm/read-xc20-custom.ts
+                  - path: ../../../customs/xcm/read-xc20-custom.ts
                     args:
                       [
                         {
@@ -99,7 +99,7 @@ tests:
           - name: SHOULD transfer assets if enough balance
             actions:
               - customs:
-                  - path: ../../../customs/xcm/create-did-custom.ts
+                  - path: ../../../customs/xcm/transfer-xc20-custom.ts
                     args:
                       [
                         {
@@ -170,7 +170,7 @@ tests:
           - name: SHOULD NOT transfer assets if NOT enough balance
             actions:
               - customs:
-                  - path: ../../../customs/xcm/create-did-custom.ts
+                  - path: ../../../customs/xcm/transfer-xc20-custom.ts
                     args:
                       [
                         {

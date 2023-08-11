@@ -1203,7 +1203,7 @@ construct_runtime!(
 		BaseFee: pallet_base_fee::{Pallet, Call, Storage, Config<T>, Event} = 52,
 
 		// DID
-		DID: pallet_did::{Pallet, Call, Storage,  Event<T>} = 60,
+		DID: pallet_did::{Pallet, Call, Storage, Event<T>} = 60,
 
 		Sudo: pallet_sudo::{Pallet, Call, Storage, Config<T>, Event<T>} = 255,
 	}

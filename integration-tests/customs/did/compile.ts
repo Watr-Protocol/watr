@@ -2,15 +2,15 @@
 const fs = require('fs');
 const solc = require('solc');
 
-const loadErc20Contract = () => {
+const loadDidContract = () => {
 	// 2. Get path and load contract
-	const source = fs.readFileSync('./integration-tests/customs/ERC20.sol', 'utf8');
+	const source = fs.readFileSync('../../../precompiles/did/WatrDID.sol', 'utf8');
 
 	// 3. Create input object
 	const input = {
 		language: 'Solidity',
 		sources: {
-			'ERC20.sol': {content: source},
+			'WatrDID.sol': {content: source},
 		},
 		settings: {
 			outputSelection: {
@@ -20,8 +20,9 @@ const loadErc20Contract = () => {
 	};
 	// 4. Compile the contract
 	const tempFile = JSON.parse(solc.compile(JSON.stringify(input)));
-	return tempFile.contracts['ERC20.sol']['IERC20'];
+	return tempFile.contracts['WatrDID.sol']['WatrDID'];
 }
 
 // 5. Export contract data
-module.exports = loadErc20Contract();
+module.exports = loadDidContract();
+

@@ -15,7 +15,6 @@
 // along with Watr.  If not, see <http://www.gnu.org/licenses/>.
 
 use super::*;
-use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::sp_runtime::BuildStorage;
 use frame_support::{
 	construct_runtime, parameter_types, sp_io,
@@ -24,6 +23,7 @@ use frame_support::{
 	weights::Weight,
 };
 use pallet_did;
+use parity_scale_codec::{Decode, Encode, MaxEncodedLen};
 use serde::{Deserialize, Serialize};
 use sp_core::{H160, H256};
 
@@ -240,7 +240,8 @@ where
 	R: pallet_evm::Config + pallet_did::Config + frame_system::Config,
 	<R as frame_system::pallet::Config>::RuntimeCall:
 		Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
-	<<R as frame_system::Config>::RuntimeCall as Dispatchable>::RuntimeOrigin: From<R::AccountId>,
+	<<R as frame_system::Config>::RuntimeCall as Dispatchable>::RuntimeOrigin:
+		From<Option<R::AccountId>>,
 	<R as frame_system::Config>::RuntimeCall: From<pallet_did::Call<R>>,
 	<R as pallet_did::Config>::AuthenticationAddress: From<Address>,
 	<R as frame_system::Config>::Hash: From<H256>,
