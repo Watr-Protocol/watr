@@ -68,7 +68,7 @@ tests:
           - name: Should read correct metadata from xc-20 asset
             actions:
               - customs:
-                  - path: ../../../customs/read-xc20-custom.ts
+                  - path: ../../../customs/xcm/xcm/read-xc20-custom.ts
                     args:
                       [
                         {
@@ -99,7 +99,7 @@ tests:
           - name: SHOULD transfer assets if enough balance
             actions:
               - customs:
-                  - path: ../../../customs/transfer-xc20-custom.ts
+                  - path: ../../../customs/xcm/transfer-xc20-custom.ts
                     args:
                       [
                         {
@@ -141,7 +141,7 @@ tests:
           - name: Should read correct metadata from xc-20 asset after the transfer
             actions:
               - customs:
-                  - path: ../../../customs/read-xc20-custom.ts
+                  - path: ../../../customs/xcm/read-xc20-custom.ts
                     args:
                       [
                         {
@@ -170,7 +170,7 @@ tests:
           - name: SHOULD NOT transfer assets if NOT enough balance
             actions:
               - customs:
-                  - path: ../../../customs/transfer-xc20-custom.ts
+                  - path: ../../../customs/xcm/transfer-xc20-custom.ts
                     args:
                       [
                         {
