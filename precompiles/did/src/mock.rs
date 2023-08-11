@@ -16,12 +16,10 @@
 
 use super::*;
 use codec::{Decode, Encode, MaxEncodedLen};
+use frame_support::sp_runtime::BuildStorage;
 use frame_support::{
 	construct_runtime, parameter_types, sp_io,
-	sp_runtime::{
-		testing::Header,
-		traits::{BlakeTwo256, ConstU128, IdentityLookup},
-	},
+	sp_runtime::traits::{BlakeTwo256, ConstU128, IdentityLookup},
 	traits::Everything,
 	weights::Weight,
 };
@@ -29,7 +27,9 @@ use pallet_did;
 use serde::{Deserialize, Serialize};
 use sp_core::{H160, H256};
 
-use pallet_evm::{EnsureAddressNever, EnsureAddressRoot, PrecompileResult, PrecompileSet};
+use pallet_evm::{
+	EnsureAddressNever, EnsureAddressRoot, IsPrecompileResult, PrecompileResult, PrecompileSet,
+};
 use scale_info::TypeInfo;
 
 parameter_types! {
@@ -45,8 +45,6 @@ parameter_types! {
 
 pub type AccountId = TestAccount;
 pub type Balance = u128;
-pub type BlockNumber = u64;
-type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 pub type Block = frame_system::mocking::MockBlock<Test>;
 
 pub const PRECOMPILE_ADDRESS: H160 = H160::repeat_byte(0xDD);
@@ -136,84 +134,91 @@ impl From<TestAccount> for RuntimeOrigin {
 }
 
 impl frame_system::Config for Test {
+	type RuntimeEvent = RuntimeEvent;
 	type BaseCallFilter = Everything;
-	type DbWeight = ();
+	type BlockWeights = ();
+	type BlockLength = ();
 	type RuntimeOrigin = RuntimeOrigin;
-	type Index = u64;
-	type BlockNumber = BlockNumber;
 	type RuntimeCall = RuntimeCall;
+	type Nonce = u32;
 	type Hash = H256;
 	type Hashing = BlakeTwo256;
 	type AccountId = AccountId;
 	type Lookup = IdentityLookup<Self::AccountId>;
-	type Header = Header;
-	type RuntimeEvent = RuntimeEvent;
+	type Block = Block;
 	type BlockHashCount = BlockHashCount;
+	type DbWeight = ();
 	type Version = ();
 	type PalletInfo = PalletInfo;
 	type AccountData = pallet_balances::AccountData<Balance>;
 	type OnNewAccount = ();
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
-	type BlockWeights = ();
-	type BlockLength = ();
 	type SS58Prefix = SS58Prefix;
 	type OnSetCode = ();
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
 
 impl pallet_did::Config for Test {
-	type RuntimeCall = RuntimeCall;
 	type RuntimeEvent = RuntimeEvent;
+	type RuntimeCall = RuntimeCall;
+	type Currency = Balances;
 	type DidIdentifier = TestAccount;
 	type AuthenticationAddress = H160;
 	type AssertionAddress = H160;
 	type DidDeposit = DidDeposit;
-	type Currency = Balances;
-	type GovernanceOrigin = frame_system::EnsureRoot<AccountId>;
-	type MaxHash = MaxHash;
+	type MaxServices = MaxServices;
 	type MaxString = MaxString;
+	type MaxHash = MaxHash;
 	type MaxCredentialsTypes = MaxCredentialsTypes;
 	type MaxCredentialTypeLength = MaxCredentialTypeLength;
-	type MaxServices = MaxServices;
+	type GovernanceOrigin = frame_system::EnsureRoot<AccountId>;
 	type WeightInfo = ();
 }
 
 impl pallet_balances::Config for Test {
-	type MaxLocks = ();
-	type MaxReserves = ();
-	type ReserveIdentifier = [u8; 8];
+	type RuntimeEvent = RuntimeEvent;
+	type WeightInfo = ();
 	type Balance = u128;
 	type DustRemoval = ();
-	type RuntimeEvent = RuntimeEvent;
 	type ExistentialDeposit = ConstU128<1>;
 	type AccountStore = System;
-	type WeightInfo = ();
+	type ReserveIdentifier = [u8; 8];
+	type RuntimeHoldReason = RuntimeHoldReason;
+	type FreezeIdentifier = ();
+	type MaxLocks = ();
+	type MaxReserves = ();
+	type MaxHolds = ();
+	type MaxFreezes = ();
 }
 
 parameter_types! {
 	pub const PrecompilesValue: TestPrecompileSet<Test> =
 	TestPrecompileSet(PhantomData);
-	pub const WeightPerGas: Weight = Weight::from_ref_time(1);
+	pub const WeightPerGas: Weight = Weight::from_parts(1, 0);
 }
 
 impl pallet_evm::Config for Test {
 	type FeeCalculator = ();
 	type GasWeightMapping = pallet_evm::FixedGasWeightMapping<Self>;
 	type WeightPerGas = WeightPerGas;
+	type BlockHashMapping = pallet_evm::SubstrateBlockHashMapping<Self>;
 	type CallOrigin = EnsureAddressRoot<AccountId>;
 	type WithdrawOrigin = EnsureAddressNever<AccountId>;
 	type AddressMapping = AccountId;
 	type Currency = Balances;
 	type RuntimeEvent = RuntimeEvent;
-	type Runner = pallet_evm::runner::stack::Runner<Self>;
 	type PrecompilesType = TestPrecompileSet<Self>;
 	type PrecompilesValue = PrecompilesValue;
 	type ChainId = ();
-	type OnChargeTransaction = ();
 	type BlockGasLimit = ();
-	type BlockHashMapping = pallet_evm::SubstrateBlockHashMapping<Self>;
+	type Runner = pallet_evm::runner::stack::Runner<Self>;
+	type OnChargeTransaction = ();
+	type OnCreate = ();
 	type FindAuthor = ();
+	type GasLimitPovSizeRatio = ();
+	type Timestamp = Timestamp;
+	type WeightInfo = ();
 }
 
 parameter_types! {
@@ -247,27 +252,26 @@ where
 		}
 	}
 
-	fn is_precompile(&self, address: H160) -> bool {
-		address == PRECOMPILE_ADDRESS
+	fn is_precompile(&self, address: H160, _remaining_gas: u64) -> IsPrecompileResult {
+		IsPrecompileResult::Answer { is_precompile: address == PRECOMPILE_ADDRESS, extra_cost: 0 }
 	}
 }
 
 construct_runtime!(
-	pub enum Test where
-		Block = Block,
-		NodeBlock = Block,
-		UncheckedExtrinsic = UncheckedExtrinsic,
-	{
+	pub struct Test {
 		System: frame_system,
 		Evm: pallet_evm,
 		Balances: pallet_balances,
 		Timestamp: pallet_timestamp,
-		DID: pallet_did
+		DID: pallet_did,
 	}
 );
 
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
+	let mut t = <frame_system::GenesisConfig<Test> as BuildStorage>::build_storage(
+		&frame_system::GenesisConfig::default(),
+	)
+	.unwrap();
 	pallet_balances::GenesisConfig::<Test> {
 		balances: vec![
 			(TestAccount::Alice, 100),
