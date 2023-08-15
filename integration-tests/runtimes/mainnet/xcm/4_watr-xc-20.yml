@@ -99,7 +99,7 @@ tests:
           - name: SHOULD transfer assets if enough balance
             actions:
               - customs:
-                  - path: ../../../customs/xcm/create-did-custom.ts
+                  - path: ../../../customs/xcm/create-did-custom.js
                     args:
                       [
                         {
@@ -170,7 +170,7 @@ tests:
           - name: SHOULD NOT transfer assets if NOT enough balance
             actions:
               - customs:
-                  - path: ../../../customs/xcm/create-did-custom.ts
+                  - path: ../../../customs/xcm/create-did-custom.js
                     args:
                       [
                         {

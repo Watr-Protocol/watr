@@ -4,7 +4,7 @@ const solc = require('solc');
 
 const loadDidContract = () => {
 	// 2. Get path and load contract
-	const source = fs.readFileSync('../../../precompiles/did/WatrDID.sol', 'utf8');
+	const source = fs.readFileSync('./precompiles/did/WatrDID.sol', 'utf8');
 
 	// 3. Create input object
 	const input = {

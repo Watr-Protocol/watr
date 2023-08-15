@@ -14,7 +14,7 @@ interface WatrDID {
 		bool hasValue;
 		Service[] services;
 	}
-	function createDid(address controller, address authentication, address assertion, Service[] calldata services) external;
+	function createDid(address controller, address authentication, OptionalAddress calldata assertion, Service[] calldata services) external;
 	function updateDid(OptionalAddress calldata controller, OptionalAddress calldata authentication, OptionalAddress calldata assertion, OptionalServices calldata services) external;
 	function removeDid(address did) external;
 	function addDidServices(address did, Service[] calldata services) external;
