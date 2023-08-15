@@ -108,11 +108,7 @@ pub type ParachainClient<RuntimeApi, Executor> =
 type ParachainBackend = TFullBackend<Block>;
 type ParachainBlockImport<RuntimeApi, Executor> = TParachainBlockImport<
 	Block,
-	FrontierBlockImport<
-		Block,
-		Arc<TFullClient<Block, RuntimeApi, ParachainExecutor<Executor>>>,
-		TFullClient<Block, RuntimeApi, ParachainExecutor<Executor>>,
-	>,
+	Arc<TFullClient<Block, RuntimeApi, ParachainExecutor<Executor>>>,
 	ParachainBackend,
 >;
 
@@ -203,9 +199,7 @@ where
 
 	let frontier_backend = crate::rpc::open_frontier_backend(client.clone(), config)?;
 
-	let frontier_block_import = FrontierBlockImport::new(client.clone(), client.clone());
-
-	let parachain_block_import = TParachainBlockImport::new(frontier_block_import, backend.clone());
+	let parachain_block_import = TParachainBlockImport::new(client.clone(), backend.clone());
 
 	let import_queue = build_import_queue(
 		client.clone(),
