@@ -3,7 +3,7 @@ const ethers = require('ethers');
 const contractFile = require('./compile.js');
 const contractABI = contractFile.abi;
 
-const createDid = async (context, ...args) => {
+const updateDid = async (context, ...args) => {
 	const {networkName, rpcPort, chainId, senderPrivKey, didPrecompileAddress} = args[0][0];
 	const {did, controller, authentication, assertion, services} = args[0][1];
 
@@ -34,4 +34,4 @@ const createDid = async (context, ...args) => {
 	}
 }
 
-module.exports = createDid
+module.exports = updateDid;

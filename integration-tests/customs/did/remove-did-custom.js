@@ -3,9 +3,9 @@ const ethers = require('ethers');
 const contractFile = require('./compile.js');
 const contractABI = contractFile.abi;
 
-const createDid = async (context, ...args) => {
+const removeDid = async (context, ...args) => {
 	const {networkName, rpcPort, chainId, senderPrivKey, didPrecompileAddress} = args[0][0];
-	const {controller, authentication, assertion, services} = args[0][1];
+	const {did} = args[0][1];
 
 	const providerRPC = {
 		development: {
@@ -27,11 +27,11 @@ const createDid = async (context, ...args) => {
 	const contract = new ethers.Contract(didPrecompileAddress, contractABI, wallet);
 
 	try {
-		const tx = await contract.createDid(controller, authentication, assertion, services, {gasLimit: 250000});
+		const tx = await contract.removeDid(did, {gasLimit: 250000});
 		await tx.wait();
 	} catch (e) {
 		console.error(`\n⚠️  WARNING: Eth tx failed\n`, e);
 	}
 }
 
-module.exports = createDid;
+module.exports = removeDid;

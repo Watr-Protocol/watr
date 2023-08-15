@@ -149,12 +149,13 @@ where
 	fn remove_did(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = handle.read_input()?;
 		input.expect_arguments(1)?;
+		let did_raw = input.read::<Address>()?;
 		let origin = Some(R::AddressMapping::into_account_id(handle.context().caller));
-		let address = R::AddressMapping::into_account_id(input.read::<Address>()?.into());
+		let did = R::AddressMapping::into_account_id(did_raw.into());
 		RuntimeHelper::<R>::try_dispatch(
 			handle,
 			origin.into(),
-			pallet_did::Call::<R>::remove_did { did: address.into() },
+			pallet_did::Call::<R>::remove_did { did: did.into() },
 		)?;
 
 		Ok(succeed(EvmDataWriter::new().write(true).build()))

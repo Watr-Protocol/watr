@@ -98,7 +98,7 @@ tests:
                         },
                         {
                           did: *wallet_eth_address,
-                          controller: [true, "0x90b5ab205c6974c9ea841be688864633dc9ca8a3"],
+                          controller: [true, *watr_controller],
                           authentication: [true, "0x1111111111111111111111111111111111111111"],
                           assertion: [true, "0x1111111111111111111111111111111111111111"],
                           services: [true, []]
@@ -122,9 +122,45 @@ tests:
                             did: *raw_address,
                             document:
                               {
-                                controller: "2zXaVmcdqbL7XdDQxLkUnAmFqqhV6NNVQEw2fAyBBJJ9A8Mp",
+                                controller: *raw_address,
                                 authentication: { controller: "0x1111111111111111111111111111111111111111" },
                                 assertionMethod: { controller: "0x1111111111111111111111111111111111111111" },
                                 services: []
                               },
+                          }
+      - name: Remove DID
+        its:
+          - name: Should remove a DID
+            actions:
+              - customs:
+                  - path: ../../../customs/did/remove-did-custom.js
+                    args:
+                      [
+                        {
+                          networkName: *watr_network_name,
+                          rpcPort: *watr_rpc_port,
+                          chainId: *eth_chain_id,
+                          senderPrivKey: *watr_sender_wallet_eth_priv_key,
+                          didPrecompileAddress: *did_precompile_addr,
+                        },
+                        {
+                          did: *wallet_eth_address
+                        }
+                      ]
+                    events:
+                      - name: ethereum.Executed
+                        chain: *watr_parachain
+                        strict: false
+                        result:
+                          {
+                            from: *wallet_eth_address,
+                            to: *did_precompile_addr,
+                            exitReason: { Succeed: Returned },
+                          }
+                      - name: did.DidRemoved
+                        chain: *watr_parachain
+                        strict: false
+                        result:
+                          {
+                            did: *raw_address
                           }
