@@ -1,6 +1,6 @@
 ---
 # Test run with https://www.npmjs.com/package/@parity/parachains-integration-tests
-# 'yarn' should be run first to have the 'node_modules' dependencies available for the tests
+# "yarn" should be run first to have the "node_modules" dependencies available for the tests
 settings:
   chains:
     watr_parachain: &watr_parachain
@@ -14,14 +14,14 @@ settings:
         sender:
           raw_address: &raw_address "2z4S7fY4hioG8wJ9Q9V4WPUPsdWu2cwYCp9QB7N9s1BRstvm"
           wallet_eth_address: &wallet_eth_address "0xe31b11a052afc923259949352b2f573a21301ba4"
-          wallet_eth_priv_key: &watr_sender_wallet_eth_priv_key "0x05306c74d0514acf0d2a02049c31284c17c9200270df88eda11f4421cd04742a" # '0xe31b11a052afc923259949352b2f573a21301ba4'
+          wallet_eth_priv_key: &watr_sender_wallet_eth_priv_key "0x05306c74d0514acf0d2a02049c31284c17c9200270df88eda11f4421cd04742a" # "0xe31b11a052afc923259949352b2f573a21301ba4"
         parameters:
           authentication: &default_authentication "0x0000000000000000000000000000000000000000"
           assertion: &default_assertion "0x0000000000000000000000000000000000000000"
           services: &default_services [
-            [ 0, 'str1' ],  # 0x7fbbd01a37bbe0fe2333128b3bf109882bb1b839c7ec93b3192dac8e839710a0
-            [ 0, 'str2' ],  # 0x8e635fc4704e7e83cc83623e4f858b38d7c02d34ee4c861742086a24ff8b6710
-            [ 0, 'str3' ]   # 0xbb31ae0b6e144972e8e9e6f5c3c6150d39cd20e07a3e5a6a8ec36c2a1e775319
+            [ 0, "str1" ],  # 0x7fbbd01a37bbe0fe2333128b3bf109882bb1b839c7ec93b3192dac8e839710a0
+            [ 0, "str2" ],  # 0x8e635fc4704e7e83cc83623e4f858b38d7c02d34ee4c861742086a24ff8b6710
+            [ 0, "str3" ]   # 0xbb31ae0b6e144972e8e9e6f5c3c6150d39cd20e07a3e5a6a8ec36c2a1e775319
           ]
       ethereum:
         chainId: &eth_chain_id 688
@@ -75,9 +75,56 @@ tests:
                                 authentication: { controller: *default_authentication },
                                 assertionMethod: null,
                                 services: [
-                                  '0x7fbbd01a37bbe0fe2333128b3bf109882bb1b839c7ec93b3192dac8e839710a0',
-                                  '0x8e635fc4704e7e83cc83623e4f858b38d7c02d34ee4c861742086a24ff8b6710',
-                                  '0xbb31ae0b6e144972e8e9e6f5c3c6150d39cd20e07a3e5a6a8ec36c2a1e775319'
+                                  "0x7fbbd01a37bbe0fe2333128b3bf109882bb1b839c7ec93b3192dac8e839710a0",
+                                  "0x8e635fc4704e7e83cc83623e4f858b38d7c02d34ee4c861742086a24ff8b6710",
+                                  "0xbb31ae0b6e144972e8e9e6f5c3c6150d39cd20e07a3e5a6a8ec36c2a1e775319"
                                 ]
+                              },
+                          }
+      - name: Update DID
+        its:
+          - name: Should update a DID
+            actions:
+              - customs:
+                  - path: ../../../customs/did/update-did-custom.js
+                    args:
+                      [
+                        {
+                          networkName: *watr_network_name,
+                          rpcPort: *watr_rpc_port,
+                          chainId: *eth_chain_id,
+                          senderPrivKey: *watr_sender_wallet_eth_priv_key,
+                          didPrecompileAddress: *did_precompile_addr,
+                        },
+                        {
+                          did: *wallet_eth_address,
+                          controller: [true, "0x90b5ab205c6974c9ea841be688864633dc9ca8a3"],
+                          authentication: [true, "0x1111111111111111111111111111111111111111"],
+                          assertion: [true, "0x1111111111111111111111111111111111111111"],
+                          services: [true, []]
+                        },
+                      ]
+                    events:
+                      - name: ethereum.Executed
+                        chain: *watr_parachain
+                        strict: false
+                        result:
+                          {
+                            from: *wallet_eth_address,
+                            to: *did_precompile_addr,
+                            exitReason: { Succeed: Returned },
+                          }
+                      - name: did.DidUpdated
+                        chain: *watr_parachain
+                        strict: false
+                        result:
+                          {
+                            did: *raw_address,
+                            document:
+                              {
+                                controller: "2zXaVmcdqbL7XdDQxLkUnAmFqqhV6NNVQEw2fAyBBJJ9A8Mp",
+                                authentication: { controller: "0x1111111111111111111111111111111111111111" },
+                                assertionMethod: { controller: "0x1111111111111111111111111111111111111111" },
+                                services: []
                               },
                           }
