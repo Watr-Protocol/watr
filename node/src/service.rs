@@ -59,7 +59,6 @@ use sp_runtime::{app_crypto::AppCrypto, traits::BlakeTwo256};
 use substrate_prometheus_endpoint::Registry;
 
 // Frontier
-use fc_consensus::FrontierBlockImport;
 use fc_mapping_sync::{kv::MappingSyncWorker, SyncStrategy};
 use fc_rpc::EthTask;
 use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
@@ -106,6 +105,7 @@ type ParachainExecutor<Executor> = NativeElseWasmExecutor<Executor>;
 pub type ParachainClient<RuntimeApi, Executor> =
 	TFullClient<Block, RuntimeApi, ParachainExecutor<Executor>>;
 type ParachainBackend = TFullBackend<Block>;
+// Does NOT have FrontierBlockImport for the following issue: https://github.com/paritytech/frontier/issues/603
 type ParachainBlockImport<RuntimeApi, Executor> = TParachainBlockImport<
 	Block,
 	Arc<TFullClient<Block, RuntimeApi, ParachainExecutor<Executor>>>,
