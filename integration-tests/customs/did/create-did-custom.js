@@ -1,30 +1,8 @@
-const ethers = require('ethers');
-
-const contractFile = require('./compile.js');
-const contractABI = contractFile.abi;
+const setup = require('./setup');
 
 const createDid = async (context, ...args) => {
-	const {networkName, rpcPort, chainId, senderPrivKey, didPrecompileAddress} = args[0][0];
+	const contract = setup(args[0][0]);
 	const {controller, authentication, assertion, services} = args[0][1];
-
-	const providerRPC = {
-		development: {
-			name: networkName,
-			rpc: `http://127.0.0.1:${rpcPort}`,
-			chainId,
-		},
-	};
-
-	const provider = new ethers.providers.StaticJsonRpcProvider(providerRPC.development.rpc, {
-		chainId: providerRPC.development.chainId,
-		name: providerRPC.development.name,
-	});
-
-	// Create a new instance of the Wallet class
-	const wallet = new ethers.Wallet(senderPrivKey, provider);
-
-	// Create a new instance of the Contract class
-	const contract = new ethers.Contract(didPrecompileAddress, contractABI, wallet);
 
 	try {
 		const tx = await contract.createDid(controller, authentication, assertion, services, {gasLimit: 250000});
