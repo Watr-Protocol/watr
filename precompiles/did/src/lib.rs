@@ -14,6 +14,7 @@ use pallet_evm::{
 use precompile_utils::{revert, succeed, EvmDataWriter, RuntimeHelper};
 use sp_core::H256;
 use sp_std::marker::PhantomData;
+use sp_std::vec::Vec;
 
 use precompile_utils::{Address, Bytes, EvmResult, PrecompileHandleExt};
 
@@ -32,7 +33,7 @@ pub enum Action {
 	AddDIDServices = "addDidServices(address,(uint8,string)[])",
 	RemoveDIDServices = "removeDidServices(address,bytes[])",
 	IssueCredentials = "issueCredentials(address,address,string[],bytes)",
-	RevokeCredentials = "revokeCredentials(address,string[])",
+	RevokeCredentials = "revokeCredentials(address,address,string[])",
 }
 
 pub struct WatrDIDPrecompile<R>(PhantomData<R>);
@@ -42,7 +43,8 @@ where
 	R: pallet_evm::Config + pallet_did::Config + frame_system::Config,
 	<R as frame_system::pallet::Config>::RuntimeCall:
 		Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
-	<<R as frame_system::Config>::RuntimeCall as Dispatchable>::RuntimeOrigin: From<R::AccountId>,
+	<<R as frame_system::Config>::RuntimeCall as Dispatchable>::RuntimeOrigin:
+		From<Option<R::AccountId>>,
 	<R as frame_system::Config>::RuntimeCall: From<pallet_did::Call<R>>,
 	<R as pallet_did::Config>::AuthenticationAddress: From<Address>,
 	<R as frame_system::Config>::Hash: From<H256>,
@@ -66,7 +68,8 @@ where
 	R: pallet_evm::Config + pallet_did::Config,
 	<R as frame_system::pallet::Config>::RuntimeCall:
 		Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
-	<<R as frame_system::Config>::RuntimeCall as Dispatchable>::RuntimeOrigin: From<R::AccountId>,
+	<<R as frame_system::Config>::RuntimeCall as Dispatchable>::RuntimeOrigin:
+		From<Option<R::AccountId>>,
 	<R as frame_system::Config>::RuntimeCall: From<pallet_did::Call<R>>,
 	<R as pallet_did::Config>::AuthenticationAddress: From<Address>,
 	<R as frame_system::Config>::Hash: From<H256>,
@@ -84,7 +87,7 @@ where
 			maybe_attestation_method.0.then(|| maybe_attestation_method.1 .0.into());
 		let services: BoundedVec<ServiceInfo<R>, R::MaxServices> =
 			Self::parse_services(raw_services)?;
-		let origin = R::AddressMapping::into_account_id(handle.context().caller);
+		let origin = Some(R::AddressMapping::into_account_id(handle.context().caller));
 		let controller = R::AddressMapping::into_account_id(controller_raw.into());
 		RuntimeHelper::<R>::try_dispatch(
 			handle,
@@ -127,7 +130,7 @@ where
 			.then(|| Self::parse_services(maybe_raw_services.1))
 			.transpose()?;
 
-		let origin = R::AddressMapping::into_account_id(handle.context().caller);
+		let origin = Some(R::AddressMapping::into_account_id(handle.context().caller));
 		RuntimeHelper::<R>::try_dispatch(
 			handle,
 			origin.into(),
@@ -146,12 +149,13 @@ where
 	fn remove_did(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = handle.read_input()?;
 		input.expect_arguments(1)?;
-		let origin = R::AddressMapping::into_account_id(handle.context().caller);
-		let address = R::AddressMapping::into_account_id(input.read::<Address>()?.into());
+		let did_raw = input.read::<Address>()?;
+		let origin = Some(R::AddressMapping::into_account_id(handle.context().caller));
+		let did = R::AddressMapping::into_account_id(did_raw.into());
 		RuntimeHelper::<R>::try_dispatch(
 			handle,
 			origin.into(),
-			pallet_did::Call::<R>::remove_did { did: address.into() },
+			pallet_did::Call::<R>::remove_did { did: did.into() },
 		)?;
 
 		Ok(succeed(EvmDataWriter::new().write(true).build()))
@@ -160,7 +164,7 @@ where
 	fn add_did_services(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = handle.read_input()?;
 		input.expect_arguments(2)?;
-		let origin = R::AddressMapping::into_account_id(handle.context().caller);
+		let origin = Some(R::AddressMapping::into_account_id(handle.context().caller));
 		let did = R::AddressMapping::into_account_id(input.read::<Address>()?.into());
 		let raw_services = input.read::<Vec<(u8, Bytes)>>()?;
 
@@ -177,7 +181,7 @@ where
 	fn remove_did_services(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = handle.read_input()?;
 		input.expect_arguments(2)?;
-		let origin = R::AddressMapping::into_account_id(handle.context().caller);
+		let origin = Some(R::AddressMapping::into_account_id(handle.context().caller));
 		let did = R::AddressMapping::into_account_id(input.read::<Address>()?.into());
 		let service_details = input.read::<Vec<Bytes>>()?;
 		let mut services: BoundedVec<<R as frame_system::Config>::Hash, R::MaxServices> =
@@ -219,7 +223,7 @@ where
 	fn issue_credentials(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = handle.read_input()?;
 		input.expect_arguments(4)?;
-		let origin = R::AddressMapping::into_account_id(handle.context().caller);
+		let origin = Some(R::AddressMapping::into_account_id(handle.context().caller));
 		let issuer_did = R::AddressMapping::into_account_id(input.read::<Address>()?.into()).into();
 		let subject_did =
 			R::AddressMapping::into_account_id(input.read::<Address>()?.into()).into();
@@ -249,7 +253,7 @@ where
 		let mut input = handle.read_input()?;
 		input.expect_arguments(3)?;
 
-		let origin = R::AddressMapping::into_account_id(handle.context().caller);
+		let origin = Some(R::AddressMapping::into_account_id(handle.context().caller));
 		let issuer_did = R::AddressMapping::into_account_id(input.read::<Address>()?.into()).into();
 		let subject_did =
 			R::AddressMapping::into_account_id(input.read::<Address>()?.into()).into();

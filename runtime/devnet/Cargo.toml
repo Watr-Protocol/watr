@@ -109,6 +109,7 @@ pallet-block-reward = { workspace = true, features = ["serde"] }
 watr-common = { workspace = true }
 pallet-motion = { workspace = true }
 pallet-did = { workspace = true }
+pallet-did-precompile = { workspace = true }
 
 [features]
 default = [
@@ -138,6 +139,7 @@ std = [
     "pallet-collective/std",
     "pallet-motion/std",
     "pallet-did/std",
+    "pallet-did-precompile/std",
     "pallet-preimage/std",
     "pallet-session/std",
     "pallet-scheduler/std",

@@ -1,0 +1,376 @@
+---
+# Test run with https://www.npmjs.com/package/@parity/parachains-integration-tests
+# "yarn" should be run first to have the "node_modules" dependencies available for the tests
+settings:
+  chains:
+    watr_parachain: &watr_parachain
+      wsPort: 9821
+  variables:
+    chains:
+      watr_parachain:
+        networkName: &watr_network_name "watr-devnet"
+        rpcPort: &watr_rpc_port 9821
+        controller: &watr_controller "0xe31b11a052afc923259949352b2f573a21301ba4"
+        sender:
+          signer: &default_signer //Alice
+          raw_address: &raw_address "2z4S7fY4hioG8wJ9Q9V4WPUPsdWu2cwYCp9QB7N9s1BRstvm"
+          wallet_eth_address: &wallet_eth_address "0xe31b11a052afc923259949352b2f573a21301ba4"
+          wallet_eth_priv_key: &watr_sender_wallet_eth_priv_key "0x05306c74d0514acf0d2a02049c31284c17c9200270df88eda11f4421cd04742a" # "0xe31b11a052afc923259949352b2f573a21301ba4"
+        parameters:
+          authentication: &default_authentication "0x0000000000000000000000000000000000000000"
+          assertion: &default_assertion "0x0000000000000000000000000000000000000000"
+          services: &default_services [
+            [ 0, "str1" ],  # 0x7fbbd01a37bbe0fe2333128b3bf109882bb1b839c7ec93b3192dac8e839710a0
+            [ 0, "str2" ],  # 0x8e635fc4704e7e83cc83623e4f858b38d7c02d34ee4c861742086a24ff8b6710
+            [ 0, "str3" ]   # 0xbb31ae0b6e144972e8e9e6f5c3c6150d39cd20e07a3e5a6a8ec36c2a1e775319
+          ]
+          credentials: &default_credential "77777777777777777777777777777777" # 0x5555555555555555555555555555555555555555555555555555555555555555
+          credentialsHash: &default_credential_hash "0x9999999999999999999999999999999999999999999999999999999999999999"
+      ethereum:
+        chainId: &eth_chain_id 688
+        contract:
+          xc_20_foreign: &did_precompile_addr "0x0000000000000000000000000000000000000402"  # 1026
+
+tests:
+  - name: TEST DID PRECOMPILES
+    describes:
+      - name: Manage DIDs
+        its:
+          - name: Should create a DID
+            actions:
+              - customs:
+                  - path: ../../../customs/did/create-did-custom.js
+                    args:
+                      [
+                        {
+                          networkName: *watr_network_name,
+                          rpcPort: *watr_rpc_port,
+                          chainId: *eth_chain_id,
+                          senderPrivKey: *watr_sender_wallet_eth_priv_key,
+                          didPrecompileAddress: *did_precompile_addr,
+                        },
+                        {
+                          controller: *watr_controller,
+                          authentication: *default_authentication,
+                          assertion: [ false, *default_assertion ],
+                          services: *default_services
+                        },
+                      ]
+                    events:
+                      - name: ethereum.Executed
+                        chain: *watr_parachain
+                        strict: false
+                        result:
+                          {
+                            from: *wallet_eth_address,
+                            to: *did_precompile_addr,
+                            exitReason: { Succeed: Returned },
+                          }
+                      - name: did.DidCreated
+                        chain: *watr_parachain
+                        strict: false
+                        result:
+                          {
+                            did: *raw_address,
+                            document:
+                              {
+                                controller: *raw_address,
+                                authentication: { controller: *default_authentication },
+                                assertionMethod: null,
+                                services: [
+                                  "0x7fbbd01a37bbe0fe2333128b3bf109882bb1b839c7ec93b3192dac8e839710a0",
+                                  "0x8e635fc4704e7e83cc83623e4f858b38d7c02d34ee4c861742086a24ff8b6710",
+                                  "0xbb31ae0b6e144972e8e9e6f5c3c6150d39cd20e07a3e5a6a8ec36c2a1e775319"
+                                ]
+                              },
+                          }
+          - name: Should update a DID
+            actions:
+              - customs:
+                  - path: ../../../customs/did/update-did-custom.js
+                    args:
+                      [
+                        {
+                          networkName: *watr_network_name,
+                          rpcPort: *watr_rpc_port,
+                          chainId: *eth_chain_id,
+                          senderPrivKey: *watr_sender_wallet_eth_priv_key,
+                          didPrecompileAddress: *did_precompile_addr,
+                        },
+                        {
+                          did: *wallet_eth_address,
+                          controller: [ true, *watr_controller ],
+                          authentication: [ true, "0x1111111111111111111111111111111111111111" ],
+                          assertion: [ true, "0x1111111111111111111111111111111111111111" ],
+                          services: [ true, [ ] ]
+                        },
+                      ]
+                    events:
+                      - name: ethereum.Executed
+                        chain: *watr_parachain
+                        strict: false
+                        result:
+                          {
+                            from: *wallet_eth_address,
+                            to: *did_precompile_addr,
+                            exitReason: { Succeed: Returned },
+                          }
+                      - name: did.DidUpdated
+                        chain: *watr_parachain
+                        strict: false
+                        result:
+                          {
+                            did: *raw_address,
+                            document:
+                              {
+                                controller: *raw_address,
+                                authentication: { controller: "0x1111111111111111111111111111111111111111" },
+                                assertionMethod: { controller: "0x1111111111111111111111111111111111111111" },
+                                services: [ ]
+                              },
+                          }
+  - name: Manage DID services
+    its:
+      - name: Should add DID services
+        actions:
+          - customs:
+              - path: ../../../customs/did/add-did-services-custom.js
+                args:
+                  [
+                    {
+                      networkName: *watr_network_name,
+                      rpcPort: *watr_rpc_port,
+                      chainId: *eth_chain_id,
+                      senderPrivKey: *watr_sender_wallet_eth_priv_key,
+                      didPrecompileAddress: *did_precompile_addr,
+                    },
+                    {
+                      did: *wallet_eth_address,
+                      services: [
+                        [ 0, "str4" ]
+                      ]
+                    },
+                  ]
+                events:
+                  - name: ethereum.Executed
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        from: *wallet_eth_address,
+                        to: *did_precompile_addr,
+                        exitReason: { Succeed: Returned },
+                      }
+                  - name: did.DidServicesAdded
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        did: *raw_address,
+                        newServices: [ "0xa7afed531f66265362d1db98580c4542e4ba110e067c8e430c6176c52cfb5e91" ]
+                      }
+      - name: Should remove DID services
+        actions:
+          - customs:
+              - path: ../../../customs/did/remove-did-services-custom.js
+                args:
+                  [
+                    {
+                      networkName: *watr_network_name,
+                      rpcPort: *watr_rpc_port,
+                      chainId: *eth_chain_id,
+                      senderPrivKey: *watr_sender_wallet_eth_priv_key,
+                      didPrecompileAddress: *did_precompile_addr,
+                    },
+                    {
+                      did: *wallet_eth_address,
+                      serviceKeys: [ "0xa7afed531f66265362d1db98580c4542e4ba110e067c8e430c6176c52cfb5e91" ]
+                    },
+                  ]
+                events:
+                  - name: ethereum.Executed
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        from: *wallet_eth_address,
+                        to: *did_precompile_addr,
+                        exitReason: { Succeed: Returned },
+                      }
+                  - name: did.DidServicesRemoved
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        did: *raw_address,
+                        removedServices: [ "0xa7afed531f66265362d1db98580c4542e4ba110e067c8e430c6176c52cfb5e91" ]
+                      }
+  - name: Manage DID credentials
+    its:
+      - name: Should create a credential type
+        actions:
+          - extrinsics:
+              - chain: *watr_parachain
+                sudo: true
+                signer: *default_signer
+                pallet: did
+                call: addCredentialsType
+                args: [
+                  [ *default_credential ]
+                ]
+                events:
+                  - name: did.CredentialTypesAdded
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        credentials: [ *default_credential ]
+                      }
+      - name: Should add an issuer
+        actions:
+          - extrinsics:
+              - chain: *watr_parachain
+                sudo: true
+                signer: *default_signer
+                pallet: did
+                call: addIssuer
+                args: [ *raw_address ]
+                events:
+                  - name: did.IssuerStatusActive
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        issuer: *raw_address
+                      }
+      - name: Should issue DID credentials
+        actions:
+          - customs:
+              - path: ../../../customs/did/issue-did-credentials-custom.js
+                args:
+                  [
+                    {
+                      networkName: *watr_network_name,
+                      rpcPort: *watr_rpc_port,
+                      chainId: *eth_chain_id,
+                      senderPrivKey: *watr_sender_wallet_eth_priv_key,
+                      didPrecompileAddress: *did_precompile_addr,
+                    },
+                    {
+                      issuerDid: *wallet_eth_address,
+                      subjectDid: *wallet_eth_address,
+                      credentials: [ *default_credential ],
+                      verifiableCredentialHash: *default_credential_hash
+                    }
+                  ]
+                events:
+                  - name: ethereum.Executed
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        from: *wallet_eth_address,
+                        to: *did_precompile_addr,
+                        exitReason: { Succeed: Returned },
+                      }
+                  - name: did.CredentialsIssued
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        issuer: *raw_address,
+                        did: *raw_address,
+                        credentials: [ *default_credential ],
+                        verifiableCredentialHash: *default_credential_hash
+                      }
+      - name: Should revoke DID credentials
+        actions:
+          - customs:
+              - path: ../../../customs/did/revoke-did-credentials-custom.js
+                args:
+                  [
+                    {
+                      networkName: *watr_network_name,
+                      rpcPort: *watr_rpc_port,
+                      chainId: *eth_chain_id,
+                      senderPrivKey: *watr_sender_wallet_eth_priv_key,
+                      didPrecompileAddress: *did_precompile_addr,
+                    },
+                    {
+                      issuerDid: *wallet_eth_address,
+                      subjectDid: *wallet_eth_address,
+                      credentials: [ *default_credential ]
+                    }
+                  ]
+                events:
+                  - name: ethereum.Executed
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        from: *wallet_eth_address,
+                        to: *did_precompile_addr,
+                        exitReason: { Succeed: Returned },
+                      }
+                  - name: did.CredentialsRevoked
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        issuer: *raw_address,
+                        did: *raw_address,
+                        credentials: [ *default_credential ]
+                      }
+  - name: Remove DID
+    its:
+      - name: Should revoke issuer
+        actions:
+          - extrinsics:
+              - chain: *watr_parachain
+                sudo: true
+                signer: *default_signer
+                pallet: did
+                call: revokeIssuer
+                args: [ *raw_address ]
+                events:
+                  - name: did.IssuerStatusRevoked
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        issuer: *raw_address
+                      }
+      - name: Should remove a DID
+        actions:
+          - customs:
+              - path: ../../../customs/did/remove-did-custom.js
+                args:
+                  [
+                    {
+                      networkName: *watr_network_name,
+                      rpcPort: *watr_rpc_port,
+                      chainId: *eth_chain_id,
+                      senderPrivKey: *watr_sender_wallet_eth_priv_key,
+                      didPrecompileAddress: *did_precompile_addr,
+                    },
+                    {
+                      did: *wallet_eth_address
+                    }
+                  ]
+                events:
+                  - name: ethereum.Executed
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        from: *wallet_eth_address,
+                        to: *did_precompile_addr,
+                        exitReason: { Succeed: Returned },
+                      }
+                  - name: did.DidRemoved
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        did: *raw_address
+                      }

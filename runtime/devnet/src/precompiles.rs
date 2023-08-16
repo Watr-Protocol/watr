@@ -33,8 +33,9 @@ use precompile_utils::error;
 use sp_core::H160;
 use sp_std::{fmt::Debug, marker::PhantomData};
 
-use crate::sp_api_hidden_includes_construct_runtime::hidden_include::traits::fungibles::roles::Inspect;
+use pallet_did_precompile::WatrDIDPrecompile;
 
+use crate::sp_api_hidden_includes_construct_runtime::hidden_include::traits::fungibles::roles::Inspect;
 use crate::AssetId;
 
 /// The asset precompile address prefix. Addresses that match against this prefix will be routed
@@ -72,10 +73,13 @@ where
 	Erc20AssetsPrecompileSet<R>: PrecompileSet,
 	<R as pallet_assets::Config>::AssetId: From<AssetId>,
 	Dispatch<R>: Precompile,
+	WatrDIDPrecompile<R>: Precompile,
 	R: pallet_evm::Config
 		+ pallet_assets::Config
 		+ pallet_xcm::Config
-		+ AddressToAssetId<<R as pallet_assets::Config>::AssetId>,
+		+ AddressToAssetId<<R as pallet_assets::Config>::AssetId>
+		+ frame_system::Config
+		+ pallet_did::Config,
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<PrecompileResult> {
 		let address = handle.code_address();
@@ -105,6 +109,7 @@ where
 			// nor Ethereum precompiles :
 			a if a == hash(1024) => Some(Sha3FIPS256::execute(handle)),
 			a if a == hash(1025) => Some(Dispatch::<R>::execute(handle)),
+			a if a == hash(1026) => Some(WatrDIDPrecompile::<R>::execute(handle)),
 			// If the address matches asset prefix, the we route through the asset precompile set
 			a if &a.to_fixed_bytes()[0..4] == ASSET_PRECOMPILE_ADDRESS_PREFIX => {
 				// Get asset id to check if it is NUSD
