@@ -1,6 +1,6 @@
 [package]
 name = "watr-devnet-runtime"
-version = "1.23.0"
+version = "1.24.0"
 authors = ["Parity Technologies <admin@parity.io>"]
 description = "Watr Devnet Runtime"
 license = "GPL-3.0-only"
