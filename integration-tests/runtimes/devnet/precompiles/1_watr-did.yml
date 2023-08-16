@@ -96,10 +96,10 @@ tests:
                         },
                         {
                           did: *wallet_eth_address,
-                          controller: [true, *watr_controller],
-                          authentication: [true, "0x1111111111111111111111111111111111111111"],
-                          assertion: [true, "0x1111111111111111111111111111111111111111"],
-                          services: [true, []]
+                          controller: [ true, *watr_controller ],
+                          authentication: [ true, "0x1111111111111111111111111111111111111111" ],
+                          assertion: [ true, "0x1111111111111111111111111111111111111111" ],
+                          services: [ true, [ ] ]
                         },
                       ]
                     events:
@@ -123,7 +123,7 @@ tests:
                                 controller: *raw_address,
                                 authentication: { controller: "0x1111111111111111111111111111111111111111" },
                                 assertionMethod: { controller: "0x1111111111111111111111111111111111111111" },
-                                services: []
+                                services: [ ]
                               },
                           }
   - name: Manage DID services
@@ -144,7 +144,7 @@ tests:
                     {
                       did: *wallet_eth_address,
                       services: [
-                        [0, "str4"]
+                        [ 0, "str4" ]
                       ]
                     },
                   ]
@@ -164,7 +164,43 @@ tests:
                     result:
                       {
                         did: *raw_address,
-                        newServices: ["0xa7afed531f66265362d1db98580c4542e4ba110e067c8e430c6176c52cfb5e91"]
+                        newServices: [ "0xa7afed531f66265362d1db98580c4542e4ba110e067c8e430c6176c52cfb5e91" ]
+                      }
+      - name: Should remove DID services
+        actions:
+          - customs:
+              - path: ../../../customs/did/remove-did-services-custom.js
+                args:
+                  [
+                    {
+                      networkName: *watr_network_name,
+                      rpcPort: *watr_rpc_port,
+                      chainId: *eth_chain_id,
+                      senderPrivKey: *watr_sender_wallet_eth_priv_key,
+                      didPrecompileAddress: *did_precompile_addr,
+                    },
+                    {
+                      did: *wallet_eth_address,
+                      serviceKeys: [ "0xa7afed531f66265362d1db98580c4542e4ba110e067c8e430c6176c52cfb5e91" ]
+                    },
+                  ]
+                events:
+                  - name: ethereum.Executed
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        from: *wallet_eth_address,
+                        to: *did_precompile_addr,
+                        exitReason: { Succeed: Returned },
+                      }
+                  - name: did.DidServicesRemoved
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        did: *raw_address,
+                        removedServices: [ "0xa7afed531f66265362d1db98580c4542e4ba110e067c8e430c6176c52cfb5e91" ]
                       }
   - name: Remove DID
     its:
