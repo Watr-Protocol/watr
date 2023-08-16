@@ -31,7 +31,7 @@ settings:
 tests:
   - name: TEST DID PRECOMPILES
     describes:
-      - name: Create DID
+      - name: Manage DIDs
         its:
           - name: Should create a DID
             actions:
@@ -81,8 +81,6 @@ tests:
                                 ]
                               },
                           }
-      - name: Update DID
-        its:
           - name: Should update a DID
             actions:
               - customs:
@@ -128,39 +126,79 @@ tests:
                                 services: []
                               },
                           }
-      - name: Remove DID
-        its:
-          - name: Should remove a DID
-            actions:
-              - customs:
-                  - path: ../../../customs/did/remove-did-custom.js
-                    args:
-                      [
-                        {
-                          networkName: *watr_network_name,
-                          rpcPort: *watr_rpc_port,
-                          chainId: *eth_chain_id,
-                          senderPrivKey: *watr_sender_wallet_eth_priv_key,
-                          didPrecompileAddress: *did_precompile_addr,
-                        },
-                        {
-                          did: *wallet_eth_address
-                        }
+  - name: Manage DID services
+    its:
+      - name: Should add DID services
+        actions:
+          - customs:
+              - path: ../../../customs/did/add-did-services-custom.js
+                args:
+                  [
+                    {
+                      networkName: *watr_network_name,
+                      rpcPort: *watr_rpc_port,
+                      chainId: *eth_chain_id,
+                      senderPrivKey: *watr_sender_wallet_eth_priv_key,
+                      didPrecompileAddress: *did_precompile_addr,
+                    },
+                    {
+                      did: *wallet_eth_address,
+                      services: [
+                        [0, "str4"]
                       ]
-                    events:
-                      - name: ethereum.Executed
-                        chain: *watr_parachain
-                        strict: false
-                        result:
-                          {
-                            from: *wallet_eth_address,
-                            to: *did_precompile_addr,
-                            exitReason: { Succeed: Returned },
-                          }
-                      - name: did.DidRemoved
-                        chain: *watr_parachain
-                        strict: false
-                        result:
-                          {
-                            did: *raw_address
-                          }
+                    },
+                  ]
+                events:
+                  - name: ethereum.Executed
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        from: *wallet_eth_address,
+                        to: *did_precompile_addr,
+                        exitReason: { Succeed: Returned },
+                      }
+                  - name: did.DidServicesAdded
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        did: *raw_address,
+                        newServices: ["0xa7afed531f66265362d1db98580c4542e4ba110e067c8e430c6176c52cfb5e91"]
+                      }
+  - name: Remove DID
+    its:
+      - name: Should remove a DID
+        actions:
+          - customs:
+              - path: ../../../customs/did/remove-did-custom.js
+                args:
+                  [
+                    {
+                      networkName: *watr_network_name,
+                      rpcPort: *watr_rpc_port,
+                      chainId: *eth_chain_id,
+                      senderPrivKey: *watr_sender_wallet_eth_priv_key,
+                      didPrecompileAddress: *did_precompile_addr,
+                    },
+                    {
+                      did: *wallet_eth_address
+                    }
+                  ]
+                events:
+                  - name: ethereum.Executed
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        from: *wallet_eth_address,
+                        to: *did_precompile_addr,
+                        exitReason: { Succeed: Returned },
+                      }
+                  - name: did.DidRemoved
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        did: *raw_address
+                      }
