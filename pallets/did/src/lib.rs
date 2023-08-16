@@ -24,7 +24,7 @@ pub mod weights;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
-mod types;
+pub mod types;
 
 use crate::types::{
 	AssertionMethod, AuthenticationMethod, CredentialInfo, Document, IssuerInfo, IssuerStatus,

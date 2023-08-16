@@ -12,6 +12,7 @@ members = [
 	"runtime/mainnet",
 	"runtime/devnet",
 	"pallets/motion",
+	"precompiles/did",
 	"pallets/did",
 ]
 
@@ -21,6 +22,7 @@ async-trait = "0.1.57"
 clap = { version = "4.1.6", features = ["derive"] }
 derive_more = "0.99.2"
 smallvec = "1.9.0"
+num_enum = { version = "0.5.3", default-features = false }
 
 # Utils (Wasm)
 log = { version = "0.4.17", default-features = false }
@@ -39,6 +41,7 @@ jsonrpsee = { version = "0.16.2", features = ["server"] }
 
 # Watr
 pallet-did = { path = "pallets/did", default-features = false }
+pallet-did-precompile = { path = "precompiles/did", default-features = false }
 pallet-motion = { path = "pallets/motion", default-features = false }
 watr-common = { path = "runtime/common", default-features = false }
 watr-devnet-runtime = { path = "runtime/devnet" }

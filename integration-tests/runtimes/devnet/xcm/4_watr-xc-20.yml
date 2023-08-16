@@ -11,7 +11,7 @@ settings:
         networkName: &watr_network_name "watr-devnet"
         rpcPort: &watr_rpc_port 9821
         amount: &watr_amount_to_transfer "100000000000000000000" # 100 WTRD
-        asset_ower:
+        asset_owner:
           signer: &watr_asset_owner_signer //Alice
         asset_funder:
           signer: &watr_asset_funder_signer //Bob
@@ -68,7 +68,7 @@ tests:
           - name: Should read correct metadata from xc-20 asset
             actions:
               - customs:
-                  - path: ../../../customs/read-xc20-custom.ts
+                  - path: ../../../customs/xcm/read-xc20-custom.ts
                     args:
                       [
                         {
@@ -99,7 +99,7 @@ tests:
           - name: SHOULD transfer assets if enough balance
             actions:
               - customs:
-                  - path: ../../../customs/transfer-xc20-custom.ts
+                  - path: ../../../customs/xcm/transfer-xc20-custom.ts
                     args:
                       [
                         {
@@ -141,7 +141,7 @@ tests:
           - name: Should read correct metadata from xc-20 asset after the transfer
             actions:
               - customs:
-                  - path: ../../../customs/read-xc20-custom.ts
+                  - path: ../../../customs/xcm/read-xc20-custom.ts
                     args:
                       [
                         {
@@ -170,7 +170,7 @@ tests:
           - name: SHOULD NOT transfer assets if NOT enough balance
             actions:
               - customs:
-                  - path: ../../../customs/transfer-xc20-custom.ts
+                  - path: ../../../customs/xcm/transfer-xc20-custom.ts
                     args:
                       [
                         {
