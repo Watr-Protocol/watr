@@ -283,6 +283,44 @@ tests:
                         credentials: [ *default_credential ],
                         verifiableCredentialHash: *default_credential_hash
                       }
+      - name: Should revoke DID credentials
+        actions:
+          - customs:
+              - path: ../../../customs/did/revoke-did-credentials-custom.js
+                args:
+                  [
+                    {
+                      networkName: *watr_network_name,
+                      rpcPort: *watr_rpc_port,
+                      chainId: *eth_chain_id,
+                      senderPrivKey: *watr_sender_wallet_eth_priv_key,
+                      didPrecompileAddress: *did_precompile_addr,
+                    },
+                    {
+                      issuerDid: *wallet_eth_address,
+                      subjectDid: *wallet_eth_address,
+                      credentials: [ *default_credential ]
+                    }
+                  ]
+                events:
+                  - name: ethereum.Executed
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        from: *wallet_eth_address,
+                        to: *did_precompile_addr,
+                        exitReason: { Succeed: Returned },
+                      }
+                  - name: did.CredentialsRevoked
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        issuer: *raw_address,
+                        did: *raw_address,
+                        credentials: [ *default_credential ]
+                      }
   - name: Remove DID
     its:
       - name: Should revoke issuer

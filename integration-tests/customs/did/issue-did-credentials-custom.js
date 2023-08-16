@@ -1,6 +1,6 @@
 const setup = require('./setup');
 
-const addDidServices = async (context, ...args) => {
+const issueDidCredentials = async (context, ...args) => {
 	const contract = setup(args[0][0]);
 	const {issuerDid, subjectDid, credentials, verifiableCredentialHash} = args[0][1];
 
@@ -12,4 +12,4 @@ const addDidServices = async (context, ...args) => {
 	}
 }
 
-module.exports = addDidServices;
+module.exports = issueDidCredentials;

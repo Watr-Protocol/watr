@@ -33,7 +33,7 @@ pub enum Action {
 	AddDIDServices = "addDidServices(address,(uint8,string)[])",
 	RemoveDIDServices = "removeDidServices(address,bytes[])",
 	IssueCredentials = "issueCredentials(address,address,string[],bytes)",
-	RevokeCredentials = "revokeCredentials(address,string[])",
+	RevokeCredentials = "revokeCredentials(address,address,string[])",
 }
 
 pub struct WatrDIDPrecompile<R>(PhantomData<R>);
