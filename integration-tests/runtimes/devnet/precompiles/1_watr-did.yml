@@ -285,6 +285,23 @@ tests:
                       }
   - name: Remove DID
     its:
+      - name: Should revoke issuer
+        actions:
+          - extrinsics:
+              - chain: *watr_parachain
+                sudo: true
+                signer: *default_signer
+                pallet: did
+                call: revokeIssuer
+                args: [ *raw_address ]
+                events:
+                  - name: did.IssuerStatusRevoked
+                    chain: *watr_parachain
+                    strict: false
+                    result:
+                      {
+                        issuer: *raw_address
+                      }
       - name: Should remove a DID
         actions:
           - customs:
