@@ -39,17 +39,14 @@
     1. Create new branch with name `release-vX.Y.Z`. For example,
         1. if the new version is `1.1.1`, then create branch `release-v1.1.1`
 3. **************************Build Branch**************************
-    1. Checkout the new release branch and build it with [srtool](https://github.com/paritytech/srtool) using the following command :
-        1. `srtool build --runtime-dir ./runtime/mainnet --package watr-runtime --json >> srtool.out` 
-        2. srtool produces deterministic builds
-    2. Wait for srtool to complete… It may take a long time.
-    3. Save srtool .wasm file:
-        1. `runtime/mainnet/target/srtool/release/wbuild/watr-runtime/watr_runtime.compact.compressed.wasm`
-    4. Also save command line outputs (command above outputs to the file `srtool.out`)
-    5. Run `subwasm` to get Wasm metadata
-        1. `subwasm info <path-to-srtool-built-wasm`
-        2. e.g. `subwasm info runtime/devnet/target/srtool/release/wbuild/watr-devnet-runtime/watr_devnet_runtime.compact.compressed.wasm`
-4. ********************************************************Create New Release on Github********************************************************
+    1. Use the [Deterministic Build](https://github.com/Watr-Protocol/watr/actions/workflows/manual-build-srtool.yml) to build the release branch with srtool.
+![Deterministic build steps](images/watr-release-guide-ci.png)
+        1. After completion save the artifacts and copy the subwasm output 
+
+            2. If the following error is outputted: `error: the lock file /build/Cargo.lock needs to be updated but --locked was passed to prevent this`, the solution is to rebuild the project (locally) and push the updated Cargo.lock   
+
+    Subwasm output: ![Subwasm output](images/watr-release-guide-subwasm.png)
+5. ********************************************************Create New Release on Github********************************************************
     1. Navigate to the [release page](https://github.com/Watr-Protocol/watr/releases)
     2. Press “Draft a new release”
     3. Select the release branch in the “Target: release-vX.Y.Z” dropdown
@@ -62,12 +59,12 @@
     8. Paste the srtool output
     9. Paste the subwasm output
     10. Include  the .wasm file as an asset
-5. **Perform a Dry-Run Runtime Upgrade**
+6. **Perform a Dry-Run Runtime Upgrade**
     1. Build the previous release branch
     2. Start the network with zombienet
     3. Perform the runtime upgrade (using the wasm generated from srtool)
     4. After the runtime upgrade completes, ensure everything performs as expected
         1. It is recommended to run the `parachains-integration-tests`
-6. ******************************************************************Perform the Real Runtime Upgrade******************************************************************
+7. ******************************************************************Perform the Real Runtime Upgrade******************************************************************
     1. Perform the runtime upgrade (using the wasm generated from srtool) on the live network
         
