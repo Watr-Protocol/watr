@@ -29,7 +29,7 @@ settings:
       ethereum:
         chainId: &eth_chain_id 688
         contract:
-          xc_20_foreign: &did_precompile_addr "0x0000000000000000000000000000000000000402"  # 1026
+          did_precompile: &did_precompile_addr "0x0000000000000000000000000000000000000402"  # 1026
 
 tests:
   - name: TEST DID PRECOMPILES
