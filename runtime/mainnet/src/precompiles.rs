@@ -75,7 +75,7 @@ where
 		+ pallet_assets::Config
 		+ pallet_xcm::Config
 		+ AddressToAssetId<<R as pallet_assets::Config>::AssetId>
-		+ frame_system::Config
+		+ frame_system::Config,
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<PrecompileResult> {
 		let address = handle.code_address();
