@@ -617,10 +617,7 @@ impl InstanceFilter<RuntimeCall> for ProxyType {
 				matches!(c, RuntimeCall::Proxy(pallet_proxy::Call::reject_announcement { .. }))
 			},
 			ProxyType::Balances => matches!(c, RuntimeCall::Balances(..)),
-			ProxyType::DidManagement => {
-				// TODO
-				false
-			},
+			ProxyType::DidManagement => matches!(c, RuntimeCall::DID(..)),
 		}
 	}
 	fn is_superset(&self, o: &Self) -> bool {
@@ -1237,7 +1234,7 @@ mod benches {
 		[pallet_treasury, Treasury]
 		[pallet_membership, CouncilMembership]
 		[pallet_preimage, Preimage]
-		[pallet_did, Preimage]
+		[pallet_did, DID]
 		[pallet_xc_asset_config, XcAssetConfig]
 		[pallet_block_reward, BlockReward]
 	);
