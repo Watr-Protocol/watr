@@ -38,6 +38,7 @@ pallet-identity = { workspace = true }
 pallet-membership = { workspace = true }
 pallet-multisig = { workspace = true }
 pallet-preimage = { workspace = true }
+pallet-proxy = { workspace = true }
 pallet-session = { workspace = true }
 pallet-scheduler = { workspace = true }
 pallet-sudo = { workspace = true }
@@ -100,11 +101,13 @@ pallet-evm-precompile-bn128 = { workspace = true }
 
 # Astar Pallets
 pallet-evm-precompile-assets-erc20 = { workspace = true }
-
+pallet-block-reward = { workspace = true, features = ["serde"] }
+pallet-xc-asset-config = { workspace = true }
 
 # Local
 watr-common = { workspace = true }
 pallet-motion = { workspace = true }
+pallet-did = { workspace = true }
 
 [features]
 default = [
@@ -129,9 +132,11 @@ std = [
     "pallet-aura/std",
     "pallet-authorship/std",
     "pallet-balances/std",
+	"pallet-block-reward/std",
     "pallet-collator-selection/std",
     "pallet-collective/std",
     "pallet-motion/std",
+	"pallet-did/std",
     "pallet-preimage/std",
     "pallet-session/std",
     "pallet-scheduler/std",
@@ -164,6 +169,8 @@ std = [
     "pallet-membership/std",
     "pallet-multisig/std",
     "pallet-identity/std",
+	"pallet-proxy/std",
+	"pallet-xc-asset-config/std",
     # Frontier
     "fp-rpc/std",
     "fp-self-contained/std",
@@ -187,6 +194,7 @@ runtime-benchmarks = [
     "pallet-assets/runtime-benchmarks",
     "pallet-balances/runtime-benchmarks",
     "pallet-sudo/runtime-benchmarks",
+	"pallet-block-reward/runtime-benchmarks",
     "pallet-collective/runtime-benchmarks",
     "pallet-collator-selection/runtime-benchmarks",
     "pallet-ethereum/runtime-benchmarks",
@@ -199,7 +207,10 @@ runtime-benchmarks = [
     "pallet-utility/runtime-benchmarks",
     "pallet-multisig/runtime-benchmarks",
     "pallet-identity/runtime-benchmarks",
+	"pallet-did/runtime-benchmarks",
+	"pallet-proxy/runtime-benchmarks",
     "pallet-xcm/runtime-benchmarks",
+	"pallet-xc-asset-config/runtime-benchmarks",
     "sp-runtime/runtime-benchmarks",
     "xcm-builder/runtime-benchmarks",
     "cumulus-pallet-session-benchmarking/runtime-benchmarks",
@@ -224,9 +235,11 @@ try-runtime = [
     "pallet-collator-selection/try-runtime",
     "pallet-collective/try-runtime",
     "pallet-identity/try-runtime",
+	"pallet-proxy/try-runtime",
     "pallet-session/try-runtime",
     "pallet-sudo/try-runtime",
     "pallet-motion/try-runtime",
+    "pallet-did/try-runtime",
     "pallet-timestamp/try-runtime",
     "pallet-transaction-payment/try-runtime",
     "pallet-xcm/try-runtime",
@@ -240,6 +253,8 @@ try-runtime = [
     "pallet-evm/try-runtime",
     "pallet-ethereum/try-runtime",
     "pallet-base-fee/try-runtime",
+	"pallet-xc-asset-config/try-runtime",
+	"pallet-block-reward/try-runtime",
 ]
 # Set timing constants (e.g. session period) to faster versions to speed up testing.
 fast-runtime = []

@@ -34,10 +34,10 @@ use std::collections::BTreeMap;
 
 use watr_common::{AccountId, AuraId, Signature};
 use watr_runtime as mainnet;
-use watr_runtime::WATR;
+use watr_runtime::{BlockRewardConfig as MainnetBlockRewardConfig, WATR};
 
 use watr_devnet_runtime as devnet;
-use watr_devnet_runtime::{BlockRewardConfig, WATRD};
+use watr_devnet_runtime::{BlockRewardConfig as DevnetBlockRewardConfig, WATRD};
 
 /// Specialized `MainnetChainSpec` for the normal parachain runtime.
 pub type MainnetChainSpec = sc_service::GenericChainSpec<mainnet::RuntimeGenesisConfig, Extensions>;
@@ -412,7 +412,7 @@ fn devnet_testnet_genesis(
 		},
 
 		balances: devnet::BalancesConfig { balances },
-		block_reward: BlockRewardConfig {
+		block_reward: DevnetBlockRewardConfig {
 			// Make sure sum is 100
 			reward_config: pallet_block_reward::RewardDistributionConfig {
 				base_treasury_percent: Perbill::from_percent(10),
@@ -522,7 +522,18 @@ fn mainnet_testnet_genesis(
 		},
 
 		balances: mainnet::BalancesConfig { balances },
-
+		block_reward: MainnetBlockRewardConfig {
+			// Make sure sum is 100
+			reward_config: pallet_block_reward::RewardDistributionConfig {
+				base_treasury_percent: Perbill::from_percent(10),
+				base_staker_percent: Perbill::from_percent(20),
+				dapps_percent: Perbill::from_percent(0),
+				collators_percent: Perbill::from_percent(25),
+				adjustable_percent: Perbill::from_percent(45),
+				ideal_dapps_staking_tvl: Perbill::from_percent(40),
+			},
+			..Default::default()
+		},
 		parachain_info: mainnet::ParachainInfoConfig { parachain_id: id, ..Default::default() },
 		collator_selection: mainnet::CollatorSelectionConfig {
 			invulnerables: invulnerables.iter().cloned().map(|(acc, _)| acc).collect(),
