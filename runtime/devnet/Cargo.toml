@@ -82,7 +82,6 @@ pallet-collator-selection = { workspace = true }
 parachains-common = { workspace = true }
 parachain-info = { workspace = true }
 
-
 # Frontier
 fp-rpc = { workspace = true }
 fp-self-contained = { workspace = true, features = ["serde"]}
@@ -111,6 +110,10 @@ pallet-motion = { workspace = true }
 pallet-did = { workspace = true }
 pallet-did-precompile = { workspace = true }
 
+moonbeam-evm-tracer = { workspace = true, optional = true }
+moonbeam-rpc-primitives-debug = { workspace = true, optional = true }
+moonbeam-rpc-primitives-txpool = { workspace = true, optional = true }
+
 [features]
 default = [
     "std",
@@ -130,6 +133,9 @@ std = [
     "frame-support/std",
     "frame-system-rpc-runtime-api/std",
     "frame-system/std",
+	"moonbeam-evm-tracer/std",
+	"moonbeam-rpc-primitives-debug/std",
+	"moonbeam-rpc-primitives-txpool/std",
     "pallet-assets/std",
     "pallet-aura/std",
     "pallet-authorship/std",
@@ -260,5 +266,11 @@ try-runtime = [
     "pallet-xc-asset-config/try-runtime",
     "pallet-block-reward/try-runtime",
 ]
+evm-tracing = [
+	"moonbeam-evm-tracer",
+	"moonbeam-rpc-primitives-debug",
+	"moonbeam-rpc-primitives-txpool",
+]
 # Set timing constants (e.g. session period) to faster versions to speed up testing.
 fast-runtime = []
+

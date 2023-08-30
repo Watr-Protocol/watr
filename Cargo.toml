@@ -216,13 +216,15 @@ pallet-evm-precompile-assets-erc20 = { git = "https://github.com/Watr-Protocol/a
 pallet-xc-asset-config = { git = "https://github.com/Watr-Protocol/astar-frame", branch = "polkadot-v1.0.0", default-features = false }
 precompile-utils = { git = "https://github.com/Watr-Protocol/astar-frame", branch = "polkadot-v1.0.0", default-features = false }
 
-# Moonbeam (Local)
-evm-tracing-events = { path = "./moonbeam/primitives/evm-tracing-events" }
+# Moonbeam (Wasm)
+evm-tracing-events = { path = "./moonbeam/primitives/evm-tracing-events", default-features = false }
+moonbeam-primitives-ext = { path = "./moonbeam/runtime/ext", default-features = false }
+moonbeam-evm-tracer = { path = "./moonbeam/runtime/evm-tracer", default-features = false }
+moonbeam-rpc-primitives-debug = { path = "./moonbeam/primitives/debug", default-features = false }
+moonbeam-rpc-primitives-txpool = { path = "./moonbeam/primitives/txpool", default-features = false }
+
 moonbeam-client-evm-tracing = { path = "./moonbeam/evm-tracing" }
-moonbeam-primitives-ext = { path = "./moonbeam/runtime/ext"}
 moonbeam-rpc-core-debug = { path = "./moonbeam/rpc-core/debug" }
 moonbeam-rpc-core-types = { path = "./moonbeam/rpc-core/types" }
 moonbeam-rpc-core-trace = { path = "./moonbeam/rpc-core/trace" }
 moonbeam-rpc-core-txpool = { path = "./moonbeam/rpc-core/txpool" }
-moonbeam-rpc-primitives-debug = { path = "./moonbeam/primitives/debug" }
-moonbeam-rpc-primitives-txpool = { path = "./moonbeam/primitives/txpool" }
