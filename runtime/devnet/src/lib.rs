@@ -503,19 +503,19 @@ impl pallet_collator_selection::Config for Runtime {
 	type WeightInfo = weights::pallet_collator_selection::WeightInfo<Runtime>;
 }
 
-type NegativeImbalanceAstar = <Balances as CurrencyT<AccountId>>::NegativeImbalance;
+type NegativeImbalanceOf = <Balances as CurrencyT<AccountId>>::NegativeImbalance;
 
 pub struct BeneficiaryPayout();
-impl pallet_block_reward::BeneficiaryPayout<NegativeImbalanceAstar> for BeneficiaryPayout {
-	fn treasury(reward: NegativeImbalanceAstar) {
+impl pallet_block_reward::BeneficiaryPayout<NegativeImbalanceOf> for BeneficiaryPayout {
+	fn treasury(reward: NegativeImbalanceOf) {
 		Balances::resolve_creating(&TreasuryPalletId::get().into_account_truncating(), reward);
 	}
 
-	fn collators(reward: NegativeImbalanceAstar) {
+	fn collators(reward: NegativeImbalanceOf) {
 		ToStakingPot::on_unbalanced(reward);
 	}
 
-	fn dapps_staking(_: NegativeImbalanceAstar, _: NegativeImbalanceAstar) {}
+	fn dapps_staking(_: NegativeImbalanceOf, _: NegativeImbalanceOf) {}
 }
 
 parameter_types! {

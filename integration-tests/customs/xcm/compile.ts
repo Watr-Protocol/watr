@@ -4,7 +4,7 @@ const solc = require('solc');
 
 const loadErc20Contract = () => {
 	// 2. Get path and load contract
-	const source = fs.readFileSync('./integration-tests/customs/ERC20.sol', 'utf8');
+	const source = fs.readFileSync('./integration-tests/customs/xcm/ERC20.sol', 'utf8');
 
 	// 3. Create input object
 	const input = {

@@ -31,13 +31,13 @@ pub mod xcm_config;
 
 pub use watr_common::{
 	impls::{AccountIdOf, DealWithFees, ToStakingPot},
-	AccountId, AssetIdForTrustBackedAssets, AuraId, Balance, BlockNumber, Hash, Signature,
-	AVERAGE_ON_INITIALIZE_RATIO, DAYS, HOURS, MAXIMUM_BLOCK_WEIGHT, MINUTES, NORMAL_DISPATCH_RATIO,
-	SLOT_DURATION, WEIGHT_REF_TIME_PER_GAS,
+	AccountId, AssetIdForTrustBackedAssets, AuraId, Balance, BlockNumber, DidIdentifier, Hash,
+	Signature, AVERAGE_ON_INITIALIZE_RATIO, DAYS, HOURS, MAXIMUM_BLOCK_WEIGHT, MINUTES,
+	NORMAL_DISPATCH_RATIO, SLOT_DURATION, WEIGHT_REF_TIME_PER_GAS,
 };
 
 use cumulus_pallet_parachain_system::RelayNumberStrictlyIncreases;
-use parity_scale_codec::{Decode, Encode};
+use parity_scale_codec::{Decode, Encode, MaxEncodedLen};
 use smallvec::smallvec;
 use sp_api::impl_runtime_apis;
 use sp_core::{
@@ -47,8 +47,8 @@ use sp_core::{
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
-		AccountIdLookup, BlakeTwo256, Block as BlockT, DispatchInfoOf, Dispatchable,
-		PostDispatchInfoOf, UniqueSaturatedInto,
+		AccountIdConversion, AccountIdLookup, BlakeTwo256, Block as BlockT, DispatchInfoOf,
+		Dispatchable, PostDispatchInfoOf, UniqueSaturatedInto,
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
 	ApplyExtrinsicResult,
@@ -77,7 +77,7 @@ pub use frame_support::{
 		constants::WEIGHT_REF_TIME_PER_SECOND, ConstantMultiplier, Weight, WeightToFeeCoefficient,
 		WeightToFeeCoefficients, WeightToFeePolynomial,
 	},
-	ConsensusEngineId, PalletId, RuntimeDebug, StorageValue,
+	ConsensusEngineId, Hashable, PalletId, RuntimeDebug, StorageValue,
 };
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
@@ -94,7 +94,9 @@ use pallet_evm::{
 
 #[cfg(any(feature = "std", test))]
 pub use sp_runtime::BuildStorage;
+
 mod precompiles;
+
 use precompiles::{FrontierPrecompiles, ASSET_PRECOMPILE_ADDRESS_PREFIX};
 
 // Polkadot imports
@@ -138,6 +140,7 @@ pub type UncheckedExtrinsic =
 /// Extrinsic type that has already been checked.
 pub type CheckedExtrinsic =
 	fp_self_contained::CheckedExtrinsic<AccountId, RuntimeCall, SignedExtra, H160>;
+
 /// The payload being signed in transactions.
 pub type SignedPayload = generic::SignedPayload<RuntimeCall, SignedExtra>;
 
@@ -230,6 +233,7 @@ pub mod opaque {
 	use sp_runtime::{generic, traits::BlakeTwo256};
 
 	pub use sp_runtime::OpaqueExtrinsic as UncheckedExtrinsic;
+
 	/// Opaque block header type.
 	pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
 	/// Opaque block type.
@@ -281,7 +285,7 @@ parameter_types! {
 	pub const Version: RuntimeVersion = VERSION;
 
 	// This part is copied from Substrate's `bin/node/runtime/src/lib.rs`.
-	//  The `RuntimeBlockLength` and `RuntimeBlockWeights` exist here because the
+	// The `RuntimeBlockLength` and `RuntimeBlockWeights` exist here because the
 	// `DeletionWeightLimit` and `DeletionQueueDepth` depend on those to parameterize
 	// the lazy contract deletion.
 	pub RuntimeBlockLength: BlockLength =
@@ -370,7 +374,7 @@ parameter_types! {
 impl pallet_timestamp::Config for Runtime {
 	/// A timestamp: milliseconds since the unix epoch.
 	type Moment = u64;
-	type OnTimestampSet = ();
+	type OnTimestampSet = BlockReward;
 	type MinimumPeriod = MinimumPeriod;
 	type WeightInfo = weights::pallet_timestamp::WeightInfo<Runtime>;
 }
@@ -498,6 +502,34 @@ impl pallet_collator_selection::Config for Runtime {
 	type WeightInfo = weights::pallet_collator_selection::WeightInfo<Runtime>;
 }
 
+type NegativeImbalanceOf = <Balances as CurrencyT<AccountId>>::NegativeImbalance;
+
+pub struct BeneficiaryPayout();
+impl pallet_block_reward::BeneficiaryPayout<NegativeImbalanceOf> for BeneficiaryPayout {
+	fn treasury(reward: NegativeImbalanceOf) {
+		Balances::resolve_creating(&TreasuryPalletId::get().into_account_truncating(), reward);
+	}
+
+	fn collators(reward: NegativeImbalanceOf) {
+		ToStakingPot::on_unbalanced(reward);
+	}
+
+	fn dapps_staking(_: NegativeImbalanceOf, _: NegativeImbalanceOf) {}
+}
+
+parameter_types! {
+	pub const RewardAmount: Balance = 6_000 * MILLI_WATR;
+}
+
+impl pallet_block_reward::Config for Runtime {
+	type Currency = Balances;
+	type DappsStakingTvlProvider = ();
+	type BeneficiaryPayout = BeneficiaryPayout;
+	type RewardAmount = RewardAmount;
+	type RuntimeEvent = RuntimeEvent;
+	type WeightInfo = weights::pallet_block_reward::WeightInfo<Runtime>;
+}
+
 parameter_types! {
 	pub const DepositPerByte: Balance = deposit(0, 1);
 	pub const DeletionQueueDepth: u32 = 128;
@@ -530,6 +562,89 @@ parameter_types! {
 	pub const MaxRegistrars: u32 = 20;
 }
 
+parameter_types! {
+	pub const ProxyDepositBase: Balance = deposit(1, 8);
+	pub const ProxyDepositFactor: Balance = deposit(0, 33);
+	pub const AnnouncementDepositBase: Balance = deposit(1, 8);
+	pub const AnnouncementDepositFactor: Balance = deposit(0, 66);
+}
+
+#[derive(
+	Copy,
+	Clone,
+	Eq,
+	PartialEq,
+	Ord,
+	PartialOrd,
+	Encode,
+	Decode,
+	RuntimeDebug,
+	MaxEncodedLen,
+	scale_info::TypeInfo,
+)]
+pub enum ProxyType {
+	/// All calls can be proxied. This is the trivial/most permissive filter.
+	Any,
+	/// Only extrinsics that do not transfer funds.
+	NonTransfer,
+	/// Only extrinsics related to governance (democracy and collectives).
+	Governance,
+	/// Allow to veto an announced proxy call.
+	CancelProxy,
+	/// Allow extrinsic related to Balances.
+	Balances,
+	/// Allow extrinsic related to DID pallet
+	DidManagement,
+}
+
+impl Default for ProxyType {
+	fn default() -> Self {
+		Self::Any
+	}
+}
+
+impl InstanceFilter<RuntimeCall> for ProxyType {
+	fn filter(&self, c: &RuntimeCall) -> bool {
+		match self {
+			ProxyType::Any => true,
+			ProxyType::NonTransfer => {
+				!matches!(c, RuntimeCall::Balances(..) | RuntimeCall::Assets(..))
+			},
+			ProxyType::Governance => {
+				matches!(c, RuntimeCall::Council(..) | RuntimeCall::Treasury(..))
+			},
+			ProxyType::CancelProxy => {
+				matches!(c, RuntimeCall::Proxy(pallet_proxy::Call::reject_announcement { .. }))
+			},
+			ProxyType::Balances => matches!(c, RuntimeCall::Balances(..)),
+			ProxyType::DidManagement => matches!(c, RuntimeCall::DID(..)),
+		}
+	}
+	fn is_superset(&self, o: &Self) -> bool {
+		match (self, o) {
+			(x, y) if x == y => true,
+			(ProxyType::Any, _) => true,
+			(_, ProxyType::Any) => false,
+			_ => false,
+		}
+	}
+}
+
+impl pallet_proxy::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type RuntimeCall = RuntimeCall;
+	type Currency = Balances;
+	type ProxyType = ProxyType;
+	type ProxyDepositBase = ProxyDepositBase;
+	type ProxyDepositFactor = ProxyDepositFactor;
+	type MaxProxies = ConstU32<32>;
+	type WeightInfo = weights::pallet_proxy::WeightInfo<Runtime>;
+	type MaxPending = ConstU32<32>;
+	type CallHasher = BlakeTwo256;
+	type AnnouncementDepositBase = AnnouncementDepositBase;
+	type AnnouncementDepositFactor = AnnouncementDepositFactor;
+}
+
 impl pallet_identity::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type Currency = Balances;
@@ -546,6 +661,7 @@ impl pallet_identity::Config for Runtime {
 }
 
 use pallet_evm_precompile_assets_erc20::AddressToAssetId;
+
 impl AddressToAssetId<AssetId> for Runtime {
 	fn address_to_asset_id(address: H160) -> Option<AssetId> {
 		let mut data = [0u8; 16];
@@ -610,6 +726,28 @@ impl pallet_assets::Config for Runtime {
 	type CallbackHandle = ();
 	#[cfg(feature = "runtime-benchmarks")]
 	type BenchmarkHelper = AssetsBenchmarkHelper;
+}
+
+pub struct EvmRevertCodeHandler;
+
+impl pallet_xc_asset_config::XcAssetChanged<Runtime> for EvmRevertCodeHandler {
+	fn xc_asset_registered(asset_id: AssetId) {
+		let address = Runtime::asset_id_to_address(asset_id);
+		pallet_evm::AccountCodes::<Runtime>::insert(address, vec![0x60, 0x00, 0x60, 0x00, 0xfd]);
+	}
+
+	fn xc_asset_unregistered(asset_id: AssetId) {
+		let address = Runtime::asset_id_to_address(asset_id);
+		pallet_evm::AccountCodes::<Runtime>::remove(address);
+	}
+}
+
+impl pallet_xc_asset_config::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type AssetId = AssetId;
+	type XcAssetChanged = EvmRevertCodeHandler;
+	type ManagerOrigin = frame_system::EnsureRoot<AccountId>;
+	type WeightInfo = weights::pallet_xc_asset_config::WeightInfo<Runtime>;
 }
 
 impl pallet_utility::Config for Runtime {
@@ -720,6 +858,7 @@ parameter_types! {
 }
 
 pub type CouncilCollective = pallet_collective::Instance1;
+
 impl pallet_collective::Config<CouncilCollective> for Runtime {
 	type RuntimeOrigin = RuntimeOrigin;
 	type Proposal = RuntimeCall;
@@ -758,6 +897,32 @@ impl pallet_motion::Config for Runtime {
 }
 
 parameter_types! {
+	pub const MaxString: u32 = 100;
+	pub const MaxHash: u32 = 512;
+	pub const MaxCredentialsTypes: u32 = 50;
+	pub const MaxCredentialTypeLength: u32 = 32; // To not be bigger than a Hash
+	pub const MaxServices: u32 = 10;
+	pub const DidDeposit: Balance = 10 * WATR;
+}
+
+impl pallet_did::Config for Runtime {
+	type RuntimeCall = RuntimeCall;
+	type RuntimeEvent = RuntimeEvent;
+	type Currency = Balances;
+	type DidIdentifier = AccountId;
+	type AuthenticationAddress = H160;
+	type AssertionAddress = H160;
+	type DidDeposit = DidDeposit;
+	type MaxString = MaxString;
+	type MaxHash = MaxHash;
+	type MaxCredentialsTypes = MaxCredentialsTypes;
+	type MaxCredentialTypeLength = MaxCredentialTypeLength;
+	type MaxServices = MaxServices;
+	type GovernanceOrigin = MoreThanHalfCouncil;
+	type WeightInfo = weights::pallet_did::WeightInfo<Runtime>;
+}
+
+parameter_types! {
 	pub const ProposalBond: Permill = Permill::from_percent(5);
 	pub const ProposalBondMinimum: Balance = 100 * WATR;
 	pub const ProposalBondMaximum: Balance = 500 * WATR;
@@ -792,6 +957,7 @@ impl pallet_treasury::Config for Runtime {
 }
 
 pub struct FindAuthorTruncated<F>(PhantomData<F>);
+
 impl<F: FindAuthor<u32>> FindAuthor<H160> for FindAuthorTruncated<F> {
 	fn find_author<'a, I>(digests: I) -> Option<H160>
 	where
@@ -807,6 +973,7 @@ impl<F: FindAuthor<u32>> FindAuthor<H160> for FindAuthorTruncated<F> {
 
 /// Handles transaction fees from the EVM
 pub struct EVMDealWithFees<R>(sp_std::marker::PhantomData<R>);
+
 impl<R> OnUnbalanced<NegativeImbalance<R>> for EVMDealWithFees<R>
 where
 	R: pallet_balances::Config + pallet_collator_selection::Config + core::fmt::Debug,
@@ -822,7 +989,7 @@ where
 	}
 }
 
-// Frontier's default OnChargeEVMTransaction burns a portion of the fees.
+// Frontier's default OnChargeEVMTransaction burns a portion of the fees
 watr_common::impl_on_charge_evm_transaction!();
 
 parameter_types! {
@@ -904,6 +1071,7 @@ parameter_types! {
 }
 
 pub struct BaseFeeThreshold;
+
 impl pallet_base_fee::BaseFeeThreshold for BaseFeeThreshold {
 	fn lower() -> Permill {
 		Permill::zero()
@@ -925,7 +1093,8 @@ impl pallet_base_fee::Config for Runtime {
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
-	pub struct Runtime {
+	pub struct Runtime
+	{
 		// System support stuff.
 		System: frame_system::{Pallet, Call, Config<T>, Storage, Event<T>} = 0,
 		ParachainSystem: cumulus_pallet_parachain_system::{
@@ -939,6 +1108,7 @@ construct_runtime!(
 		// Monetary stuff.
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>} = 10,
 		TransactionPayment: pallet_transaction_payment::{Pallet, Storage, Event<T>} = 11,
+		BlockReward: pallet_block_reward::{Pallet, Call, Storage, Event<T>, Config<T>} = 12,
 
 		// Collator support. The order of these 4 are important and shall not change.
 		Authorship: pallet_authorship::{Pallet, Storage} = 20,
@@ -952,9 +1122,11 @@ construct_runtime!(
 		PolkadotXcm: pallet_xcm::{Pallet, Call, Event<T>, Origin, Config<T>} = 31,
 		CumulusXcm: cumulus_pallet_xcm::{Pallet, Event<T>, Origin} = 32,
 		DmpQueue: cumulus_pallet_dmp_queue::{Pallet, Call, Storage, Event<T>} = 33,
+		XcAssetConfig: pallet_xc_asset_config::{Pallet, Call, Storage, Event<T>} = 34,
 
 		Multisig: pallet_multisig::{Pallet, Call, Storage, Event<T>} = 41,
 		Identity: pallet_identity::{Pallet, Call, Storage, Event<T>} = 42,
+		Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>} = 43,
 
 		//Governance
 		Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>} = 44,
@@ -972,6 +1144,9 @@ construct_runtime!(
 		Ethereum: pallet_ethereum::{Pallet, Call, Storage, Event, Origin, Config<T>} = 50,
 		EVM: pallet_evm::{Pallet, Config<T>, Call, Storage, Event<T>} = 51,
 		BaseFee: pallet_base_fee::{Pallet, Call, Storage, Config<T>, Event} = 52,
+
+		// DID
+		DID: pallet_did::{Pallet, Call, Storage, Event<T>} = 60,
 
 		Sudo: pallet_sudo::{Pallet, Call, Storage, Config<T>, Event<T>} = 255,
 	}
@@ -1054,10 +1229,14 @@ mod benches {
 		[cumulus_pallet_xcmp_queue, XcmpQueue]
 		[pallet_collective, Council]
 		[pallet_identity, Identity]
+		[pallet_proxy, Proxy]
 		[pallet_scheduler, Scheduler]
 		[pallet_treasury, Treasury]
 		[pallet_membership, CouncilMembership]
 		[pallet_preimage, Preimage]
+		[pallet_did, DID]
+		[pallet_xc_asset_config, XcAssetConfig]
+		[pallet_block_reward, BlockReward]
 	);
 }
 
