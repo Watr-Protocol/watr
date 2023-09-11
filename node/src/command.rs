@@ -297,9 +297,12 @@ pub fn run() -> Result<()> {
 			})
 		},
 		Some(Subcommand::ExportGenesisState(cmd)) => {
-			construct_async_run!(|components, cli, cmd, config| {
+			let runner = cli.create_runner(cmd)?;
+			runner.sync_run(|config| {
 				let spec = cli.load_spec(&cmd.shared_params.chain.clone().unwrap_or_default())?;
-				Ok(async move { cmd.run::<crate::service::Block>(&*spec, &*components.client) })
+				construct_benchmark_partials!(config, |partials| {
+					cmd.run::<crate::service::Block>(&*spec, &*partials.client)
+				})
 			})
 		},
 		Some(Subcommand::ExportGenesisWasm(cmd)) => {
