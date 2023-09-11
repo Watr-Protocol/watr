@@ -29,7 +29,7 @@ watr-devnet-runtime = { workspace = true }
 watr-common = { workspace = true, default-features = false }
 
 # Substrate
-frame-benchmarking = { workspace = true, optional = true }
+frame-benchmarking = { workspace = true }
 frame-benchmarking-cli = { workspace = true }
 frame-system = { workspace = true }
 pallet-transaction-payment-rpc = { workspace = true }
