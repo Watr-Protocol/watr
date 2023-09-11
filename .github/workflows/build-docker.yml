@@ -24,7 +24,7 @@ jobs:
       - name: Build Docker image
         uses: docker/build-push-action@2eb1c1961a95fc15694676618e422e8ba1d63825 #v4.1.1
         with:
-          file: docker/watr-parachain.dockerfile
+          file: docker/watr-parachain.Dockerfile
           push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
