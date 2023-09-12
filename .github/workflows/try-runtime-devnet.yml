@@ -41,11 +41,12 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
 
+      - name: Install try-runtime
+        run: cargo install --git https://github.com/paritytech/try-runtime-cli --locked
+
       - run: |
-          cargo run -p watr-node --locked --release --no-default-features --features try-runtime try-runtime \
-              --runtime ./target/release/wbuild/watr-devnet-runtime/target/wasm32-unknown-unknown/release/watr_devnet_runtime.wasm \
-              -lruntime=debug \
-              --chain=devnet-dev \
+          cargo build -p watr-node --locked --release --no-default-features --features try-runtime && \
+          try-runtime --runtime ./target/release/wbuild/watr-devnet-runtime/target/wasm32-unknown-unknown/release/watr_devnet_runtime.wasm \
               on-runtime-upgrade live --uri wss://rpc.dev.watr.org:443
         env:
           RUST_LOG: remote-ext=debug,runtime=debug
