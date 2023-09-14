@@ -1,6 +1,6 @@
 {
     "name": "Watr Dry Run",
-    "id": "dryrun_mainnet_watr_network",
+    "id": "mainnet_watr_network",
     "chainType": "Live",
     "bootNodes": [
         "/ip4/162.19.171.190/tcp/30333/p2p/12D3KooWAWdraq4JQcWFRgooKZQPEM862cdxUSvDxMT2biKfCxQS",
@@ -8,11 +8,11 @@
         "/ip4/15.235.83.125/tcp/30333/p2p/12D3KooWRvbVVXXmVpRR97X7LWzBMxHFcHLQNsA9AJ4nGS1C3xYP"
     ],
     "telemetryEndpoints": null,
-    "protocolId": "watrmainnetdr",
+    "protocolId": "watrmainnet",
     "properties": {
         "ss58Format": 19,
         "tokenDecimals": 18,
-        "tokenSymbol": "WATRDR"
+        "tokenSymbol": "WATR"
     },
     "relay_chain": "rococo",
     "para_id": 2059,
