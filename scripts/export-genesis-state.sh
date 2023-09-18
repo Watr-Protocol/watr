@@ -23,15 +23,16 @@ if [ ! -f "$chain_spec_location" ]; then
 fi
 
 # Export the genesis state
-export_output="$("$binary_location" export-genesis-state --chain="$chain_spec_location" "$output_file_name" 2>&1 | tee /dev/tty)"
+export_output="$("$binary_location" export-genesis-state --chain="$chain_spec_location" "$output_file_name" 2>&1)"
+retval=$?
 
-echo ""
+echo "$export_output"
 
 # Check if the export command produced an error
-if [[ "$export_output" == *"No specific runtime was recognized for ChainSpec's Id"* || "$export_output" == *"Error"* ]]; then
+if [[ "$export_output" == *"No specific runtime was recognized for ChainSpec's Id"* || $retval -ne 0 ]]; then
     echo "Error exporting genesis state. Please check your chain spec file."
     echo "Deleting '$output_file_name'..."
-    rm "$output_file_name"
+    rm -f "$output_file_name"
     exit 1
 else
     echo "Genesis state exported successfully to '$output_file_name'"
