@@ -184,8 +184,9 @@ where
 		let origin = Some(R::AddressMapping::into_account_id(handle.context().caller));
 		let did = R::AddressMapping::into_account_id(input.read::<Address>()?.into());
 		let service_details = input.read::<Vec<Bytes>>()?;
+		// The maximum capacity is the minimum between [`service_details.len()`] and [`R::MaxServices`]
 		let mut services = BoundedVec::with_bounded_capacity(service_details.len());
-		for service in service_details.into_iter() {
+		for service in service_details {
 			if service.0.len() != H256::len_bytes() {
 				return Err(revert("Service length different than 32 bytes"));
 			}
@@ -205,6 +206,7 @@ where
 	fn parse_credentials(
 		raw_credentials: Vec<Bytes>,
 	) -> EvmResult<BoundedVec<BoundedVec<u8, R::MaxCredentialTypeLength>, R::MaxCredentialsTypes>> {
+		// The maximum capacity is the minimum between [`raw_credentials.len()`] and [`R::MaxCredentialsTypes`]
 		let mut credentials = BoundedVec::with_bounded_capacity(raw_credentials.len());
 		for raw_credential in raw_credentials {
 			raw_credential
@@ -271,6 +273,7 @@ where
 	fn parse_services(
 		raw_services: Vec<(u8, Bytes)>,
 	) -> Result<BoundedVec<ServiceInfo<R>, R::MaxServices>, PrecompileFailure> {
+		// The maximum capacity is the minimum between [`raw_services.len()`] and [`R::MaxServices`]
 		let mut services = BoundedVec::with_bounded_capacity(raw_services.len());
 		for service in raw_services {
 			let service_type: ServiceType = match service.0 {
