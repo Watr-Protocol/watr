@@ -37,9 +37,9 @@ parameter_types! {
 	pub const SS58Prefix: u8 = 19;
 	pub const DidDeposit: u64 = 5;
 	pub const MaxString: u8 = 100;
-	pub const MaxCredentialsTypes: u8 = 50;
+	pub const MaxCredentialsTypes: u8 = 5;
 	pub const MaxCredentialTypeLength: u32 = 32;
-	pub const MaxServices: u8 = 10;
+	pub const MaxServices: u8 = 5;
 	pub const MaxHash: u32 = 512;
 }
 

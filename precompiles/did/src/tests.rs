@@ -20,6 +20,7 @@ use pallet_did::{
 };
 use precompile_utils::testing::PrecompileTesterExt;
 use sp_core::{bounded_vec, H160};
+use sp_std::vec::Vec;
 
 use super::*;
 use crate::mock::*;
@@ -40,9 +41,7 @@ fn events() -> Vec<pallet_did::Event<Test>> {
 	result
 }
 
-fn hash_services(
-	services: &BoundedVec<ServiceInfo<Test>, <mock::Test as pallet_did::Config>::MaxServices>,
-) -> ServiceKeysOf<Test> {
+fn hash_services(services: &Vec<ServiceInfo<Test>>) -> ServiceKeysOf<Test> {
 	let mut services_keys: ServiceKeysOf<Test> = BoundedVec::default();
 	for service in services {
 		let _ = services_keys
@@ -109,7 +108,7 @@ fn default_services(
 	bounded_vec![ServiceInfo {
 		type_id: pallet_did::types::ServiceType::VerifiableCredentialFileStorage,
 		service_endpoint: bounded_vec![b's', b'0']
-	},]
+	}]
 }
 
 #[test]
@@ -128,8 +127,7 @@ fn it_creates_did_without_assertion() {
 					.build(),
 			)
 			.execute_returns(EvmDataWriter::new().write(true).build());
-		let events = events();
-		assert!(events.contains(&pallet_did::Event::<Test>::DidCreated {
+		assert!(events().contains(&pallet_did::Event::<Test>::DidCreated {
 			did: TestAccount::Alice,
 			document: expected_document,
 		}));
@@ -160,6 +158,36 @@ fn it_creates_did_with_assertion() {
 }
 
 #[test]
+fn reverts_creates_did_if_too_many_services() {
+	new_test_ext().execute_with(|| {
+		precompiles()
+			.prepare_test(
+				TestAccount::Alice,
+				PRECOMPILE_ADDRESS,
+				EvmDataWriter::new_with_selector(Action::CreateDID)
+					.write(Address(TestAccount::Alice.into()))
+					.write(Address(H160::from([0u8; 20])))
+					.write((false, Address(H160::from([0u8; 20]))))
+					.write(vec![
+						(1u8, Bytes(default_services()[0].service_endpoint.to_vec())),
+						(2u8, Bytes(default_services()[0].service_endpoint.to_vec())),
+						(3u8, Bytes(default_services()[0].service_endpoint.to_vec())),
+						(4u8, Bytes(default_services()[0].service_endpoint.to_vec())),
+						(5u8, Bytes(default_services()[0].service_endpoint.to_vec())),
+						// the 6th should fail
+						(6u8, Bytes(default_services()[0].service_endpoint.to_vec())),
+					])
+					.build(),
+			)
+			.execute_reverts(|err| {
+				let reason = sp_std::str::from_utf8(err).unwrap();
+				assert_eq!(reason, "failed to parse service");
+				true
+			});
+	});
+}
+
+#[test]
 fn it_updates_nothing_from_did() {
 	new_test_ext().execute_with(|| {
 		let expected_document = create_default_did(TestAccount::Alice, true);
@@ -184,6 +212,40 @@ fn it_updates_nothing_from_did() {
 			did: TestAccount::Alice,
 			document: expected_document,
 		}));
+	});
+}
+
+#[test]
+fn reverts_updates_did_if_too_many_services() {
+	new_test_ext().execute_with(|| {
+		insert_default_did(TestAccount::Alice);
+		precompiles()
+			.prepare_test(
+				TestAccount::Alice,
+				PRECOMPILE_ADDRESS,
+				EvmDataWriter::new_with_selector(Action::UpdateDID)
+					.write(Address(TestAccount::Alice.into()))
+					.write((false, Address(TestAccount::Alice.into())))
+					.write((false, Address(H160::from([0u8; 20]))))
+					.write((false, Address(H160::from([0u8; 20]))))
+					.write((
+						true,
+						vec![
+							(2u8, Bytes(default_services()[0].service_endpoint.to_vec())),
+							(3u8, Bytes(default_services()[0].service_endpoint.to_vec())),
+							(4u8, Bytes(default_services()[0].service_endpoint.to_vec())),
+							(5u8, Bytes(default_services()[0].service_endpoint.to_vec())),
+							(6u8, Bytes(default_services()[0].service_endpoint.to_vec())),
+							(7u8, Bytes(default_services()[0].service_endpoint.to_vec())),
+						],
+					))
+					.build(),
+			)
+			.execute_reverts(|err| {
+				let reason = sp_std::str::from_utf8(err).unwrap();
+				assert_eq!(reason, "failed to parse service");
+				true
+			});
 	});
 }
 
@@ -278,7 +340,7 @@ fn can_add_did_services() {
 		service_keys.sort();
 		let mut raw_services: Vec<(u8, Bytes)> = Vec::with_capacity(services.len());
 
-		for service in services.iter() {
+		for service in services {
 			match service.type_id {
 				ServiceType::VerifiableCredentialFileStorage => {
 					raw_services.push((0u8, Bytes(service.service_endpoint.to_vec())))
@@ -292,7 +354,7 @@ fn can_add_did_services() {
 				PRECOMPILE_ADDRESS,
 				EvmDataWriter::new_with_selector(Action::AddDIDServices)
 					.write(Address(TestAccount::Alice.into()))
-					.write::<Vec<(u8, Bytes)>>(raw_services)
+					.write(raw_services)
 					.build(),
 			)
 			.execute_returns(EvmDataWriter::new().write(true).build());
@@ -300,6 +362,66 @@ fn can_add_did_services() {
 			did: TestAccount::Alice,
 			new_services: service_keys,
 		}));
+	});
+}
+
+#[test]
+fn reverts_add_did_services_if_too_many() {
+	new_test_ext().execute_with(|| {
+		let services = vec![
+			ServiceInfo {
+				type_id: pallet_did::types::ServiceType::VerifiableCredentialFileStorage,
+				service_endpoint: bounded_vec![b's', b'1'],
+			},
+			ServiceInfo {
+				type_id: pallet_did::types::ServiceType::VerifiableCredentialFileStorage,
+				service_endpoint: bounded_vec![b's', b'2'],
+			},
+			ServiceInfo {
+				type_id: pallet_did::types::ServiceType::VerifiableCredentialFileStorage,
+				service_endpoint: bounded_vec![b's', b'3'],
+			},
+			ServiceInfo {
+				type_id: pallet_did::types::ServiceType::VerifiableCredentialFileStorage,
+				service_endpoint: bounded_vec![b's', b'4'],
+			},
+			ServiceInfo {
+				type_id: pallet_did::types::ServiceType::VerifiableCredentialFileStorage,
+				service_endpoint: bounded_vec![b's', b'5'],
+			},
+			// the 6th one should fail
+			ServiceInfo {
+				type_id: pallet_did::types::ServiceType::VerifiableCredentialFileStorage,
+				service_endpoint: bounded_vec![b's', b'6'],
+			},
+		];
+		insert_default_did(TestAccount::Alice);
+		let mut service_keys = hash_services(&services);
+		service_keys.sort();
+		let mut raw_services: Vec<(u8, Bytes)> = Vec::with_capacity(services.len());
+
+		for service in services {
+			match service.type_id {
+				ServiceType::VerifiableCredentialFileStorage => {
+					raw_services.push((0u8, Bytes(service.service_endpoint.to_vec())))
+				},
+			}
+		}
+
+		precompiles()
+			.prepare_test(
+				TestAccount::Alice,
+				PRECOMPILE_ADDRESS,
+				EvmDataWriter::new_with_selector(Action::AddDIDServices)
+					.write(Address(TestAccount::Alice.into()))
+					.write(raw_services)
+					.build(),
+			)
+			.execute_reverts(|err| {
+				let reason = sp_std::str::from_utf8(err).unwrap();
+				assert_eq!(reason, "failed to parse service");
+				true
+			});
 	});
 }
 
@@ -363,6 +485,43 @@ fn it_issues_credentials() {
 }
 
 #[test]
+fn revert_issues_credentials_if_too_many() {
+	new_test_ext().execute_with(|| {
+		let credentials: BoundedVec<
+			BoundedVec<u8, <mock::Test as pallet_did::Config>::MaxCredentialTypeLength>,
+			<mock::Test as pallet_did::Config>::MaxCredentialsTypes,
+		> = bounded_vec![bounded_vec![1u8; 32]];
+		insert_default_credential_types(credentials.clone());
+		insert_default_did(TestAccount::Alice);
+		insert_default_issuer(TestAccount::Alice);
+		precompiles()
+			.prepare_test(
+				TestAccount::Alice,
+				PRECOMPILE_ADDRESS,
+				EvmDataWriter::new_with_selector(Action::IssueCredentials)
+					.write(Address(TestAccount::Alice.into()))
+					.write(Address(TestAccount::Alice.into()))
+					.write(vec![
+						Bytes(vec![1u8; 32]),
+						Bytes(vec![2u8; 32]),
+						Bytes(vec![3u8; 32]),
+						Bytes(vec![4u8; 32]),
+						Bytes(vec![5u8; 32]),
+						// the 6th one should fail
+						Bytes(vec![6u8; 32]),
+					])
+					.write(Bytes(vec![5u8; 32]))
+					.build(),
+			)
+			.execute_reverts(|err| {
+				let reason = sp_std::str::from_utf8(err).unwrap();
+				assert_eq!(reason, "failed to parse credential");
+				true
+			});
+	});
+}
+
+#[test]
 fn it_revokes_credentials() {
 	new_test_ext().execute_with(|| {
 		let credentials: BoundedVec<
@@ -395,5 +554,48 @@ fn it_revokes_credentials() {
 			did: TestAccount::Alice,
 			credentials,
 		}));
+	});
+}
+
+#[test]
+fn revert_revoke_credentials_if_too_many() {
+	new_test_ext().execute_with(|| {
+		let credentials: BoundedVec<
+			BoundedVec<u8, <mock::Test as pallet_did::Config>::MaxCredentialTypeLength>,
+			<mock::Test as pallet_did::Config>::MaxCredentialsTypes,
+		> = bounded_vec![bounded_vec![1u8; 32]];
+		insert_default_credential_types(credentials.clone());
+		insert_default_did(TestAccount::Alice);
+		insert_default_issuer(TestAccount::Alice);
+		assert_ok!(DID::issue_credentials(
+			RuntimeOrigin::signed(TestAccount::Alice),
+			TestAccount::Alice,
+			TestAccount::Alice,
+			bounded_vec![bounded_vec![1u8; 32]],
+			bounded_vec![5u8; 32],
+		));
+		precompiles()
+			.prepare_test(
+				TestAccount::Alice,
+				PRECOMPILE_ADDRESS,
+				EvmDataWriter::new_with_selector(Action::RevokeCredentials)
+					.write(Address(TestAccount::Alice.into()))
+					.write(Address(TestAccount::Alice.into()))
+					.write(vec![
+						Bytes(vec![1u8; 32]),
+						Bytes(vec![2u8; 32]),
+						Bytes(vec![3u8; 32]),
+						Bytes(vec![4u8; 32]),
+						Bytes(vec![5u8; 32]),
+						// if we insert a 6th it should crash
+						Bytes(vec![6u8; 32]),
+					])
+					.build(),
+			)
+			.execute_reverts(|err| {
+				let reason = sp_std::str::from_utf8(err).unwrap();
+				assert_eq!(reason, "failed to parse credential");
+				true
+			});
 	});
 }
