@@ -208,17 +208,97 @@
           [
             "2yMbhjVREsX92CAjbikxcwvve5erdLxajGCoSjDDueAstzbW",
             100000000000000000000
+          ],
+          [
+            "2zihSGqWk31LPrNivWbteVPfYTVtKgBGMaU7rXw5b7ukRR3y",
+            100000000000000000000
+          ],
+          [
+            "2xmvtDzjKht2ZEVfg2n88Em9vPZLTvGFLBakuKy8uTHHG5QQ",
+            100000000000000000000
+          ],
+          [
+            "2yDkBYmvgPJr2vmKCzMLTPsLkaiTb6JqtoSpQaCdoSJb5DpA",
+            100000000000000000000
+          ],
+          [
+            "2uh78FYNXnCQZT7DD1NvdYqYCR5mGXGSTJwnXNB6uEEGmorp",
+            100000000000000000000
+          ],
+          [
+            "2xmfPvdGMkBEvc855G19CXuwhVRa1Q5EVayerUquGByjnMqS",
+            100000000000000000000
+          ],
+          [
+            "2xN9qLbPjcbadrxREJ3ZXus8UyUPGKgmwKUg8NYAgTbLjNFa",
+            100000000000000000000
+          ],
+          [
+            "2uU197tuFrCfCiaGqMoQXM8evUGEA36ksQixaij2HzKDcHJf",
+            100000000000000000000
+          ],
+          [
+            "2yr7p5BM6AmMEH19L7ZNyc9wi9HRjyTcDXGkF4DdTV8iaXNJ",
+            100000000000000000000
+          ],
+          [
+            "2woqKJVUFvxV6m6pmdNG3JuLyGiDYaVbyktXdkTt1J4H8QjR",
+            100000000000000000000
+          ],
+          [
+            "2wwzfuv3sgBni3pQqdGiAcvhjgCuHQbumBaYMyAC8xHgc2qc",
+            100000000000000000000
+          ],
+          [
+            "2yMHGxYuqBN24qe9jZ9KNzGhrqd8wAdcQ3optJPgjepDKdwv",
+            100000000000000000000
+          ],
+          [
+            "2vUNo9hsLcYwtBbaxMS4CkBZ9bEXDXu4fu4y1xahtU1GihjZ",
+            100000000000000000000
+          ],
+          [
+            "2vv72KrDcuX34wurHDRZ87ipFGXnaQYJwag4xGJc83B8HvW3",
+            100000000000000000000
+          ],
+          [
+            "2uCmxWvAeAop6znk9Ec2M3X6eWycS5w2J13soySYSRvaHumK",
+            100000000000000000000
+          ],
+          [
+            "2vHnW8BGyr9Zpif77hEPaNySRHPsmQqCgJk3ZiwkF5cJmno6",
+            100000000000000000000
+          ],
+          [
+            "2zSyu2tNoVnXQ6HcMBU8E2bLJTnppmgCVLjxLiFuF7AhDGao",
+            100000000000000000000
+          ],
+          [
+            "2ymGXK41AHazB5QtY98Thec7XyjCnWPP72FHNahJFKwtKeSU",
+            100000000000000000000
+          ],
+          [
+            "2w1H7WTYASpb4EKmnDSbrg2RohnRDig4FSRPSohM89vjduYJ",
+            100000000000000000000
+          ],
+          [
+            "2wYfTGQcMAZa3kgcphW86pj6bQ4T5EFG7Fq27EvPuzyVQ5Qs",
+            100000000000000000000
+          ],
+          [
+            "2z4yjxCSxgo9WgjZtr2JVMrzAAxee9nmZ92P6YwwS66ztXni",
+            100000000000000000000
           ]
         ]
       },
       "blockReward": {
         "rewardConfig": {
-          "base_treasury_percent": 100000000,
-          "base_staker_percent": 200000000,
+          "base_treasury_percent": 1000000000,
+          "base_staker_percent": 0,
           "dapps_percent": 0,
-          "collators_percent": 250000000,
-          "adjustable_percent": 450000000,
-          "ideal_dapps_staking_tvl": 400000000
+          "collators_percent": 0,
+          "adjustable_percent": 0,
+          "ideal_dapps_staking_tvl": 0
         }
       },
       "collatorSelection": {
@@ -271,7 +351,17 @@
           "2xN9qLbPjcbadrxREJ3ZXus8UyUPGKgmwKUg8NYAgTbLjNFa",
           "2uU197tuFrCfCiaGqMoQXM8evUGEA36ksQixaij2HzKDcHJf",
           "2yr7p5BM6AmMEH19L7ZNyc9wi9HRjyTcDXGkF4DdTV8iaXNJ",
-          "2woqKJVUFvxV6m6pmdNG3JuLyGiDYaVbyktXdkTt1J4H8QjR"
+          "2woqKJVUFvxV6m6pmdNG3JuLyGiDYaVbyktXdkTt1J4H8QjR",
+          "2wwzfuv3sgBni3pQqdGiAcvhjgCuHQbumBaYMyAC8xHgc2qc",
+          "2yMHGxYuqBN24qe9jZ9KNzGhrqd8wAdcQ3optJPgjepDKdwv",
+          "2vUNo9hsLcYwtBbaxMS4CkBZ9bEXDXu4fu4y1xahtU1GihjZ",
+          "2vv72KrDcuX34wurHDRZ87ipFGXnaQYJwag4xGJc83B8HvW3",
+          "2uCmxWvAeAop6znk9Ec2M3X6eWycS5w2J13soySYSRvaHumK",
+          "2vHnW8BGyr9Zpif77hEPaNySRHPsmQqCgJk3ZiwkF5cJmno6",
+          "2zSyu2tNoVnXQ6HcMBU8E2bLJTnppmgCVLjxLiFuF7AhDGao",
+          "2ymGXK41AHazB5QtY98Thec7XyjCnWPP72FHNahJFKwtKeSU",
+          "2w1H7WTYASpb4EKmnDSbrg2RohnRDig4FSRPSohM89vjduYJ",
+          "2wYfTGQcMAZa3kgcphW86pj6bQ4T5EFG7Fq27EvPuzyVQ5Qs"
         ]
       },
       "treasury": {},
@@ -286,7 +376,7 @@
         "elasticity": 0
       },
       "sudo": {
-        "key": "2ykmykmyFJQsRjxKKcNs8VPfCwv7yCor31xW3fpT9cb7SYuS"
+        "key": "2z4yjxCSxgo9WgjZtr2JVMrzAAxee9nmZ92P6YwwS66ztXni"
       }
     }
   }
