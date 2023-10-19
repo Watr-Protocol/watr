@@ -3,6 +3,9 @@
   "id": "mainnet_watr_network",
   "chainType": "Live",
   "bootNodes": [
+    "/ip4/162.19.171.190/tcp/30333/p2p/12D3KooWAWdraq4JQcWFRgooKZQPEM862cdxUSvDxMT2biKfCxQS",
+    "/ip4/198.244.212.132/tcp/30333/p2p/12D3KooWKHSnZG5JKnfGrkpTGzxghf2hF1bGbssivbtT5Jnw67ZW",
+    "/ip4/15.235.83.125/tcp/30333/p2p/12D3KooWRvbVVXXmVpRR97X7LWzBMxHFcHLQNsA9AJ4nGS1C3xYP"
   ],
   "telemetryEndpoints": null,
   "protocolId": "watrmainnet",
@@ -302,11 +305,39 @@
         }
       },
       "collatorSelection": {
-        "invulnerables": [],
+        "invulnerables": [
+          "2w5saZ5GbwkN9mP4iRdmLWrhoGFLreMzHgZnum3ZdMhdUjmh",
+          "2yuc7G2GuxN8AvNtMVew3bfx8d3QE5WdsQuFESmXPQnFMtPb",
+          "2xQkwfGjEN3MpyD1Pnub3swSzB379FSqkoeWPU5C6h1xugk1"
+        ],
         "candidacyBond": 160000000000000000,
         "desiredCandidates": 0
       },
-      "session": {},
+      "session": {
+        "keys": [
+          [
+              "2w5saZ5GbwkN9mP4iRdmLWrhoGFLreMzHgZnum3ZdMhdUjmh",
+              "2w5saZ5GbwkN9mP4iRdmLWrhoGFLreMzHgZnum3ZdMhdUjmh",
+              {
+                  "aura": "2yJZ1Lzd4GvJobiAn8ZLYpjw8KE2P54ycUteDuG1U3BioLiZ"
+              }
+          ],
+          [
+              "2yuc7G2GuxN8AvNtMVew3bfx8d3QE5WdsQuFESmXPQnFMtPb",
+              "2yuc7G2GuxN8AvNtMVew3bfx8d3QE5WdsQuFESmXPQnFMtPb",
+              {
+                  "aura": "2x19Rvfj3qDSL1ESMUozqwWpU84NArLrKoXPYkhduwwoLoZ5"
+              }
+          ],
+          [
+              "2xQkwfGjEN3MpyD1Pnub3swSzB379FSqkoeWPU5C6h1xugk1",
+              "2xQkwfGjEN3MpyD1Pnub3swSzB379FSqkoeWPU5C6h1xugk1",
+              {
+                  "aura": "2yzV6pbuBWsoj2kuspoYzwVx8wRBbbSdCYZTpJywgwWSxCNU"
+              }
+          ]
+      ]
+      },
       "aura": {
         "authorities": []
       },
