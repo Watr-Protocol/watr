@@ -77,34 +77,6 @@
             299994500000000000000000000
           ],
           [
-            "2w5saZ5GbwkN9mP4iRdmLWrhoGFLreMzHgZnum3ZdMhdUjmh",
-            100000000000000000000
-          ],
-          [
-            "2yuc7G2GuxN8AvNtMVew3bfx8d3QE5WdsQuFESmXPQnFMtPb",
-            100000000000000000000
-          ],
-          [
-            "2xQkwfGjEN3MpyD1Pnub3swSzB379FSqkoeWPU5C6h1xugk1",
-            100000000000000000000
-          ],
-          [
-            "2vEhNM6Doq8nrbNxKvho238h3mU5uzLqSA9ybr7hLiXa6cwi",
-            100000000000000000000
-          ],
-          [
-            "2vc5pXZKXALeufiw3cyBMwidysbVDLaB2kS6kayiaDsgZAZv",
-            100000000000000000000
-          ],
-          [
-            "2uZ1RaX6k2ERSp36GXRsKe8kDHJqNSkKP2gfFgtboGW5pHLS",
-            100000000000000000000
-          ],
-          [
-            "2xYrvJUxLzzzM5XSy8orT5Lu85TXQk6b18kbx6izP7QrQGxd",
-            100000000000000000000
-          ],
-          [
             "2yFvKgufyrLEZxPrA9piAVcyyjJCSXqLUbgeXRmdFd1u7r9P",
             100000000000000000000
           ],
@@ -414,6 +386,9 @@
       },
       "treasury": {},
       "assets": {
+        "assets": [],
+        "metadata": [],
+        "accounts": []
       },
       "ethereum": {},
       "evm": {
