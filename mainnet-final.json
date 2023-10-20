@@ -3,9 +3,9 @@
   "id": "mainnet_watr_network",
   "chainType": "Live",
   "bootNodes": [
-    "/ip4/162.19.171.190/tcp/30333/p2p/12D3KooWAWdraq4JQcWFRgooKZQPEM862cdxUSvDxMT2biKfCxQS",
-    "/ip4/198.244.212.132/tcp/30333/p2p/12D3KooWKHSnZG5JKnfGrkpTGzxghf2hF1bGbssivbtT5Jnw67ZW",
-    "/ip4/15.235.83.125/tcp/30333/p2p/12D3KooWRvbVVXXmVpRR97X7LWzBMxHFcHLQNsA9AJ4nGS1C3xYP"
+    "/dns4/deo-bootnode-1.watr-infra.network/tcp/30333/p2p/12D3KooWAWdraq4JQcWFRgooKZQPEM862cdxUSvDxMT2biKfCxQS",
+    "/dns4/lono-bootnode-1.watr-infra.network/tcp/30333/p2p/12D3KooWKHSnZG5JKnfGrkpTGzxghf2hF1bGbssivbtT5Jnw67ZW",
+    "/dns4/qco-bootnode-1.watr-infra.network/tcp/30333/p2p/12D3KooWRvbVVXXmVpRR97X7LWzBMxHFcHLQNsA9AJ4nGS1C3xYP"
   ],
   "telemetryEndpoints": null,
   "protocolId": "watrmainnet",
@@ -249,47 +249,55 @@
             100000000000000000000
           ],
           [
-            "2wwzfuv3sgBni3pQqdGiAcvhjgCuHQbumBaYMyAC8xHgc2qc",
+            "2vF6SWw8S8KDQcPoNXaWhvZkbeRPUfmny8BqW1vf6dUzb6ca",
             100000000000000000000
           ],
           [
-            "2yMHGxYuqBN24qe9jZ9KNzGhrqd8wAdcQ3optJPgjepDKdwv",
+            "2z5d5zTJ7DjUmJLDHedk7jUVjVoy4LKybvMS1phn7SFou2nM",
             100000000000000000000
           ],
           [
-            "2vUNo9hsLcYwtBbaxMS4CkBZ9bEXDXu4fu4y1xahtU1GihjZ",
+            "2vZ2DQiYq4yc4TQZAnfPrEjVSd5d2FmrMpvNGzCKRk9Zbme4",
             100000000000000000000
           ],
           [
-            "2vv72KrDcuX34wurHDRZ87ipFGXnaQYJwag4xGJc83B8HvW3",
+            "2uUe6PLr9z5aE2d3QB5ugC7bwALPPRAs3mU5xWJ95z1WSFWq",
             100000000000000000000
           ],
           [
-            "2uCmxWvAeAop6znk9Ec2M3X6eWycS5w2J13soySYSRvaHumK",
+            "2zMEAw3EDBSRyFJ7ZptmZyHMuc2GR1pqPcN9g4FDBhjJFgr1",
             100000000000000000000
           ],
           [
-            "2vHnW8BGyr9Zpif77hEPaNySRHPsmQqCgJk3ZiwkF5cJmno6",
+            "2wbqMmnpUxJdFKqJ5qzBya1oxp9NMsPAE43rzCrfupiDiHNZ",
             100000000000000000000
           ],
           [
-            "2zSyu2tNoVnXQ6HcMBU8E2bLJTnppmgCVLjxLiFuF7AhDGao",
+            "2vbM9dVKr4p3rqFVyrAgxn8cpMKHv8GNkHLPL2LzptNCSHHi",
             100000000000000000000
           ],
           [
-            "2ymGXK41AHazB5QtY98Thec7XyjCnWPP72FHNahJFKwtKeSU",
+            "2vYk2tbLspJjD2P2KAaVzBnucF1gFbnf7DMMa3opmDTRCLL5",
             100000000000000000000
           ],
           [
-            "2w1H7WTYASpb4EKmnDSbrg2RohnRDig4FSRPSohM89vjduYJ",
+            "2w4N9HHKF7KSu7ep834W688XsesJLPSEYKP16jXRGerKnuyX",
             100000000000000000000
           ],
           [
-            "2wYfTGQcMAZa3kgcphW86pj6bQ4T5EFG7Fq27EvPuzyVQ5Qs",
+            "2y8KCVmeVeTKer3byUC6VvNpDxzBhVAhFT4389N1L2iKKQi4",
             100000000000000000000
           ],
           [
             "2z4yjxCSxgo9WgjZtr2JVMrzAAxee9nmZ92P6YwwS66ztXni",
+            100000000000000000000
+          ],
+          [
+            "2unQZrYwMjNgGMdzciqvBH1kCDFYiRpwsJu3xiUA9FwGrJJG",
+            100000000000000000000
+          ],
+          [
+            "2wbS9vEEMvP4rmH7m5RKryuBZfR1CXZtRkxG54yyHgErCGT5",
             100000000000000000000
           ]
         ]
@@ -335,6 +343,13 @@
               {
                   "aura": "2yzV6pbuBWsoj2kuspoYzwVx8wRBbbSdCYZTpJywgwWSxCNU"
               }
+          ],
+          [
+            "2y5YJo5g3iGkYgCat2UDjKRA4Vtw9DKSYChb83mNiKY71wNp",
+            "2y5YJo5g3iGkYgCat2UDjKRA4Vtw9DKSYChb83mNiKY71wNp",
+            {
+              "aura": "2xVasDMQuRCra5gnesEWuQsgUWANs9KrypQpMWsCsHMSCiW5"
+            }
           ]
       ]
       },
@@ -383,16 +398,18 @@
           "2uU197tuFrCfCiaGqMoQXM8evUGEA36ksQixaij2HzKDcHJf",
           "2yr7p5BM6AmMEH19L7ZNyc9wi9HRjyTcDXGkF4DdTV8iaXNJ",
           "2woqKJVUFvxV6m6pmdNG3JuLyGiDYaVbyktXdkTt1J4H8QjR",
-          "2wwzfuv3sgBni3pQqdGiAcvhjgCuHQbumBaYMyAC8xHgc2qc",
-          "2yMHGxYuqBN24qe9jZ9KNzGhrqd8wAdcQ3optJPgjepDKdwv",
-          "2vUNo9hsLcYwtBbaxMS4CkBZ9bEXDXu4fu4y1xahtU1GihjZ",
-          "2vv72KrDcuX34wurHDRZ87ipFGXnaQYJwag4xGJc83B8HvW3",
-          "2uCmxWvAeAop6znk9Ec2M3X6eWycS5w2J13soySYSRvaHumK",
-          "2vHnW8BGyr9Zpif77hEPaNySRHPsmQqCgJk3ZiwkF5cJmno6",
-          "2zSyu2tNoVnXQ6HcMBU8E2bLJTnppmgCVLjxLiFuF7AhDGao",
-          "2ymGXK41AHazB5QtY98Thec7XyjCnWPP72FHNahJFKwtKeSU",
-          "2w1H7WTYASpb4EKmnDSbrg2RohnRDig4FSRPSohM89vjduYJ",
-          "2wYfTGQcMAZa3kgcphW86pj6bQ4T5EFG7Fq27EvPuzyVQ5Qs"
+          "2vF6SWw8S8KDQcPoNXaWhvZkbeRPUfmny8BqW1vf6dUzb6ca",
+          "2z5d5zTJ7DjUmJLDHedk7jUVjVoy4LKybvMS1phn7SFou2nM",
+          "2vZ2DQiYq4yc4TQZAnfPrEjVSd5d2FmrMpvNGzCKRk9Zbme4",
+          "2uUe6PLr9z5aE2d3QB5ugC7bwALPPRAs3mU5xWJ95z1WSFWq",
+          "2zMEAw3EDBSRyFJ7ZptmZyHMuc2GR1pqPcN9g4FDBhjJFgr1",
+          "2wbqMmnpUxJdFKqJ5qzBya1oxp9NMsPAE43rzCrfupiDiHNZ",
+          "2vbM9dVKr4p3rqFVyrAgxn8cpMKHv8GNkHLPL2LzptNCSHHi",
+          "2vYk2tbLspJjD2P2KAaVzBnucF1gFbnf7DMMa3opmDTRCLL5",
+          "2w4N9HHKF7KSu7ep834W688XsesJLPSEYKP16jXRGerKnuyX",
+          "2y8KCVmeVeTKer3byUC6VvNpDxzBhVAhFT4389N1L2iKKQi4",
+          "2unQZrYwMjNgGMdzciqvBH1kCDFYiRpwsJu3xiUA9FwGrJJG",
+          "2wbS9vEEMvP4rmH7m5RKryuBZfR1CXZtRkxG54yyHgErCGT5"
         ]
       },
       "treasury": {},
