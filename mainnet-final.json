@@ -29,10 +29,6 @@
       "balances": {
         "balances": [
           [
-            "2ykmykmyFJQsRjxKKcNs8VPfCwv7yCor31xW3fpT9cb7SYuS",
-            100000000000000000000
-          ],
-          [
             "2w5saZ5GbwkN9mP4iRdmLWrhoGFLreMzHgZnum3ZdMhdUjmh",
             100000000000000000000
           ],
@@ -74,7 +70,7 @@
           ],
           [
             "2wBBLz1cR32a45LVFgMR2gd3GAujfo5eLFsK4QkTJwRZNgM6", 
-            299994500000000000000000000
+            299994400000000000000000000
           ],
           [
             "2yFvKgufyrLEZxPrA9piAVcyyjJCSXqLUbgeXRmdFd1u7r9P",
@@ -288,7 +284,8 @@
         "invulnerables": [
           "2w5saZ5GbwkN9mP4iRdmLWrhoGFLreMzHgZnum3ZdMhdUjmh",
           "2yuc7G2GuxN8AvNtMVew3bfx8d3QE5WdsQuFESmXPQnFMtPb",
-          "2xQkwfGjEN3MpyD1Pnub3swSzB379FSqkoeWPU5C6h1xugk1"
+          "2xQkwfGjEN3MpyD1Pnub3swSzB379FSqkoeWPU5C6h1xugk1",
+          "2yM9uY4WTexugmPNLkKSh6ruEAXUomNoeBNGtcenyE8czxkt"
         ],
         "candidacyBond": 160000000000000000,
         "desiredCandidates": 0
